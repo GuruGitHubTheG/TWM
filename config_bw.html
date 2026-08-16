@@ -7,7 +7,7 @@
     <style>
         @font-face {
             font-family: 'Volter';
-            src: url('https://github.com/GuruGitHubTheG/TWM/raw/refs/heads/main/Volter.ttf') format('truetype');
+            src: url('https://raw.githubusercontent.com/GuruGitHubTheG/TWM/main/Volter.ttf') format('truetype');
             font-weight: normal;
             font-style: normal;
         }
@@ -92,11 +92,6 @@
         body.inverted .window-header {
             background: #000000;
             color: #ffffff;
-        }
-
-        .window-header .header-icon {
-            margin-right: 12px;
-            font-size: 20px;
         }
 
         /* --- Window: Bottom border (6px) --- */
@@ -336,7 +331,6 @@
             <div class="window-top-border"></div>
             <div class="window-header-wrapper">
                 <div class="window-header">
-                    <span class="header-icon">⚙</span>
                     The World Machine
                 </div>
             </div>
@@ -348,7 +342,6 @@
             <div class="window-top-border"></div>
             <div class="window-header-wrapper">
                 <div class="window-header">
-                    <span class="header-icon">⌚</span>
                     Customize
                 </div>
             </div>
@@ -400,7 +393,6 @@
             <div class="window-top-border"></div>
             <div class="window-header-wrapper">
                 <div class="window-header">
-                    <span class="header-icon">🖼</span>
                     Wallpapers
                 </div>
             </div>
@@ -428,7 +420,6 @@
             <div class="window-top-border"></div>
             <div class="window-header-wrapper">
                 <div class="window-header">
-                    <span class="header-icon">🎨</span>
                     Themes
                 </div>
             </div>
@@ -446,7 +437,7 @@
                             <span class="slider"></span>
                         </label>
                     </div>
-                    <div class="capability-note">⚠ Applies to black-and-white Pebble watches only</div>
+                    <div class="capability-note">Applies to black-and-white Pebble watches only</div>
                 </div>
             </div>
         </div>
@@ -520,7 +511,7 @@
 
             loadConfig();
 
-            console.log('🔔 REMINDER: Secondary Color is available in config_color.html but not yet used.');
+            console.log('REMINDER: Secondary Color is available in config_color.html but not yet used.');
             console.log('   Add MESSAGE_KEY_Secondary_Color to CloudPebble when ready.');
             console.log('   Add SETTINGS_KEY_SECONDARY_COLOR to C code.');
             console.log('   Add secondary_color to the C struct and persistence.');
