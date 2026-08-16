@@ -5,11 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>The World Machine Settings</title>
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
             background: #f5f5f5;
@@ -18,12 +14,7 @@
             max-width: 600px;
             margin: 0 auto;
         }
-        h1 {
-            font-size: 24px;
-            font-weight: 700;
-            margin-bottom: 20px;
-            color: #1a1a1a;
-        }
+        h1 { font-size: 24px; font-weight: 700; margin-bottom: 20px; }
         .section {
             background: #ffffff;
             border-radius: 12px;
@@ -50,24 +41,14 @@
             border-top: 1px solid #e5e5ea;
             padding-top: 12px;
         }
-        .setting-label {
-            font-size: 16px;
-            font-weight: 500;
-            margin-bottom: 4px;
-            color: #1a1a1a;
-        }
-        .setting-description {
-            font-size: 13px;
-            color: #8e8e93;
-            margin-bottom: 6px;
-        }
+        .setting-label { font-size: 16px; font-weight: 500; margin-bottom: 4px; }
+        .setting-description { font-size: 13px; color: #8e8e93; margin-bottom: 6px; }
         select, input[type="color"] {
             font-size: 16px;
             padding: 8px 12px;
             border: 1px solid #c6c6c8;
             border-radius: 8px;
             background: #fafafa;
-            color: #1a1a1a;
             width: 100%;
             max-width: 300px;
         }
@@ -82,27 +63,18 @@
             justify-content: space-between;
             padding: 4px 0;
         }
-        .toggle-row .setting-label {
-            margin-bottom: 0;
-        }
+        .toggle-row .setting-label { margin-bottom: 0; }
         .toggle {
             position: relative;
             width: 51px;
             height: 31px;
             flex-shrink: 0;
         }
-        .toggle input {
-            opacity: 0;
-            width: 0;
-            height: 0;
-        }
+        .toggle input { opacity: 0; width: 0; height: 0; }
         .toggle .slider {
             position: absolute;
             cursor: pointer;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
+            top: 0; left: 0; right: 0; bottom: 0;
             background: #c6c6c8;
             transition: 0.3s;
             border-radius: 31px;
@@ -110,30 +82,15 @@
         .toggle .slider:before {
             content: "";
             position: absolute;
-            height: 27px;
-            width: 27px;
-            left: 2px;
-            bottom: 2px;
+            height: 27px; width: 27px;
+            left: 2px; bottom: 2px;
             background: white;
             transition: 0.3s;
             border-radius: 50%;
             box-shadow: 0 1px 3px rgba(0,0,0,0.2);
         }
-        .toggle input:checked + .slider {
-            background: #34c759;
-        }
-        .toggle input:checked + .slider:before {
-            transform: translateX(20px);
-        }
-        .capability-note {
-            font-size: 12px;
-            color: #8e8e93;
-            font-style: italic;
-            margin-top: 4px;
-            padding: 6px 10px;
-            background: #f8f8fa;
-            border-radius: 6px;
-        }
+        .toggle input:checked + .slider { background: #34c759; }
+        .toggle input:checked + .slider:before { transform: translateX(20px); }
         .color-picker-wrapper {
             display: flex;
             align-items: center;
@@ -149,7 +106,6 @@
         .color-hex {
             font-size: 15px;
             font-weight: 500;
-            color: #1a1a1a;
             font-family: "SF Mono", Menlo, monospace;
         }
         .save-btn {
@@ -165,29 +121,17 @@
             transition: background 0.2s;
             margin-top: 8px;
         }
-        .save-btn:hover {
-            background: #0066d9;
-        }
-        .save-btn:active {
-            background: #0055b3;
-        }
-        .hidden {
-            display: none !important;
-        }
-        @media (max-width: 400px) {
-            body { padding: 12px; }
-            .section { padding: 14px 16px; }
-        }
+        .save-btn:hover { background: #0066d9; }
+        .save-btn:active { background: #0055b3; }
+        @media (max-width: 400px) { body { padding: 12px; } .section { padding: 14px 16px; } }
     </style>
 </head>
 <body>
     <h1>The World Machine Settings</h1>
 
-    <!-- ===== Customize Section ===== -->
+    <!-- Customize -->
     <div class="section">
         <div class="section-title">Customize</div>
-
-        <!-- Clock Mode -->
         <div class="setting">
             <div class="setting-label">Time Format</div>
             <select id="ClockMode">
@@ -196,8 +140,6 @@
                 <option value="2">24-Hour</option>
             </select>
         </div>
-
-        <!-- Leading Zeros -->
         <div class="setting">
             <div class="toggle-row">
                 <div>
@@ -210,8 +152,6 @@
                 </label>
             </div>
         </div>
-
-        <!-- Show AM/PM -->
         <div class="setting">
             <div class="toggle-row">
                 <div>
@@ -226,7 +166,7 @@
         </div>
     </div>
 
-    <!-- ===== Wallpapers Section ===== -->
+    <!-- Wallpapers -->
     <div class="section">
         <div class="section-title">Wallpapers</div>
         <div class="setting">
@@ -244,8 +184,8 @@
         </div>
     </div>
 
-    <!-- ===== Themes (COLOR only) ===== -->
-    <div class="section" id="color-section">
+    <!-- Themes (Color only) -->
+    <div class="section">
         <div class="section-title">Themes</div>
         <div class="setting">
             <div class="setting-label">UI Color</div>
@@ -257,12 +197,11 @@
         </div>
     </div>
 
-    <!-- ===== Save Button ===== -->
     <button class="save-btn" id="saveBtn">Save Settings</button>
 
     <script>
         (function() {
-            // Load saved config from URL
+            // Load saved config
             function loadConfig() {
                 var params = new URLSearchParams(window.location.search);
                 var configJson = params.get('config');
@@ -285,7 +224,6 @@
                 }
             }
 
-            // Get current config
             function getConfig() {
                 return {
                     ClockMode: document.getElementById('ClockMode').value,
@@ -296,15 +234,15 @@
                 };
             }
 
-            // Save button – using fragment for better reliability
+            // Save button – using pebblejs://close with fragment
             document.getElementById('saveBtn').addEventListener('click', function() {
                 var config = getConfig();
                 var json = JSON.stringify(config);
                 var encoded = encodeURIComponent(json);
+                console.log('Saving config: ' + json);
                 window.location.href = 'pebblejs://close#' + encoded;
             });
 
-            // Color picker preview
             document.getElementById('UI_Color').addEventListener('input', function() {
                 document.getElementById('colorHex').textContent = this.value;
             });
