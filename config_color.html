@@ -21,7 +21,7 @@
         body {
             font-family: 'Volter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
             background: #000000;
-            color: #ffffff;
+            color: var(--primary-color, #aa55ff);
             padding: 0;
             margin: 0;
             min-height: 100vh;
@@ -47,15 +47,15 @@
             overflow: hidden;
         }
 
-        /* --- Window: Top border (6px) --- */
+        /* --- Window: Top border (6px) – UI COLOR --- */
         .window-top-border {
             height: 6px;
             background: var(--primary-color, #aa55ff);
         }
 
-        /* --- Window: Header row (6px top padding, 60px content, 6px bottom padding) --- */
+        /* --- Window: Header row – BLACK background, UI COLOR text --- */
         .window-header-wrapper {
-            padding: 6px 0;
+            padding: 0;
         }
 
         .window-header {
@@ -63,20 +63,15 @@
             display: flex;
             align-items: center;
             padding: 0 18px;
-            background: var(--primary-color, #aa55ff);
-            color: #000000;
+            background: #000000;
+            color: var(--primary-color, #aa55ff);
             font-size: 18px;
             font-weight: normal;
             letter-spacing: 1px;
             text-transform: uppercase;
         }
 
-        .window-header .header-icon {
-            margin-right: 12px;
-            font-size: 20px;
-        }
-
-        /* --- Window: Bottom border (6px) --- */
+        /* --- Window: Bottom border (6px) – UI COLOR --- */
         .window-bottom-border {
             height: 6px;
             background: var(--primary-color, #aa55ff);
@@ -85,6 +80,7 @@
         /* --- Window: Content area (18px padding around content) --- */
         .window-content {
             padding: 18px;
+            background: #000000;
         }
 
         /* --- Settings items --- */
@@ -101,13 +97,14 @@
             font-size: 14px;
             font-weight: normal;
             margin-bottom: 6px;
-            color: #ffffff;
+            color: var(--primary-color, #aa55ff);
             letter-spacing: 0.5px;
         }
 
         .setting-description {
             font-size: 11px;
-            color: rgba(255, 255, 255, 0.5);
+            color: var(--primary-color, #aa55ff);
+            opacity: 0.6;
             margin-bottom: 8px;
         }
 
@@ -116,15 +113,15 @@
             font-family: 'Volter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
             font-size: 14px;
             padding: 10px 14px;
-            border: 1px solid rgba(255, 255, 255, 0.2);
+            border: 1px solid var(--primary-color, #aa55ff);
             border-radius: 0;
             background: rgba(255, 255, 255, 0.05);
-            color: #ffffff;
+            color: var(--primary-color, #aa55ff);
             width: 100%;
             max-width: 100%;
             appearance: none;
             -webkit-appearance: none;
-            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='white' stroke-width='1.5' fill='none'/%3E%3C/svg%3E");
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%23aa55ff' stroke-width='1.5' fill='none'/%3E%3C/svg%3E");
             background-repeat: no-repeat;
             background-position: right 14px center;
             background-size: 12px 8px;
@@ -210,7 +207,7 @@
             height: 44px;
             padding: 4px;
             cursor: pointer;
-            border: 1px solid rgba(255, 255, 255, 0.2);
+            border: 1px solid var(--primary-color, #aa55ff);
             background: transparent;
             flex-shrink: 0;
         }
@@ -218,12 +215,12 @@
         .color-hex {
             font-size: 14px;
             font-weight: normal;
-            color: rgba(255, 255, 255, 0.6);
+            color: var(--primary-color, #aa55ff);
             font-family: 'Volter', monospace;
             letter-spacing: 0.5px;
         }
 
-        /* --- Save button --- */
+        /* --- Save button – UI COLOR --- */
         .save-btn {
             font-family: 'Volter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
             width: 100%;
@@ -252,7 +249,8 @@
         /* --- Capability note --- */
         .capability-note {
             font-size: 10px;
-            color: rgba(255, 255, 255, 0.3);
+            color: var(--primary-color, #aa55ff);
+            opacity: 0.4;
             margin-top: 6px;
             letter-spacing: 0.3px;
         }
@@ -275,7 +273,7 @@
         <div class="window" style="border-color: var(--primary-color, #aa55ff); margin-bottom: 20px;">
             <div class="window-top-border" style="background: var(--primary-color, #aa55ff);"></div>
             <div class="window-header-wrapper">
-                <div class="window-header" style="background: var(--primary-color, #aa55ff); color: #000000;">
+                <div class="window-header">
                     The World Machine
                 </div>
             </div>
@@ -286,7 +284,7 @@
         <div class="window" id="customize-window">
             <div class="window-top-border" style="background: var(--primary-color, #aa55ff);"></div>
             <div class="window-header-wrapper">
-                <div class="window-header" style="background: var(--primary-color, #aa55ff); color: #000000;">
+                <div class="window-header">
                     Customize
                 </div>
             </div>
@@ -337,7 +335,7 @@
         <div class="window" id="wallpaper-window">
             <div class="window-top-border" style="background: var(--primary-color, #aa55ff);"></div>
             <div class="window-header-wrapper">
-                <div class="window-header" style="background: var(--primary-color, #aa55ff); color: #000000;">
+                <div class="window-header">
                     Wallpapers
                 </div>
             </div>
@@ -364,7 +362,7 @@
         <div class="window" id="themes-window">
             <div class="window-top-border" style="background: var(--primary-color, #aa55ff);"></div>
             <div class="window-header-wrapper">
-                <div class="window-header" style="background: var(--primary-color, #aa55ff); color: #000000;">
+                <div class="window-header">
                     Themes
                 </div>
             </div>
@@ -434,8 +432,7 @@
             });
 
             document.querySelectorAll('.window-header').forEach(function(el) {
-                el.style.background = primaryColor;
-                el.style.color = '#000000';
+                el.style.color = primaryColor;
             });
 
             document.querySelectorAll('.window').forEach(function(el) {
@@ -446,6 +443,23 @@
             var style = document.createElement('style');
             style.textContent = '.toggle input:checked + .slider { background: ' + primaryColor + ' !important; }';
             document.head.appendChild(style);
+
+            // Update all text elements
+            document.querySelectorAll('.setting-label, .color-hex, .capability-note').forEach(function(el) {
+                el.style.color = primaryColor;
+            });
+            document.querySelectorAll('.setting-description').forEach(function(el) {
+                el.style.color = primaryColor;
+                el.style.opacity = '0.6';
+            });
+            document.querySelectorAll('select').forEach(function(el) {
+                el.style.color = primaryColor;
+                el.style.borderColor = primaryColor;
+                el.style.backgroundImage = "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='" + primaryColor.replace('#', '%23') + "' stroke-width='1.5' fill='none'/%3E%3C/svg%3E\")";
+            });
+            document.querySelectorAll('.color-picker-wrapper input[type="color"]').forEach(function(el) {
+                el.style.borderColor = primaryColor;
+            });
 
             // ----- Load saved config from URL -----
             function loadConfig() {
@@ -513,24 +527,39 @@
 
             // ----- Color picker preview -----
             document.getElementById('UI_Color').addEventListener('input', function() {
-                document.getElementById('colorHex').textContent = this.value;
-                // Update primary color live
                 var color = this.value;
+                document.getElementById('colorHex').textContent = color;
                 document.documentElement.style.setProperty('--primary-color', color);
-                document.querySelectorAll('.window-top-border, .window-bottom-border, .save-btn').forEach(function(el) {
-                    if (el.classList.contains('window-top-border') || el.classList.contains('window-bottom-border')) {
-                        el.style.background = color;
-                    }
-                    if (el.classList.contains('save-btn')) {
-                        el.style.background = color;
-                    }
+
+                // Update all elements
+                document.querySelectorAll('.window-top-border, .window-bottom-border').forEach(function(el) {
+                    el.style.background = color;
+                });
+                document.querySelectorAll('.save-btn').forEach(function(el) {
+                    el.style.background = color;
                 });
                 document.querySelectorAll('.window-header').forEach(function(el) {
-                    el.style.background = color;
+                    el.style.color = color;
                 });
                 document.querySelectorAll('.window').forEach(function(el) {
                     el.style.borderColor = color;
                 });
+                document.querySelectorAll('.setting-label, .color-hex, .capability-note').forEach(function(el) {
+                    el.style.color = color;
+                });
+                document.querySelectorAll('.setting-description').forEach(function(el) {
+                    el.style.color = color;
+                });
+                document.querySelectorAll('select').forEach(function(el) {
+                    el.style.color = color;
+                    el.style.borderColor = color;
+                    var encodedColor = color.replace('#', '%23');
+                    el.style.backgroundImage = "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='" + encodedColor + "' stroke-width='1.5' fill='none'/%3E%3C/svg%3E\")";
+                });
+                document.querySelectorAll('.color-picker-wrapper input[type="color"]').forEach(function(el) {
+                    el.style.borderColor = color;
+                });
+
                 // Update toggle
                 var style = document.createElement('style');
                 style.textContent = '.toggle input:checked + .slider { background: ' + color + ' !important; }';
