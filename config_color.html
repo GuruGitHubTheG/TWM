@@ -182,25 +182,58 @@
 
     <script>
         (function() {
-            // Load saved config from URL
+            // Helper to get URL parameters
+            function getQueryParam(variable, defaultValue) {
+                var query = location.search.substring(1);
+                var vars = query.split('&');
+                for (var i = 0; i < vars.length; i++) {
+                    var pair = vars[i].split('=');
+                    if (pair[0] === variable) {
+                        return decodeURIComponent(pair[1]);
+                    }
+                }
+                return defaultValue || false;
+            }
+
+            // Load settings from localStorage OR URL
             function loadConfig() {
+                var config = null;
+                
                 var params = new URLSearchParams(window.location.search);
                 var configJson = params.get('config');
+                
                 if (configJson) {
                     try {
-                        var config = JSON.parse(decodeURIComponent(configJson));
-                        document.getElementById('ClockMode').value = config.ClockMode || '0';
-                        document.getElementById('LeadingZeros').checked = config.LeadingZeros === true;
-                        document.getElementById('ShowAMPM').checked = config.ShowAMPM !== false;
-                        document.getElementById('Wallpaper').value = config.Wallpaper || '1';
-                        if (config.UI_Color) {
-                            var color = config.UI_Color;
-                            if (!color.startsWith('#')) color = '#' + color;
-                            document.getElementById('UI_Color').value = color;
-                            document.getElementById('colorHex').textContent = color;
-                        }
+                        config = JSON.parse(decodeURIComponent(configJson));
+                        localStorage.setItem('twm_config', JSON.stringify(config));
+                        console.log('Loaded from URL:', config);
                     } catch (e) {
-                        console.warn('Failed to parse config', e);
+                        console.warn('Failed to parse URL config', e);
+                    }
+                }
+                
+                if (!config) {
+                    var stored = localStorage.getItem('twm_config');
+                    if (stored) {
+                        try {
+                            config = JSON.parse(stored);
+                            console.log('Loaded from localStorage:', config);
+                        } catch (e) {
+                            console.warn('Failed to parse stored config', e);
+                        }
+                    }
+                }
+                
+                if (config) {
+                    if (config.ClockMode !== undefined) document.getElementById('ClockMode').value = config.ClockMode;
+                    if (config.LeadingZeros !== undefined) document.getElementById('LeadingZeros').checked = config.LeadingZeros === true;
+                    if (config.ShowAMPM !== undefined) document.getElementById('ShowAMPM').checked = config.ShowAMPM !== false;
+                    if (config.Wallpaper !== undefined) document.getElementById('Wallpaper').value = config.Wallpaper;
+                    if (config.UI_Color) {
+                        var color = config.UI_Color;
+                        if (!color.startsWith('#')) color = '#' + color;
+                        document.getElementById('UI_Color').value = color;
+                        document.getElementById('colorHex').textContent = color;
                     }
                 }
             }
@@ -215,14 +248,20 @@
                 };
             }
 
-            // Save button
+            // Save button – handles both emulator (return_to) and real watch (pebblejs://close)
             document.getElementById('saveBtn').addEventListener('click', function() {
                 var config = getConfig();
                 var json = JSON.stringify(config);
                 var encoded = encodeURIComponent(json);
-                console.log('Saving config: ' + json);
-                // Use the standard pebblejs://close scheme
-                window.location = 'pebblejs://close#' + encoded;
+                
+                // Save to localStorage
+                localStorage.setItem('twm_config', json);
+                console.log('Saved to localStorage:', config);
+                
+                // Check for return_to parameter (emulator/CloudPebble) or use pebblejs://close (real watch)
+                var return_to = getQueryParam('return_to', 'pebblejs://close#');
+                console.log('Redirecting to:', return_to + encoded);
+                document.location = return_to + encoded;
             });
 
             // Color picker preview
