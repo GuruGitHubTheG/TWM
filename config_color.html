@@ -244,24 +244,6 @@
         </div>
     </div>
 
-    <!-- ===== Themes (BW only) ===== -->
-    <div class="section" id="bw-section">
-        <div class="section-title">Themes</div>
-        <div class="setting">
-            <div class="toggle-row">
-                <div>
-                    <div class="setting-label">Inverted UI</div>
-                    <div class="setting-description">Swap black and white (BW only)</div>
-                </div>
-                <label class="toggle">
-                    <input type="checkbox" id="Inverted">
-                    <span class="slider"></span>
-                </label>
-            </div>
-            <div class="capability-note">⚠ This setting only applies to black-and-white Pebble watches.</div>
-        </div>
-    </div>
-
     <!-- ===== Themes (COLOR only) ===== -->
     <div class="section" id="color-section">
         <div class="section-title">Themes</div>
@@ -272,7 +254,6 @@
                 <input type="color" id="UI_Color" value="#aa55ff">
                 <span class="color-hex" id="colorHex">#aa55ff</span>
             </div>
-            <div class="capability-note">⚠ This setting only applies to color Pebble watches.</div>
         </div>
     </div>
 
@@ -281,22 +262,7 @@
 
     <script>
         (function() {
-            // Detect capabilities
-            var hasColor = screen.color;
-            var isBW = !hasColor;
-
-            // Show/hide sections
-            var colorSection = document.getElementById('color-section');
-            var bwSection = document.getElementById('bw-section');
-
-            if (colorSection) {
-                colorSection.classList.toggle('hidden', !hasColor);
-            }
-            if (bwSection) {
-                bwSection.classList.toggle('hidden', !isBW);
-            }
-
-            // Load saved config
+            // Load saved config from URL
             function loadConfig() {
                 var params = new URLSearchParams(window.location.search);
                 var configJson = params.get('config');
@@ -307,7 +273,6 @@
                         document.getElementById('LeadingZeros').checked = config.LeadingZeros === true;
                         document.getElementById('ShowAMPM').checked = config.ShowAMPM !== false;
                         document.getElementById('Wallpaper').value = config.Wallpaper || '1';
-                        document.getElementById('Inverted').checked = config.Inverted === true;
                         if (config.UI_Color) {
                             var color = config.UI_Color;
                             if (!color.startsWith('#')) color = '#' + color;
@@ -322,25 +287,20 @@
 
             // Get current config
             function getConfig() {
-                var config = {
+                return {
                     ClockMode: document.getElementById('ClockMode').value,
                     LeadingZeros: document.getElementById('LeadingZeros').checked,
                     ShowAMPM: document.getElementById('ShowAMPM').checked,
                     Wallpaper: document.getElementById('Wallpaper').value,
-                    Inverted: document.getElementById('Inverted').checked
+                    UI_Color: document.getElementById('UI_Color').value.replace('#', '')
                 };
-                if (hasColor) {
-                    config.UI_Color = document.getElementById('UI_Color').value.replace('#', '');
-                }
-                return config;
             }
 
-            // Save button
+            // Save button – using fragment for better reliability
             document.getElementById('saveBtn').addEventListener('click', function() {
                 var config = getConfig();
                 var json = JSON.stringify(config);
                 var encoded = encodeURIComponent(json);
-                // Use location.href with fragment (more reliable)
                 window.location.href = 'pebblejs://close#' + encoded;
             });
 
@@ -349,7 +309,6 @@
                 document.getElementById('colorHex').textContent = this.value;
             });
 
-            // Load config on page load
             loadConfig();
         })();
     </script>
