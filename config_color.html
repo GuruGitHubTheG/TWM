@@ -5,271 +5,555 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>The World Machine Settings</title>
     <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
+        @font-face {
+            font-family: 'Volter';
+            src: url('https://github.com/GuruGitHubTheG/TWM/raw/refs/heads/main/Volter.ttf') format('truetype');
+            font-weight: normal;
+            font-style: normal;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
         body {
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-            background: #f5f5f5;
-            padding: 20px;
-            max-width: 600px;
-            margin: 0 auto;
+            font-family: 'Volter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background: #000000;
+            color: #ffffff;
+            padding: 0;
+            margin: 0;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
         }
-        h1 { font-size: 24px; margin-bottom: 20px; }
-        .section {
-            background: #ffffff;
-            border-radius: 12px;
-            padding: 16px 20px;
-            margin-bottom: 16px;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.08);
-        }
-        .section-title {
-            font-size: 14px;
-            font-weight: 600;
-            color: #8e8e93;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-            margin-bottom: 12px;
-            padding-bottom: 8px;
-            border-bottom: 1px solid #e5e5ea;
-        }
-        .setting { padding: 6px 0; }
-        .setting + .setting { border-top: 1px solid #e5e5ea; padding-top: 12px; }
-        .setting-label { font-size: 16px; font-weight: 500; margin-bottom: 4px; }
-        .setting-description { font-size: 13px; color: #8e8e93; margin-bottom: 6px; }
-        select, input[type="color"] {
-            font-size: 16px;
-            padding: 8px 12px;
-            border: 1px solid #c6c6c8;
-            border-radius: 8px;
-            background: #fafafa;
+
+        .container {
             width: 100%;
-            max-width: 300px;
+            max-width: 600px;
+            padding: 0 2.5%;
+            padding-top: 20px;
+            padding-bottom: 40px;
         }
+
+        /* --- Window / Card --- */
+        .window {
+            background: #000000;
+            border: 1px solid var(--primary-color, #aa55ff);
+            border-radius: 0;
+            margin-bottom: 16px;
+            overflow: hidden;
+        }
+
+        /* --- Window: Top border (6px) --- */
+        .window-top-border {
+            height: 6px;
+            background: var(--primary-color, #aa55ff);
+        }
+
+        /* --- Window: Header row (6px top padding, 60px content, 6px bottom padding) --- */
+        .window-header-wrapper {
+            padding: 6px 0;
+        }
+
+        .window-header {
+            height: 60px;
+            display: flex;
+            align-items: center;
+            padding: 0 18px;
+            background: var(--primary-color, #aa55ff);
+            color: #000000;
+            font-size: 18px;
+            font-weight: normal;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+        }
+
+        .window-header .header-icon {
+            margin-right: 12px;
+            font-size: 20px;
+        }
+
+        /* --- Window: Bottom border (6px) --- */
+        .window-bottom-border {
+            height: 6px;
+            background: var(--primary-color, #aa55ff);
+        }
+
+        /* --- Window: Content area (18px padding around content) --- */
+        .window-content {
+            padding: 18px;
+        }
+
+        /* --- Settings items --- */
+        .setting {
+            padding: 10px 0;
+        }
+
+        .setting + .setting {
+            border-top: 1px solid rgba(255, 255, 255, 0.08);
+            padding-top: 14px;
+        }
+
+        .setting-label {
+            font-size: 14px;
+            font-weight: normal;
+            margin-bottom: 6px;
+            color: #ffffff;
+            letter-spacing: 0.5px;
+        }
+
+        .setting-description {
+            font-size: 11px;
+            color: rgba(255, 255, 255, 0.5);
+            margin-bottom: 8px;
+        }
+
+        /* --- Select dropdown --- */
+        select {
+            font-family: 'Volter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            font-size: 14px;
+            padding: 10px 14px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 0;
+            background: rgba(255, 255, 255, 0.05);
+            color: #ffffff;
+            width: 100%;
+            max-width: 100%;
+            appearance: none;
+            -webkit-appearance: none;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='white' stroke-width='1.5' fill='none'/%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 14px center;
+            background-size: 12px 8px;
+            cursor: pointer;
+        }
+
+        select:focus {
+            outline: none;
+            border-color: var(--primary-color, #aa55ff);
+        }
+
+        select option {
+            background: #1a1a1a;
+            color: #ffffff;
+        }
+
+        /* --- Toggle switch --- */
         .toggle-row {
             display: flex;
             align-items: center;
             justify-content: space-between;
         }
-        .toggle-row .setting-label { margin-bottom: 0; }
+
+        .toggle-row .setting-label {
+            margin-bottom: 0;
+        }
+
         .toggle {
             position: relative;
             width: 51px;
             height: 31px;
             flex-shrink: 0;
         }
-        .toggle input { opacity: 0; width: 0; height: 0; }
+
+        .toggle input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
         .toggle .slider {
             position: absolute;
             cursor: pointer;
-            top: 0; left: 0; right: 0; bottom: 0;
-            background: #c6c6c8;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(255, 255, 255, 0.15);
             transition: 0.3s;
             border-radius: 31px;
         }
+
         .toggle .slider:before {
             content: "";
             position: absolute;
-            height: 27px; width: 27px;
-            left: 2px; bottom: 2px;
-            background: white;
+            height: 27px;
+            width: 27px;
+            left: 2px;
+            bottom: 2px;
+            background: #ffffff;
             transition: 0.3s;
             border-radius: 50%;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
         }
-        .toggle input:checked + .slider { background: #34c759; }
-        .toggle input:checked + .slider:before { transform: translateX(20px); }
+
+        .toggle input:checked + .slider {
+            background: var(--primary-color, #aa55ff);
+        }
+
+        .toggle input:checked + .slider:before {
+            transform: translateX(20px);
+        }
+
+        /* --- Color picker --- */
         .color-picker-wrapper {
             display: flex;
             align-items: center;
-            gap: 12px;
+            gap: 14px;
         }
+
         .color-picker-wrapper input[type="color"] {
             width: 60px;
             height: 44px;
             padding: 4px;
             cursor: pointer;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            background: transparent;
             flex-shrink: 0;
         }
+
         .color-hex {
-            font-size: 15px;
-            font-weight: 500;
-            font-family: "SF Mono", Menlo, monospace;
+            font-size: 14px;
+            font-weight: normal;
+            color: rgba(255, 255, 255, 0.6);
+            font-family: 'Volter', monospace;
+            letter-spacing: 0.5px;
         }
+
+        /* --- Save button --- */
         .save-btn {
+            font-family: 'Volter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
             width: 100%;
-            padding: 14px;
-            font-size: 17px;
-            font-weight: 600;
-            color: #ffffff;
-            background: #007aff;
+            padding: 16px;
+            font-size: 16px;
+            font-weight: normal;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            color: #000000;
+            background: var(--primary-color, #aa55ff);
             border: none;
-            border-radius: 12px;
+            border-radius: 0;
             cursor: pointer;
+            transition: opacity 0.2s;
             margin-top: 8px;
         }
-        .save-btn:hover { background: #0066d9; }
-        .save-btn:active { background: #0055b3; }
+
+        .save-btn:hover {
+            opacity: 0.85;
+        }
+
+        .save-btn:active {
+            opacity: 0.7;
+        }
+
+        /* --- Capability note --- */
+        .capability-note {
+            font-size: 10px;
+            color: rgba(255, 255, 255, 0.3);
+            margin-top: 6px;
+            letter-spacing: 0.3px;
+        }
+
+        /* --- Responsive --- */
+        @media (max-width: 400px) {
+            .container { padding: 0 2%; padding-top: 12px; }
+            .window-header { font-size: 15px; height: 50px; padding: 0 14px; }
+            .window-content { padding: 14px; }
+            .setting-label { font-size: 13px; }
+        }
+
+        /* --- Hide scrollbar --- */
+        ::-webkit-scrollbar { width: 0; background: transparent; }
     </style>
 </head>
 <body>
-    <h1>The World Machine Settings</h1>
-
-    <div class="section">
-        <div class="section-title">Customize</div>
-        <div class="setting">
-            <div class="setting-label">Time Format</div>
-            <select id="ClockMode">
-                <option value="0">System</option>
-                <option value="1">12-Hour</option>
-                <option value="2">24-Hour</option>
-            </select>
-        </div>
-        <div class="setting">
-            <div class="toggle-row">
-                <div>
-                    <div class="setting-label">Show Leading Zeros</div>
-                    <div class="setting-description">(08:00 instead of 8:00)</div>
+    <div class="container" id="app">
+        <!-- Header -->
+        <div class="window" style="border-color: var(--primary-color, #aa55ff); margin-bottom: 20px;">
+            <div class="window-top-border" style="background: var(--primary-color, #aa55ff);"></div>
+            <div class="window-header-wrapper">
+                <div class="window-header" style="background: var(--primary-color, #aa55ff); color: #000000;">
+                    <span class="header-icon">⚙</span>
+                    The World Machine
                 </div>
-                <label class="toggle">
-                    <input type="checkbox" id="LeadingZeros">
-                    <span class="slider"></span>
-                </label>
             </div>
+            <div class="window-bottom-border" style="background: var(--primary-color, #aa55ff);"></div>
         </div>
-        <div class="setting">
-            <div class="toggle-row">
-                <div>
-                    <div class="setting-label">Show AM/PM</div>
-                    <div class="setting-description">Display AM/PM indicator</div>
+
+        <!-- ===== Customize Window ===== -->
+        <div class="window" id="customize-window">
+            <div class="window-top-border" style="background: var(--primary-color, #aa55ff);"></div>
+            <div class="window-header-wrapper">
+                <div class="window-header" style="background: var(--primary-color, #aa55ff); color: #000000;">
+                    <span class="header-icon">⌚</span>
+                    Customize
                 </div>
-                <label class="toggle">
-                    <input type="checkbox" id="ShowAMPM" checked>
-                    <span class="slider"></span>
-                </label>
+            </div>
+            <div class="window-bottom-border" style="background: var(--primary-color, #aa55ff);"></div>
+
+            <div class="window-content">
+                <!-- Clock Mode -->
+                <div class="setting">
+                    <div class="setting-label">Time Format</div>
+                    <select id="ClockMode">
+                        <option value="0">System</option>
+                        <option value="1">12-Hour</option>
+                        <option value="2">24-Hour</option>
+                    </select>
+                </div>
+
+                <!-- Leading Zeros -->
+                <div class="setting">
+                    <div class="toggle-row">
+                        <div>
+                            <div class="setting-label">Show Leading Zeros</div>
+                            <div class="setting-description">08:00 instead of 8:00</div>
+                        </div>
+                        <label class="toggle">
+                            <input type="checkbox" id="LeadingZeros">
+                            <span class="slider"></span>
+                        </label>
+                    </div>
+                </div>
+
+                <!-- Show AM/PM -->
+                <div class="setting">
+                    <div class="toggle-row">
+                        <div>
+                            <div class="setting-label">Show AM/PM</div>
+                            <div class="setting-description">Display AM/PM indicator</div>
+                        </div>
+                        <label class="toggle">
+                            <input type="checkbox" id="ShowAMPM" checked>
+                            <span class="slider"></span>
+                        </label>
+                    </div>
+                </div>
             </div>
         </div>
-    </div>
 
-    <div class="section">
-        <div class="section-title">Wallpapers</div>
-        <div class="setting">
-            <div class="setting-label">Wallpaper</div>
-            <select id="Wallpaper">
-                <option value="1">The World Machine</option>
-                <option value="2">Barrens Craters</option>
-                <option value="3">Glen Shoreline</option>
-                <option value="4">Refuge Cityscape</option>
-                <option value="5">Messiah</option>
-                <option value="6">My Burden is Light</option>
-                <option value="7">Asteroid</option>
-                <option value="0">Blank</option>
-            </select>
-        </div>
-    </div>
+        <!-- ===== Wallpapers Window ===== -->
+        <div class="window" id="wallpaper-window">
+            <div class="window-top-border" style="background: var(--primary-color, #aa55ff);"></div>
+            <div class="window-header-wrapper">
+                <div class="window-header" style="background: var(--primary-color, #aa55ff); color: #000000;">
+                    <span class="header-icon">🖼</span>
+                    Wallpapers
+                </div>
+            </div>
+            <div class="window-bottom-border" style="background: var(--primary-color, #aa55ff);"></div>
 
-    <div class="section">
-        <div class="section-title">Themes</div>
-        <div class="setting">
-            <div class="setting-label">UI Color</div>
-            <div class="setting-description">Accent color for UI elements</div>
-            <div class="color-picker-wrapper">
-                <input type="color" id="UI_Color" value="#aa55ff">
-                <span class="color-hex" id="colorHex">#aa55ff</span>
+            <div class="window-content">
+                <div class="setting">
+                    <div class="setting-label">Select Wallpaper</div>
+                    <select id="Wallpaper">
+                        <option value="1">The World Machine</option>
+                        <option value="2">Barrens Craters</option>
+                        <option value="3">Glen Shoreline</option>
+                        <option value="4">Refuge Cityscape</option>
+                        <option value="5">Messiah</option>
+                        <option value="6">My Burden is Light</option>
+                        <option value="7">Asteroid</option>
+                        <option value="0">Blank</option>
+                    </select>
+                </div>
             </div>
         </div>
-    </div>
 
-    <button class="save-btn" id="saveBtn">Save Settings</button>
+        <!-- ===== Themes Window (COLOR only) ===== -->
+        <div class="window" id="themes-window">
+            <div class="window-top-border" style="background: var(--primary-color, #aa55ff);"></div>
+            <div class="window-header-wrapper">
+                <div class="window-header" style="background: var(--primary-color, #aa55ff); color: #000000;">
+                    <span class="header-icon">🎨</span>
+                    Themes
+                </div>
+            </div>
+            <div class="window-bottom-border" style="background: var(--primary-color, #aa55ff);"></div>
+
+            <div class="window-content">
+                <div class="setting">
+                    <div class="setting-label">UI Color</div>
+                    <div class="setting-description">Accent color for UI elements</div>
+                    <div class="color-picker-wrapper">
+                        <input type="color" id="UI_Color" value="#aa55ff">
+                        <span class="color-hex" id="colorHex">#aa55ff</span>
+                    </div>
+                    <div class="capability-note">⚠ Applies to color Pebble watches only</div>
+                </div>
+
+                <!-- Secondary Color – PLACEHOLDER, not yet used -->
+                <div class="setting" id="secondary-color-setting" style="opacity: 0.4; pointer-events: none;">
+                    <div class="setting-label">Secondary Color</div>
+                    <div class="setting-description">Coming soon – additional accent color</div>
+                    <div class="color-picker-wrapper">
+                        <input type="color" id="Secondary_Color" value="#ffffff">
+                        <span class="color-hex" id="secondaryColorHex">#ffffff</span>
+                    </div>
+                    <div class="capability-note">⏳ Future feature – not yet implemented</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ===== Save Button ===== -->
+        <button class="save-btn" id="saveBtn">Save Settings</button>
+    </div>
 
     <script>
         (function() {
-            // Helper to get URL parameters
-            function getQueryParam(variable, defaultValue) {
-                var query = location.search.substring(1);
-                var vars = query.split('&');
-                for (var i = 0; i < vars.length; i++) {
-                    var pair = vars[i].split('=');
-                    if (pair[0] === variable) {
-                        return decodeURIComponent(pair[1]);
-                    }
-                }
-                return defaultValue || false;
-            }
-
-            // Load settings from localStorage OR URL
-            function loadConfig() {
-                var config = null;
-                
+            // ----- Get primary color from URL config -----
+            function getPrimaryColor() {
                 var params = new URLSearchParams(window.location.search);
                 var configJson = params.get('config');
-                
                 if (configJson) {
                     try {
-                        config = JSON.parse(decodeURIComponent(configJson));
-                        localStorage.setItem('twm_config', JSON.stringify(config));
-                        console.log('Loaded from URL:', config);
-                    } catch (e) {
-                        console.warn('Failed to parse URL config', e);
-                    }
-                }
-                
-                if (!config) {
-                    var stored = localStorage.getItem('twm_config');
-                    if (stored) {
-                        try {
-                            config = JSON.parse(stored);
-                            console.log('Loaded from localStorage:', config);
-                        } catch (e) {
-                            console.warn('Failed to parse stored config', e);
+                        var config = JSON.parse(decodeURIComponent(configJson));
+                        if (config.UI_Color) {
+                            var color = config.UI_Color;
+                            if (!color.startsWith('#')) color = '#' + color;
+                            return color;
                         }
-                    }
+                    } catch (e) {}
                 }
-                
-                if (config) {
-                    if (config.ClockMode !== undefined) document.getElementById('ClockMode').value = config.ClockMode;
-                    if (config.LeadingZeros !== undefined) document.getElementById('LeadingZeros').checked = config.LeadingZeros === true;
-                    if (config.ShowAMPM !== undefined) document.getElementById('ShowAMPM').checked = config.ShowAMPM !== false;
-                    if (config.Wallpaper !== undefined) document.getElementById('Wallpaper').value = config.Wallpaper;
-                    if (config.UI_Color) {
-                        var color = config.UI_Color;
-                        if (!color.startsWith('#')) color = '#' + color;
-                        document.getElementById('UI_Color').value = color;
-                        document.getElementById('colorHex').textContent = color;
+                return '#aa55ff'; // Default
+            }
+
+            var primaryColor = getPrimaryColor();
+
+            // Apply primary color to all elements
+            document.documentElement.style.setProperty('--primary-color', primaryColor);
+
+            // Update all primary-colored elements
+            document.querySelectorAll('.window-top-border, .window-bottom-border, .save-btn').forEach(function(el) {
+                if (el.classList.contains('window-top-border') || el.classList.contains('window-bottom-border')) {
+                    el.style.background = primaryColor;
+                }
+                if (el.classList.contains('save-btn')) {
+                    el.style.background = primaryColor;
+                    el.style.color = '#000000';
+                }
+            });
+
+            document.querySelectorAll('.window-header').forEach(function(el) {
+                el.style.background = primaryColor;
+                el.style.color = '#000000';
+            });
+
+            document.querySelectorAll('.window').forEach(function(el) {
+                el.style.borderColor = primaryColor;
+            });
+
+            // Toggle slider checked color
+            var style = document.createElement('style');
+            style.textContent = '.toggle input:checked + .slider { background: ' + primaryColor + ' !important; }';
+            document.head.appendChild(style);
+
+            // ----- Load saved config from URL -----
+            function loadConfig() {
+                var params = new URLSearchParams(window.location.search);
+                var configJson = params.get('config');
+                if (configJson) {
+                    try {
+                        var config = JSON.parse(decodeURIComponent(configJson));
+                        document.getElementById('ClockMode').value = config.ClockMode || '0';
+                        document.getElementById('LeadingZeros').checked = config.LeadingZeros === true;
+                        document.getElementById('ShowAMPM').checked = config.ShowAMPM !== false;
+                        document.getElementById('Wallpaper').value = config.Wallpaper || '1';
+                        if (config.UI_Color) {
+                            var color = config.UI_Color;
+                            if (!color.startsWith('#')) color = '#' + color;
+                            document.getElementById('UI_Color').value = color;
+                            document.getElementById('colorHex').textContent = color;
+                        }
+                        // Secondary Color – placeholder
+                        if (config.Secondary_Color) {
+                            var secColor = config.Secondary_Color;
+                            if (!secColor.startsWith('#')) secColor = '#' + secColor;
+                            document.getElementById('Secondary_Color').value = secColor;
+                            document.getElementById('secondaryColorHex').textContent = secColor;
+                        }
+                    } catch (e) {
+                        console.warn('Failed to parse config', e);
                     }
                 }
             }
 
+            // ----- Get current config -----
             function getConfig() {
-                return {
+                var config = {
                     ClockMode: document.getElementById('ClockMode').value,
                     LeadingZeros: document.getElementById('LeadingZeros').checked,
                     ShowAMPM: document.getElementById('ShowAMPM').checked,
                     Wallpaper: document.getElementById('Wallpaper').value,
                     UI_Color: document.getElementById('UI_Color').value.replace('#', '')
                 };
+                // Secondary Color – include it even though it's not used by the watch yet
+                var secColor = document.getElementById('Secondary_Color').value.replace('#', '');
+                if (secColor) {
+                    config.Secondary_Color = secColor;
+                }
+                return config;
             }
 
-            // Save button – handles both emulator (return_to) and real watch (pebblejs://close)
+            // ----- Save button -----
             document.getElementById('saveBtn').addEventListener('click', function() {
                 var config = getConfig();
                 var json = JSON.stringify(config);
                 var encoded = encodeURIComponent(json);
-                
-                // Save to localStorage
-                localStorage.setItem('twm_config', json);
-                console.log('Saved to localStorage:', config);
-                
-                // Check for return_to parameter (emulator/CloudPebble) or use pebblejs://close (real watch)
-                var return_to = getQueryParam('return_to', 'pebblejs://close#');
-                console.log('Redirecting to:', return_to + encoded);
-                document.location = return_to + encoded;
+                console.log('Saving config: ' + json);
+
+                // Check for return_to parameter (emulator) or use pebblejs://close (real watch)
+                var params = new URLSearchParams(window.location.search);
+                var returnTo = params.get('return_to');
+                if (returnTo) {
+                    window.location = returnTo + encoded;
+                } else {
+                    window.location = 'pebblejs://close#' + encoded;
+                }
             });
 
-            // Color picker preview
+            // ----- Color picker preview -----
             document.getElementById('UI_Color').addEventListener('input', function() {
                 document.getElementById('colorHex').textContent = this.value;
+                // Update primary color live
+                var color = this.value;
+                document.documentElement.style.setProperty('--primary-color', color);
+                document.querySelectorAll('.window-top-border, .window-bottom-border, .save-btn').forEach(function(el) {
+                    if (el.classList.contains('window-top-border') || el.classList.contains('window-bottom-border')) {
+                        el.style.background = color;
+                    }
+                    if (el.classList.contains('save-btn')) {
+                        el.style.background = color;
+                    }
+                });
+                document.querySelectorAll('.window-header').forEach(function(el) {
+                    el.style.background = color;
+                });
+                document.querySelectorAll('.window').forEach(function(el) {
+                    el.style.borderColor = color;
+                });
+                // Update toggle
+                var style = document.createElement('style');
+                style.textContent = '.toggle input:checked + .slider { background: ' + color + ' !important; }';
+                document.head.appendChild(style);
+            });
+
+            // ----- Secondary color preview -----
+            document.getElementById('Secondary_Color').addEventListener('input', function() {
+                document.getElementById('secondaryColorHex').textContent = this.value;
             });
 
             loadConfig();
+
+            // ----- Reminder for Secondary Color -----
+            console.log('🔔 REMINDER: Secondary Color is saved but NOT yet used by the watchface.');
+            console.log('   Add MESSAGE_KEY_Secondary_Color to CloudPebble when ready.');
+            console.log('   Add SETTINGS_KEY_SECONDARY_COLOR to C code.');
+            console.log('   Add secondary_color to the C struct and persistence.');
+            console.log('   Update update_colors_and_resources() to use secondary_color.');
         })();
     </script>
 </body>
