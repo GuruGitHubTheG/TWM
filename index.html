@@ -70,8 +70,6 @@
             color: #1a1a1a;
             width: 100%;
             max-width: 300px;
-            appearance: auto;
-            -webkit-appearance: auto;
         }
         select:focus, input[type="color"]:focus {
             outline: none;
@@ -87,7 +85,6 @@
         .toggle-row .setting-label {
             margin-bottom: 0;
         }
-        /* Toggle switch */
         .toggle {
             position: relative;
             width: 51px;
@@ -284,27 +281,11 @@
 
     <script>
         (function() {
-            // ============================================================
-            // 1. DETECT PLATFORM CAPABILITIES
-            // ============================================================
-
-            // screen.color – true on color watches (Basalt, Chalk, Emery)
+            // Detect capabilities
             var hasColor = screen.color;
             var isBW = !hasColor;
 
-            // screen.round – true on round watches (Chalk)
-            var isRound = screen.round;
-
-            // watch.model – returns "aplite", "basalt", "chalk", "diorite", "emery"
-            var model = watch.model || 'unknown';
-
-            // Optional: Check for other sensors if available
-            var hasHealth = device.sensor && device.sensor.Health;
-
-            // ============================================================
-            // 2. SHOW/HIDE SECTIONS BASED ON CAPABILITIES
-            // ============================================================
-
+            // Show/hide sections
             var colorSection = document.getElementById('color-section');
             var bwSection = document.getElementById('bw-section');
 
@@ -315,27 +296,18 @@
                 bwSection.classList.toggle('hidden', !isBW);
             }
 
-            // Optional: Log detection for debugging
-            console.log('Watch model:', model);
-            console.log('Has color:', hasColor);
-            console.log('Is round:', isRound);
-            console.log('Has Health:', hasHealth);
-
-            // ============================================================
-            // 3. LOAD SAVED CONFIG FROM URL PARAMS
-            // ============================================================
-
+            // Load saved config
             function loadConfig() {
                 var params = new URLSearchParams(window.location.search);
                 var configJson = params.get('config');
                 if (configJson) {
                     try {
                         var config = JSON.parse(decodeURIComponent(configJson));
-                        setValue('ClockMode', config.ClockMode || '0');
-                        setChecked('LeadingZeros', config.LeadingZeros === true);
-                        setChecked('ShowAMPM', config.ShowAMPM !== false);
-                        setValue('Wallpaper', config.Wallpaper || '1');
-                        setChecked('Inverted', config.Inverted === true);
+                        document.getElementById('ClockMode').value = config.ClockMode || '0';
+                        document.getElementById('LeadingZeros').checked = config.LeadingZeros === true;
+                        document.getElementById('ShowAMPM').checked = config.ShowAMPM !== false;
+                        document.getElementById('Wallpaper').value = config.Wallpaper || '1';
+                        document.getElementById('Inverted').checked = config.Inverted === true;
                         if (config.UI_Color) {
                             var color = config.UI_Color;
                             if (!color.startsWith('#')) color = '#' + color;
@@ -348,20 +320,7 @@
                 }
             }
 
-            function setValue(id, val) {
-                var el = document.getElementById(id);
-                if (el) el.value = val;
-            }
-
-            function setChecked(id, val) {
-                var el = document.getElementById(id);
-                if (el) el.checked = val;
-            }
-
-            // ============================================================
-            // 4. GATHER CURRENT SETTINGS
-            // ============================================================
-
+            // Get current config
             function getConfig() {
                 var config = {
                     ClockMode: document.getElementById('ClockMode').value,
@@ -370,39 +329,27 @@
                     Wallpaper: document.getElementById('Wallpaper').value,
                     Inverted: document.getElementById('Inverted').checked
                 };
-
-                // Only include UI_Color if the watch has color
                 if (hasColor) {
                     config.UI_Color = document.getElementById('UI_Color').value.replace('#', '');
                 }
-
                 return config;
             }
 
-            // ============================================================
-            // 5. SAVE BUTTON
-            // ============================================================
-
+            // Save button
             document.getElementById('saveBtn').addEventListener('click', function() {
                 var config = getConfig();
                 var json = JSON.stringify(config);
                 var encoded = encodeURIComponent(json);
-                // Close the config page and send data back to Pebble
-                window.location = 'pebblejs://close?' + encoded;
+                // Use location.href with fragment (more reliable)
+                window.location.href = 'pebblejs://close#' + encoded;
             });
 
-            // ============================================================
-            // 6. COLOR PICKER LIVE PREVIEW
-            // ============================================================
-
+            // Color picker preview
             document.getElementById('UI_Color').addEventListener('input', function() {
                 document.getElementById('colorHex').textContent = this.value;
             });
 
-            // ============================================================
-            // 7. INIT
-            // ============================================================
-
+            // Load config on page load
             loadConfig();
         })();
     </script>
