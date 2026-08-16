@@ -59,7 +59,7 @@
             border-color: #000000;
         }
 
-        /* --- Window: Top border (6px) --- */
+        /* --- Window: Top border (6px) – UI COLOR (white) --- */
         .window-top-border {
             height: 6px;
             background: #ffffff;
@@ -70,9 +70,9 @@
             background: #000000;
         }
 
-        /* --- Window: Header row --- */
+        /* --- Window: Header row – BLACK background, UI COLOR text --- */
         .window-header-wrapper {
-            padding: 6px 0;
+            padding: 0;
         }
 
         .window-header {
@@ -80,8 +80,8 @@
             display: flex;
             align-items: center;
             padding: 0 18px;
-            background: #ffffff;
-            color: #000000;
+            background: #000000;
+            color: #ffffff;
             font-size: 18px;
             font-weight: normal;
             letter-spacing: 1px;
@@ -90,11 +90,11 @@
         }
 
         body.inverted .window-header {
-            background: #000000;
-            color: #ffffff;
+            background: #ffffff;
+            color: #000000;
         }
 
-        /* --- Window: Bottom border (6px) --- */
+        /* --- Window: Bottom border (6px) – UI COLOR (white) --- */
         .window-bottom-border {
             height: 6px;
             background: #ffffff;
@@ -108,6 +108,12 @@
         /* --- Window: Content area --- */
         .window-content {
             padding: 18px;
+            background: #000000;
+            transition: background 0.3s;
+        }
+
+        body.inverted .window-content {
+            background: #ffffff;
         }
 
         /* --- Settings items --- */
@@ -121,7 +127,7 @@
         }
 
         body.inverted .setting + .setting {
-            border-top: 1px solid rgba(0, 0, 0, 0.1);
+            border-top: 1px solid rgba(0, 0, 0, 0.08);
         }
 
         .setting-label {
@@ -139,13 +145,15 @@
 
         .setting-description {
             font-size: 11px;
-            color: rgba(255, 255, 255, 0.5);
+            color: #ffffff;
+            opacity: 0.6;
             margin-bottom: 8px;
-            transition: color 0.3s;
+            transition: color 0.3s, opacity 0.3s;
         }
 
         body.inverted .setting-description {
-            color: rgba(0, 0, 0, 0.5);
+            color: #000000;
+            opacity: 0.6;
         }
 
         /* --- Select dropdown --- */
@@ -153,7 +161,7 @@
             font-family: 'Volter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
             font-size: 14px;
             padding: 10px 14px;
-            border: 1px solid rgba(255, 255, 255, 0.2);
+            border: 1px solid #ffffff;
             border-radius: 0;
             background: rgba(255, 255, 255, 0.05);
             color: #ffffff;
@@ -170,7 +178,7 @@
         }
 
         body.inverted select {
-            border-color: rgba(0, 0, 0, 0.2);
+            border-color: #000000;
             background: rgba(0, 0, 0, 0.05);
             color: #000000;
             background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='black' stroke-width='1.5' fill='none'/%3E%3C/svg%3E");
@@ -268,7 +276,7 @@
             background: #ffffff;
         }
 
-        /* --- Save button --- */
+        /* --- Save button – UI COLOR (white) --- */
         .save-btn {
             font-family: 'Volter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
             width: 100%;
@@ -302,14 +310,16 @@
         /* --- Capability note --- */
         .capability-note {
             font-size: 10px;
-            color: rgba(255, 255, 255, 0.3);
+            color: #ffffff;
+            opacity: 0.4;
             margin-top: 6px;
             letter-spacing: 0.3px;
-            transition: color 0.3s;
+            transition: color 0.3s, opacity 0.3s;
         }
 
         body.inverted .capability-note {
-            color: rgba(0, 0, 0, 0.3);
+            color: #000000;
+            opacity: 0.4;
         }
 
         /* --- Responsive --- */
