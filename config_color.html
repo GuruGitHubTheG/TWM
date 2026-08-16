@@ -7,7 +7,7 @@
     <style>
         @font-face {
             font-family: 'Volter';
-            src: url('https://github.com/GuruGitHubTheG/TWM/raw/refs/heads/main/Volter.ttf') format('truetype');
+            src: url('https://raw.githubusercontent.com/GuruGitHubTheG/TWM/main/Volter.ttf') format('truetype');
             font-weight: normal;
             font-style: normal;
         }
@@ -276,7 +276,6 @@
             <div class="window-top-border" style="background: var(--primary-color, #aa55ff);"></div>
             <div class="window-header-wrapper">
                 <div class="window-header" style="background: var(--primary-color, #aa55ff); color: #000000;">
-                    <span class="header-icon">⚙</span>
                     The World Machine
                 </div>
             </div>
@@ -288,7 +287,6 @@
             <div class="window-top-border" style="background: var(--primary-color, #aa55ff);"></div>
             <div class="window-header-wrapper">
                 <div class="window-header" style="background: var(--primary-color, #aa55ff); color: #000000;">
-                    <span class="header-icon">⌚</span>
                     Customize
                 </div>
             </div>
@@ -340,7 +338,6 @@
             <div class="window-top-border" style="background: var(--primary-color, #aa55ff);"></div>
             <div class="window-header-wrapper">
                 <div class="window-header" style="background: var(--primary-color, #aa55ff); color: #000000;">
-                    <span class="header-icon">🖼</span>
                     Wallpapers
                 </div>
             </div>
@@ -368,7 +365,6 @@
             <div class="window-top-border" style="background: var(--primary-color, #aa55ff);"></div>
             <div class="window-header-wrapper">
                 <div class="window-header" style="background: var(--primary-color, #aa55ff); color: #000000;">
-                    <span class="header-icon">🎨</span>
                     Themes
                 </div>
             </div>
@@ -382,7 +378,7 @@
                         <input type="color" id="UI_Color" value="#aa55ff">
                         <span class="color-hex" id="colorHex">#aa55ff</span>
                     </div>
-                    <div class="capability-note">⚠ Applies to color Pebble watches only</div>
+                    <div class="capability-note">Applies to color Pebble watches only</div>
                 </div>
 
                 <!-- Secondary Color – PLACEHOLDER, not yet used -->
@@ -393,7 +389,7 @@
                         <input type="color" id="Secondary_Color" value="#ffffff">
                         <span class="color-hex" id="secondaryColorHex">#ffffff</span>
                     </div>
-                    <div class="capability-note">⏳ Future feature – not yet implemented</div>
+                    <div class="capability-note">Future feature – not yet implemented</div>
                 </div>
             </div>
         </div>
@@ -549,7 +545,7 @@
             loadConfig();
 
             // ----- Reminder for Secondary Color -----
-            console.log('🔔 REMINDER: Secondary Color is saved but NOT yet used by the watchface.');
+            console.log('REMINDER: Secondary Color is saved but NOT yet used by the watchface.');
             console.log('   Add MESSAGE_KEY_Secondary_Color to CloudPebble when ready.');
             console.log('   Add SETTINGS_KEY_SECONDARY_COLOR to C code.');
             console.log('   Add secondary_color to the C struct and persistence.');
