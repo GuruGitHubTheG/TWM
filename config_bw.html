@@ -5,219 +5,488 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>The World Machine Settings</title>
     <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
+        @font-face {
+            font-family: 'Volter';
+            src: url('https://github.com/GuruGitHubTheG/TWM/raw/refs/heads/main/Volter.ttf') format('truetype');
+            font-weight: normal;
+            font-style: normal;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
         body {
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-            background: #f5f5f5;
-            padding: 20px;
-            max-width: 600px;
-            margin: 0 auto;
+            font-family: 'Volter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background: #000000;
+            color: #ffffff;
+            padding: 0;
+            margin: 0;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            transition: background 0.3s, color 0.3s;
         }
-        h1 { font-size: 24px; margin-bottom: 20px; }
-        .section {
+
+        body.inverted {
             background: #ffffff;
-            border-radius: 12px;
-            padding: 16px 20px;
-            margin-bottom: 16px;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+            color: #000000;
         }
-        .section-title {
-            font-size: 14px;
-            font-weight: 600;
-            color: #8e8e93;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-            margin-bottom: 12px;
-            padding-bottom: 8px;
-            border-bottom: 1px solid #e5e5ea;
-        }
-        .setting { padding: 6px 0; }
-        .setting + .setting { border-top: 1px solid #e5e5ea; padding-top: 12px; }
-        .setting-label { font-size: 16px; font-weight: 500; margin-bottom: 4px; }
-        .setting-description { font-size: 13px; color: #8e8e93; margin-bottom: 6px; }
-        select {
-            font-size: 16px;
-            padding: 8px 12px;
-            border: 1px solid #c6c6c8;
-            border-radius: 8px;
-            background: #fafafa;
+
+        .container {
             width: 100%;
-            max-width: 300px;
+            max-width: 600px;
+            padding: 0 2.5%;
+            padding-top: 20px;
+            padding-bottom: 40px;
         }
+
+        /* --- Window / Card --- */
+        .window {
+            background: #000000;
+            border: 1px solid #ffffff;
+            border-radius: 0;
+            margin-bottom: 16px;
+            overflow: hidden;
+            transition: border-color 0.3s, background 0.3s;
+        }
+
+        body.inverted .window {
+            background: #ffffff;
+            border-color: #000000;
+        }
+
+        /* --- Window: Top border (6px) --- */
+        .window-top-border {
+            height: 6px;
+            background: #ffffff;
+            transition: background 0.3s;
+        }
+
+        body.inverted .window-top-border {
+            background: #000000;
+        }
+
+        /* --- Window: Header row --- */
+        .window-header-wrapper {
+            padding: 6px 0;
+        }
+
+        .window-header {
+            height: 60px;
+            display: flex;
+            align-items: center;
+            padding: 0 18px;
+            background: #ffffff;
+            color: #000000;
+            font-size: 18px;
+            font-weight: normal;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            transition: background 0.3s, color 0.3s;
+        }
+
+        body.inverted .window-header {
+            background: #000000;
+            color: #ffffff;
+        }
+
+        .window-header .header-icon {
+            margin-right: 12px;
+            font-size: 20px;
+        }
+
+        /* --- Window: Bottom border (6px) --- */
+        .window-bottom-border {
+            height: 6px;
+            background: #ffffff;
+            transition: background 0.3s;
+        }
+
+        body.inverted .window-bottom-border {
+            background: #000000;
+        }
+
+        /* --- Window: Content area --- */
+        .window-content {
+            padding: 18px;
+        }
+
+        /* --- Settings items --- */
+        .setting {
+            padding: 10px 0;
+        }
+
+        .setting + .setting {
+            border-top: 1px solid rgba(255, 255, 255, 0.08);
+            padding-top: 14px;
+        }
+
+        body.inverted .setting + .setting {
+            border-top: 1px solid rgba(0, 0, 0, 0.1);
+        }
+
+        .setting-label {
+            font-size: 14px;
+            font-weight: normal;
+            margin-bottom: 6px;
+            color: #ffffff;
+            letter-spacing: 0.5px;
+            transition: color 0.3s;
+        }
+
+        body.inverted .setting-label {
+            color: #000000;
+        }
+
+        .setting-description {
+            font-size: 11px;
+            color: rgba(255, 255, 255, 0.5);
+            margin-bottom: 8px;
+            transition: color 0.3s;
+        }
+
+        body.inverted .setting-description {
+            color: rgba(0, 0, 0, 0.5);
+        }
+
+        /* --- Select dropdown --- */
+        select {
+            font-family: 'Volter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            font-size: 14px;
+            padding: 10px 14px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 0;
+            background: rgba(255, 255, 255, 0.05);
+            color: #ffffff;
+            width: 100%;
+            max-width: 100%;
+            appearance: none;
+            -webkit-appearance: none;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='white' stroke-width='1.5' fill='none'/%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 14px center;
+            background-size: 12px 8px;
+            cursor: pointer;
+            transition: border-color 0.3s, background 0.3s, color 0.3s;
+        }
+
+        body.inverted select {
+            border-color: rgba(0, 0, 0, 0.2);
+            background: rgba(0, 0, 0, 0.05);
+            color: #000000;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='black' stroke-width='1.5' fill='none'/%3E%3C/svg%3E");
+        }
+
+        select:focus {
+            outline: none;
+            border-color: #ffffff;
+        }
+
+        body.inverted select:focus {
+            border-color: #000000;
+        }
+
+        select option {
+            background: #1a1a1a;
+            color: #ffffff;
+        }
+
+        body.inverted select option {
+            background: #e5e5e5;
+            color: #000000;
+        }
+
+        /* --- Toggle switch --- */
         .toggle-row {
             display: flex;
             align-items: center;
             justify-content: space-between;
         }
-        .toggle-row .setting-label { margin-bottom: 0; }
+
+        .toggle-row .setting-label {
+            margin-bottom: 0;
+        }
+
         .toggle {
             position: relative;
             width: 51px;
             height: 31px;
             flex-shrink: 0;
         }
-        .toggle input { opacity: 0; width: 0; height: 0; }
+
+        .toggle input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
         .toggle .slider {
             position: absolute;
             cursor: pointer;
-            top: 0; left: 0; right: 0; bottom: 0;
-            background: #c6c6c8;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(255, 255, 255, 0.15);
             transition: 0.3s;
             border-radius: 31px;
         }
+
+        body.inverted .toggle .slider {
+            background: rgba(0, 0, 0, 0.15);
+        }
+
         .toggle .slider:before {
             content: "";
             position: absolute;
-            height: 27px; width: 27px;
-            left: 2px; bottom: 2px;
-            background: white;
+            height: 27px;
+            width: 27px;
+            left: 2px;
+            bottom: 2px;
+            background: #ffffff;
             transition: 0.3s;
             border-radius: 50%;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
         }
-        .toggle input:checked + .slider { background: #34c759; }
-        .toggle input:checked + .slider:before { transform: translateX(20px); }
+
+        body.inverted .toggle .slider:before {
+            background: #000000;
+        }
+
+        .toggle input:checked + .slider {
+            background: #ffffff;
+        }
+
+        body.inverted .toggle input:checked + .slider {
+            background: #000000;
+        }
+
+        .toggle input:checked + .slider:before {
+            transform: translateX(20px);
+        }
+
+        body.inverted .toggle input:checked + .slider:before {
+            background: #ffffff;
+        }
+
+        /* --- Save button --- */
         .save-btn {
+            font-family: 'Volter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
             width: 100%;
-            padding: 14px;
-            font-size: 17px;
-            font-weight: 600;
-            color: #ffffff;
-            background: #007aff;
+            padding: 16px;
+            font-size: 16px;
+            font-weight: normal;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            color: #000000;
+            background: #ffffff;
             border: none;
-            border-radius: 12px;
+            border-radius: 0;
             cursor: pointer;
+            transition: background 0.3s, color 0.3s, opacity 0.2s;
             margin-top: 8px;
         }
-        .save-btn:hover { background: #0066d9; }
-        .save-btn:active { background: #0055b3; }
+
+        body.inverted .save-btn {
+            background: #000000;
+            color: #ffffff;
+        }
+
+        .save-btn:hover {
+            opacity: 0.85;
+        }
+
+        .save-btn:active {
+            opacity: 0.7;
+        }
+
+        /* --- Capability note --- */
+        .capability-note {
+            font-size: 10px;
+            color: rgba(255, 255, 255, 0.3);
+            margin-top: 6px;
+            letter-spacing: 0.3px;
+            transition: color 0.3s;
+        }
+
+        body.inverted .capability-note {
+            color: rgba(0, 0, 0, 0.3);
+        }
+
+        /* --- Responsive --- */
+        @media (max-width: 400px) {
+            .container { padding: 0 2%; padding-top: 12px; }
+            .window-header { font-size: 15px; height: 50px; padding: 0 14px; }
+            .window-content { padding: 14px; }
+            .setting-label { font-size: 13px; }
+        }
+
+        /* --- Hide scrollbar --- */
+        ::-webkit-scrollbar { width: 0; background: transparent; }
     </style>
 </head>
 <body>
-    <h1>The World Machine Settings</h1>
-
-    <div class="section">
-        <div class="section-title">Customize</div>
-        <div class="setting">
-            <div class="setting-label">Time Format</div>
-            <select id="ClockMode">
-                <option value="0">System</option>
-                <option value="1">12-Hour</option>
-                <option value="2">24-Hour</option>
-            </select>
-        </div>
-        <div class="setting">
-            <div class="toggle-row">
-                <div>
-                    <div class="setting-label">Show Leading Zeros</div>
-                    <div class="setting-description">(08:00 instead of 8:00)</div>
+    <div class="container" id="app">
+        <!-- Header -->
+        <div class="window">
+            <div class="window-top-border"></div>
+            <div class="window-header-wrapper">
+                <div class="window-header">
+                    <span class="header-icon">⚙</span>
+                    The World Machine
                 </div>
-                <label class="toggle">
-                    <input type="checkbox" id="LeadingZeros">
-                    <span class="slider"></span>
-                </label>
+            </div>
+            <div class="window-bottom-border"></div>
+        </div>
+
+        <!-- ===== Customize Window ===== -->
+        <div class="window" id="customize-window">
+            <div class="window-top-border"></div>
+            <div class="window-header-wrapper">
+                <div class="window-header">
+                    <span class="header-icon">⌚</span>
+                    Customize
+                </div>
+            </div>
+            <div class="window-bottom-border"></div>
+
+            <div class="window-content">
+                <!-- Clock Mode -->
+                <div class="setting">
+                    <div class="setting-label">Time Format</div>
+                    <select id="ClockMode">
+                        <option value="0">System</option>
+                        <option value="1">12-Hour</option>
+                        <option value="2">24-Hour</option>
+                    </select>
+                </div>
+
+                <!-- Leading Zeros -->
+                <div class="setting">
+                    <div class="toggle-row">
+                        <div>
+                            <div class="setting-label">Show Leading Zeros</div>
+                            <div class="setting-description">08:00 instead of 8:00</div>
+                        </div>
+                        <label class="toggle">
+                            <input type="checkbox" id="LeadingZeros">
+                            <span class="slider"></span>
+                        </label>
+                    </div>
+                </div>
+
+                <!-- Show AM/PM -->
+                <div class="setting">
+                    <div class="toggle-row">
+                        <div>
+                            <div class="setting-label">Show AM/PM</div>
+                            <div class="setting-description">Display AM/PM indicator</div>
+                        </div>
+                        <label class="toggle">
+                            <input type="checkbox" id="ShowAMPM" checked>
+                            <span class="slider"></span>
+                        </label>
+                    </div>
+                </div>
             </div>
         </div>
-        <div class="setting">
-            <div class="toggle-row">
-                <div>
-                    <div class="setting-label">Show AM/PM</div>
-                    <div class="setting-description">Display AM/PM indicator</div>
+
+        <!-- ===== Wallpapers Window ===== -->
+        <div class="window" id="wallpaper-window">
+            <div class="window-top-border"></div>
+            <div class="window-header-wrapper">
+                <div class="window-header">
+                    <span class="header-icon">🖼</span>
+                    Wallpapers
                 </div>
-                <label class="toggle">
-                    <input type="checkbox" id="ShowAMPM" checked>
-                    <span class="slider"></span>
-                </label>
+            </div>
+            <div class="window-bottom-border"></div>
+
+            <div class="window-content">
+                <div class="setting">
+                    <div class="setting-label">Select Wallpaper</div>
+                    <select id="Wallpaper">
+                        <option value="1">The World Machine</option>
+                        <option value="2">Barrens Craters</option>
+                        <option value="3">Glen Shoreline</option>
+                        <option value="4">Refuge Cityscape</option>
+                        <option value="5">Messiah</option>
+                        <option value="6">My Burden is Light</option>
+                        <option value="7">Asteroid</option>
+                        <option value="0">Blank</option>
+                    </select>
+                </div>
             </div>
         </div>
-    </div>
 
-    <div class="section">
-        <div class="section-title">Wallpapers</div>
-        <div class="setting">
-            <div class="setting-label">Wallpaper</div>
-            <select id="Wallpaper">
-                <option value="1">The World Machine</option>
-                <option value="2">Barrens Craters</option>
-                <option value="3">Glen Shoreline</option>
-                <option value="4">Refuge Cityscape</option>
-                <option value="5">Messiah</option>
-                <option value="6">My Burden is Light</option>
-                <option value="7">Asteroid</option>
-                <option value="0">Blank</option>
-            </select>
-        </div>
-    </div>
-
-    <div class="section">
-        <div class="section-title">Themes</div>
-        <div class="setting">
-            <div class="toggle-row">
-                <div>
-                    <div class="setting-label">Inverted UI</div>
-                    <div class="setting-description">Swap black and white (BW only)</div>
+        <!-- ===== Themes Window (BW only) ===== -->
+        <div class="window" id="themes-window">
+            <div class="window-top-border"></div>
+            <div class="window-header-wrapper">
+                <div class="window-header">
+                    <span class="header-icon">🎨</span>
+                    Themes
                 </div>
-                <label class="toggle">
-                    <input type="checkbox" id="Inverted">
-                    <span class="slider"></span>
-                </label>
+            </div>
+            <div class="window-bottom-border"></div>
+
+            <div class="window-content">
+                <div class="setting">
+                    <div class="toggle-row">
+                        <div>
+                            <div class="setting-label">Inverted UI</div>
+                            <div class="setting-description">Swap black and white (BW only)</div>
+                        </div>
+                        <label class="toggle">
+                            <input type="checkbox" id="Inverted">
+                            <span class="slider"></span>
+                        </label>
+                    </div>
+                    <div class="capability-note">⚠ Applies to black-and-white Pebble watches only</div>
+                </div>
             </div>
         </div>
-    </div>
 
-    <button class="save-btn" id="saveBtn">Save Settings</button>
+        <!-- ===== Save Button ===== -->
+        <button class="save-btn" id="saveBtn">Save Settings</button>
+    </div>
 
     <script>
         (function() {
-            function getQueryParam(variable, defaultValue) {
-                var query = location.search.substring(1);
-                var vars = query.split('&');
-                for (var i = 0; i < vars.length; i++) {
-                    var pair = vars[i].split('=');
-                    if (pair[0] === variable) {
-                        return decodeURIComponent(pair[1]);
-                    }
+            // ----- Inversion handler -----
+            function applyInversion(enabled) {
+                if (enabled) {
+                    document.body.classList.add('inverted');
+                } else {
+                    document.body.classList.remove('inverted');
                 }
-                return defaultValue || false;
             }
 
+            // ----- Load saved config from URL -----
             function loadConfig() {
-                var config = null;
-                
                 var params = new URLSearchParams(window.location.search);
                 var configJson = params.get('config');
-                
                 if (configJson) {
                     try {
-                        config = JSON.parse(decodeURIComponent(configJson));
-                        localStorage.setItem('twm_config_bw', JSON.stringify(config));
-                        console.log('Loaded from URL:', config);
+                        var config = JSON.parse(decodeURIComponent(configJson));
+                        document.getElementById('ClockMode').value = config.ClockMode || '0';
+                        document.getElementById('LeadingZeros').checked = config.LeadingZeros === true;
+                        document.getElementById('ShowAMPM').checked = config.ShowAMPM !== false;
+                        document.getElementById('Wallpaper').value = config.Wallpaper || '1';
+                        var inverted = config.Inverted === true;
+                        document.getElementById('Inverted').checked = inverted;
+                        applyInversion(inverted);
                     } catch (e) {
-                        console.warn('Failed to parse URL config', e);
+                        console.warn('Failed to parse config', e);
                     }
-                }
-                
-                if (!config) {
-                    var stored = localStorage.getItem('twm_config_bw');
-                    if (stored) {
-                        try {
-                            config = JSON.parse(stored);
-                            console.log('Loaded from localStorage:', config);
-                        } catch (e) {
-                            console.warn('Failed to parse stored config', e);
-                        }
-                    }
-                }
-                
-                if (config) {
-                    if (config.ClockMode !== undefined) document.getElementById('ClockMode').value = config.ClockMode;
-                    if (config.LeadingZeros !== undefined) document.getElementById('LeadingZeros').checked = config.LeadingZeros === true;
-                    if (config.ShowAMPM !== undefined) document.getElementById('ShowAMPM').checked = config.ShowAMPM !== false;
-                    if (config.Wallpaper !== undefined) document.getElementById('Wallpaper').value = config.Wallpaper;
-                    if (config.Inverted !== undefined) document.getElementById('Inverted').checked = config.Inverted === true;
                 }
             }
 
+            // ----- Get current config -----
             function getConfig() {
                 return {
                     ClockMode: document.getElementById('ClockMode').value,
@@ -228,20 +497,34 @@
                 };
             }
 
+            // ----- Save button -----
             document.getElementById('saveBtn').addEventListener('click', function() {
                 var config = getConfig();
                 var json = JSON.stringify(config);
                 var encoded = encodeURIComponent(json);
-                
-                localStorage.setItem('twm_config_bw', json);
-                console.log('Saved to localStorage:', config);
-                
-                var return_to = getQueryParam('return_to', 'pebblejs://close#');
-                console.log('Redirecting to:', return_to + encoded);
-                document.location = return_to + encoded;
+                console.log('Saving config: ' + json);
+
+                var params = new URLSearchParams(window.location.search);
+                var returnTo = params.get('return_to');
+                if (returnTo) {
+                    window.location = returnTo + encoded;
+                } else {
+                    window.location = 'pebblejs://close#' + encoded;
+                }
+            });
+
+            // ----- Inversion toggle live preview -----
+            document.getElementById('Inverted').addEventListener('change', function() {
+                applyInversion(this.checked);
             });
 
             loadConfig();
+
+            console.log('🔔 REMINDER: Secondary Color is available in config_color.html but not yet used.');
+            console.log('   Add MESSAGE_KEY_Secondary_Color to CloudPebble when ready.');
+            console.log('   Add SETTINGS_KEY_SECONDARY_COLOR to C code.');
+            console.log('   Add secondary_color to the C struct and persistence.');
+            console.log('   Update update_colors_and_resources() to use secondary_color.');
         })();
     </script>
 </body>
