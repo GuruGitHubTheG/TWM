@@ -169,20 +169,52 @@
 
     <script>
         (function() {
+            function getQueryParam(variable, defaultValue) {
+                var query = location.search.substring(1);
+                var vars = query.split('&');
+                for (var i = 0; i < vars.length; i++) {
+                    var pair = vars[i].split('=');
+                    if (pair[0] === variable) {
+                        return decodeURIComponent(pair[1]);
+                    }
+                }
+                return defaultValue || false;
+            }
+
             function loadConfig() {
+                var config = null;
+                
                 var params = new URLSearchParams(window.location.search);
                 var configJson = params.get('config');
+                
                 if (configJson) {
                     try {
-                        var config = JSON.parse(decodeURIComponent(configJson));
-                        document.getElementById('ClockMode').value = config.ClockMode || '0';
-                        document.getElementById('LeadingZeros').checked = config.LeadingZeros === true;
-                        document.getElementById('ShowAMPM').checked = config.ShowAMPM !== false;
-                        document.getElementById('Wallpaper').value = config.Wallpaper || '1';
-                        document.getElementById('Inverted').checked = config.Inverted === true;
+                        config = JSON.parse(decodeURIComponent(configJson));
+                        localStorage.setItem('twm_config_bw', JSON.stringify(config));
+                        console.log('Loaded from URL:', config);
                     } catch (e) {
-                        console.warn('Failed to parse config', e);
+                        console.warn('Failed to parse URL config', e);
                     }
+                }
+                
+                if (!config) {
+                    var stored = localStorage.getItem('twm_config_bw');
+                    if (stored) {
+                        try {
+                            config = JSON.parse(stored);
+                            console.log('Loaded from localStorage:', config);
+                        } catch (e) {
+                            console.warn('Failed to parse stored config', e);
+                        }
+                    }
+                }
+                
+                if (config) {
+                    if (config.ClockMode !== undefined) document.getElementById('ClockMode').value = config.ClockMode;
+                    if (config.LeadingZeros !== undefined) document.getElementById('LeadingZeros').checked = config.LeadingZeros === true;
+                    if (config.ShowAMPM !== undefined) document.getElementById('ShowAMPM').checked = config.ShowAMPM !== false;
+                    if (config.Wallpaper !== undefined) document.getElementById('Wallpaper').value = config.Wallpaper;
+                    if (config.Inverted !== undefined) document.getElementById('Inverted').checked = config.Inverted === true;
                 }
             }
 
@@ -200,8 +232,13 @@
                 var config = getConfig();
                 var json = JSON.stringify(config);
                 var encoded = encodeURIComponent(json);
-                console.log('Saving config: ' + json);
-                window.location = 'pebblejs://close#' + encoded;
+                
+                localStorage.setItem('twm_config_bw', json);
+                console.log('Saved to localStorage:', config);
+                
+                var return_to = getQueryParam('return_to', 'pebblejs://close#');
+                console.log('Redirecting to:', return_to + encoded);
+                document.location = return_to + encoded;
             });
 
             loadConfig();
