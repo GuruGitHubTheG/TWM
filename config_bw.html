@@ -139,7 +139,6 @@
             height: 48px;
             object-fit: contain;
             display: block;
-            /* NO FILTERS - images display as-is */
         }
 
         .header-icon-btn:hover {
@@ -584,8 +583,16 @@
 
             var selectedWallpaperId = 1;
 
+            function applyInversion(enabled) {
+                if (enabled) {
+                    document.body.classList.add('inverted');
+                } else {
+                    document.body.classList.remove('inverted');
+                }
+                updateIcons(enabled);
+            }
+
             function updateIcons(inverted) {
-                // Update icon images based on inversion state
                 document.querySelectorAll('.icon-dismiss').forEach(function(el) {
                     if (inverted) {
                         el.src = 'https://github.com/GuruGitHubTheG/TWM/blob/main/icons/dismiss-inverted.png?raw=true';
@@ -602,15 +609,6 @@
                 });
             }
 
-            function applyInversion(enabled) {
-                if (enabled) {
-                    document.body.classList.add('inverted');
-                } else {
-                    document.body.classList.remove('inverted');
-                }
-                updateIcons(enabled);
-            }
-
             // ----- Icon click handlers -----
             document.querySelectorAll('#dismissBtnBW, #dismissBtnBW2, #dismissBtnBW3, #dismissBtnBW4').forEach(function(btn) {
                 btn.addEventListener('click', function() {
@@ -623,6 +621,57 @@
                     document.getElementById('saveBtn').click();
                 });
             });
+
+            function loadConfig() {
+                var config = null;
+                
+                var params = new URLSearchParams(window.location.search);
+                var configJson = params.get('config');
+                
+                if (configJson) {
+                    try {
+                        config = JSON.parse(decodeURIComponent(configJson));
+                        localStorage.setItem('twm_config_bw', JSON.stringify(config));
+                        console.log('Loaded from URL:', config);
+                    } catch (e) {
+                        console.warn('Failed to parse URL config', e);
+                    }
+                }
+                
+                if (!config) {
+                    var stored = localStorage.getItem('twm_config_bw');
+                    if (stored) {
+                        try {
+                            config = JSON.parse(stored);
+                            console.log('Loaded from localStorage:', config);
+                        } catch (e) {
+                            console.warn('Failed to parse stored config', e);
+                        }
+                    }
+                }
+                
+                if (config) {
+                    if (config.ClockMode !== undefined) document.getElementById('ClockMode').value = config.ClockMode;
+                    if (config.LeadingZeros !== undefined) document.getElementById('LeadingZeros').checked = config.LeadingZeros === true;
+                    if (config.ShowAMPM !== undefined) document.getElementById('ShowAMPM').checked = config.ShowAMPM !== false;
+                    
+                    if (config.Wallpaper !== undefined) {
+                        var wallpaperValue = parseInt(config.Wallpaper) || 1;
+                        selectedWallpaperId = wallpaperValue;
+                        document.querySelectorAll('.wallpaper-item').forEach(function(el) {
+                            if (parseInt(el.dataset.id) === wallpaperValue) {
+                                el.classList.add('selected');
+                            } else {
+                                el.classList.remove('selected');
+                            }
+                        });
+                    }
+                    
+                    var inverted = config.Inverted === true;
+                    document.getElementById('Inverted').checked = inverted;
+                    applyInversion(inverted);
+                }
+            }
 
             function buildGrid() {
                 var grid = document.getElementById('wallpaperGrid');
@@ -678,33 +727,6 @@
                 });
             }
 
-            function loadConfig() {
-                var params = new URLSearchParams(window.location.search);
-                var configJson = params.get('config');
-                if (configJson) {
-                    try {
-                        var config = JSON.parse(decodeURIComponent(configJson));
-                        document.getElementById('ClockMode').value = config.ClockMode || '0';
-                        document.getElementById('LeadingZeros').checked = config.LeadingZeros === true;
-                        document.getElementById('ShowAMPM').checked = config.ShowAMPM !== false;
-
-                        var wallpaperValue = parseInt(config.Wallpaper) || 1;
-                        selectedWallpaperId = wallpaperValue;
-                        document.querySelectorAll('.wallpaper-item').forEach(function(el) {
-                            if (parseInt(el.dataset.id) === wallpaperValue) {
-                                el.classList.add('selected');
-                            } else {
-                                el.classList.remove('selected');
-                            }
-                        });
-
-                        var inverted = config.Inverted === true;
-                        document.getElementById('Inverted').checked = inverted;
-                        applyInversion(inverted);
-                    } catch (e) { console.warn('Failed to parse config', e); }
-                }
-            }
-
             function getConfig() {
                 return {
                     ClockMode: document.getElementById('ClockMode').value,
@@ -730,9 +752,7 @@
                 applyInversion(this.checked);
             });
 
-            // Initial icon state (not inverted by default)
             updateIcons(false);
-
             buildGrid();
             loadConfig();
 
