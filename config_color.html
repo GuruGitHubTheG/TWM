@@ -579,7 +579,13 @@
             // ----- Icon click handlers -----
             document.querySelectorAll('#dismissBtnColor, #dismissBtnColor2, #dismissBtnColor3, #dismissBtnColor4').forEach(function(btn) {
                 btn.addEventListener('click', function() {
-                    window.location = 'pebblejs://close';
+                    var params = new URLSearchParams(window.location.search);
+                    var returnTo = params.get('return_to');
+                    if (returnTo) {
+                        window.location = returnTo;
+                    } else {
+                        window.location = 'pebblejs://close';
+                    }
                 });
             });
 
@@ -589,38 +595,20 @@
                 });
             });
 
-            // ----- LOAD CONFIG FROM URL OR LOCALSTORAGE -----
+            // ----- LOAD CONFIG FROM LOCALSTORAGE -----
             function loadConfig() {
                 var config = null;
+                var stored = localStorage.getItem('twm_config');
                 
-                // 1. Check URL first (fresh data from watch)
-                var params = new URLSearchParams(window.location.search);
-                var configJson = params.get('config');
-                
-                if (configJson) {
+                if (stored) {
                     try {
-                        config = JSON.parse(decodeURIComponent(configJson));
-                        localStorage.setItem('twm_config', JSON.stringify(config));
-                        console.log('Loaded from URL:', config);
+                        config = JSON.parse(stored);
+                        console.log('Loaded from localStorage:', config);
                     } catch (e) {
-                        console.warn('Failed to parse URL config', e);
+                        console.warn('Failed to parse stored config', e);
                     }
                 }
                 
-                // 2. If no URL config, try localStorage
-                if (!config) {
-                    var stored = localStorage.getItem('twm_config');
-                    if (stored) {
-                        try {
-                            config = JSON.parse(stored);
-                            console.log('Loaded from localStorage:', config);
-                        } catch (e) {
-                            console.warn('Failed to parse stored config', e);
-                        }
-                    }
-                }
-                
-                // 3. Apply the config
                 if (config) {
                     if (config.ClockMode !== undefined) document.getElementById('ClockMode').value = config.ClockMode;
                     if (config.LeadingZeros !== undefined) document.getElementById('LeadingZeros').checked = config.LeadingZeros === true;
@@ -728,17 +716,22 @@
                 return config;
             }
 
+            // ----- SAVE BUTTON: Save to localStorage and close -----
             document.getElementById('saveBtn').addEventListener('click', function() {
                 var config = getConfig();
                 var json = JSON.stringify(config);
-                var encoded = encodeURIComponent(json);
-                console.log('Saving config: ' + json);
+                
+                // 1. Save to localStorage
+                localStorage.setItem('twm_config', json);
+                console.log('Saved to localStorage:', json);
+                
+                // 2. Close the config page
                 var params = new URLSearchParams(window.location.search);
                 var returnTo = params.get('return_to');
                 if (returnTo) {
-                    window.location = returnTo + encoded;
+                    window.location = returnTo;
                 } else {
-                    window.location = 'pebblejs://close#' + encoded;
+                    window.location = 'pebblejs://close';
                 }
             });
 
