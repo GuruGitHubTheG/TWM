@@ -5,770 +5,327 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>The World Machine Settings</title>
     <style>
-        @font-face {
-            font-family: 'Volter';
-            src: url('https://raw.githubusercontent.com/GuruGitHubTheG/TWM/main/Volter.ttf') format('truetype');
-            font-weight: normal;
-            font-style: normal;
-        }
-
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
-        body {
-            font-family: 'Volter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-            background: #000000;
-            color: var(--primary-color, #aa55ff);
-            padding: 0;
-            margin: 0;
-            min-height: 100vh;
-            display: flex;
-            justify-content: center;
-            align-items: flex-start;
-        }
-
-        .container {
-            width: 100%;
-            max-width: 1200px;
-            padding: 0 10px;
-            padding-top: 20px;
-            padding-bottom: 40px;
-        }
-
-        .window {
-            background: #000000;
-            border: 6px solid var(--primary-color, #aa55ff);
-            border-radius: 0;
-            margin-bottom: 16px;
-            overflow: hidden;
-        }
-
-        .window-header-wrapper {
-            padding: 0;
-            position: relative;
-        }
-
-        .window-header {
-            display: flex;
-            align-items: center;
-            padding: 20px 18px 12px 18px;
-            background: #000000;
-            color: var(--primary-color, #aa55ff);
-            font-size: 28px;
-            font-weight: normal;
-            letter-spacing: 1px;
-            line-height: 1;
-            min-height: 60px;
-            height: auto;
-            padding-right: 120px;
-        }
-
-        .window-divider {
-            height: 12px;
-            background: var(--primary-color, #aa55ff);
-        }
-
-        .window-content {
-            padding: 18px 18px 18px 18px;
-            background: #000000;
-        }
-
-        /* --- Header Icons --- */
-        .header-icons {
-            position: absolute;
-            right: 6px;
-            top: 6px;
-            bottom: 6px;
-            display: flex;
-            align-items: center;
-            gap: 6px;
-            height: 48px;
-        }
-
-        .header-icon-btn {
-            width: 48px;
-            height: 48px;
-            padding: 0;
-            border: none;
-            background: var(--primary-color, #aa55ff);
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            flex-shrink: 0;
-        }
-
-        .header-icon-btn img {
-            width: 48px;
-            height: 48px;
-            object-fit: contain;
-            display: block;
-        }
-
-        .header-icon-btn:hover {
-            opacity: 0.8;
-        }
-
-        .header-icon-btn:active {
-            opacity: 0.6;
-        }
-
-        /* --- Wallpaper Grid --- */
-        .wallpaper-grid {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 20px 12px;
-            padding: 0;
-            margin: 0;
-            justify-content: flex-start;
-        }
-
-        .wallpaper-item {
-            width: 240px;
-            cursor: pointer;
-            border: 6px solid transparent;
-            background: transparent;
-            transition: border-color 0.2s, background 0.2s;
-            padding: 0;
-            position: relative;
-            display: flex;
-            flex-direction: column;
-            align-items: flex-start;
-            justify-content: flex-start;
-            box-sizing: border-box;
-            overflow: hidden;
-            flex-shrink: 0;
-        }
-
-        .wallpaper-item.two-liner {
-            height: 217px;
-        }
-
-        .wallpaper-item.one-liner {
-            height: 170px;
-        }
-
-        .wallpaper-item.selected {
-            border-color: rgb(74, 50, 126);
-            background: rgb(38, 24, 64);
-        }
-
-        .wallpaper-screenshot-wrapper {
-            position: relative;
-            width: 126px;
-            height: 72px;
-            margin-top: 18px;
-            margin-left: 51px;
-            flex-shrink: 0;
-            z-index: 2;
-        }
-
-        .wallpaper-shadow {
-            position: absolute;
-            top: 3px;
-            left: 3px;
-            width: 100%;
-            height: 100%;
-            background: #000000;
-            z-index: 1;
-        }
-
-        .wallpaper-screenshot {
-            position: relative;
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-            z-index: 2;
-            display: block;
-            background: #1a1a1a;
-        }
-
-        .wallpaper-text-wrapper {
-            position: absolute;
-            top: 111px;
-            left: 51px;
-            width: 126px;
-            height: auto;
-            min-height: 33px;
-            z-index: 3;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: flex-start;
-            pointer-events: none;
-            gap: 0;
-        }
-
-        .wallpaper-label {
-            font-size: 29px;
-            line-height: 1;
-            color: var(--primary-color, #aa55ff);
-            text-align: center;
-            letter-spacing: 0.3px;
-            display: inline-block;
-            background: #000000;
-            padding: 6px 6px 9px 3px;
-            border-radius: 0;
-            white-space: pre;
-            word-wrap: break-word;
-        }
-
-        /* --- Settings --- */
-        .setting {
-            padding: 10px 0;
-        }
-        .setting + .setting {
-            border-top: 1px solid rgba(255, 255, 255, 0.08);
-            padding-top: 14px;
-        }
-        .setting-label {
-            font-size: 14px;
-            font-weight: normal;
-            margin-bottom: 6px;
-            color: var(--primary-color, #aa55ff);
-            letter-spacing: 0.5px;
-        }
-        .setting-description {
-            font-size: 11px;
-            color: var(--primary-color, #aa55ff);
-            opacity: 0.6;
-            margin-bottom: 8px;
-        }
-        .toggle-row {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-        }
-        .toggle-row .setting-label { margin-bottom: 0; }
-
-        .toggle {
-            position: relative;
-            width: 51px;
-            height: 31px;
-            flex-shrink: 0;
-        }
-        .toggle input { opacity: 0; width: 0; height: 0; }
-        .toggle .slider {
-            position: absolute;
-            cursor: pointer;
-            top: 0; left: 0; right: 0; bottom: 0;
-            background: rgba(255, 255, 255, 0.15);
-            transition: 0.3s;
-            border-radius: 31px;
-        }
-        .toggle .slider:before {
-            content: "";
-            position: absolute;
-            height: 27px;
-            width: 27px;
-            left: 2px;
-            bottom: 2px;
-            background: #ffffff;
-            transition: 0.3s;
-            border-radius: 50%;
-            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
-        }
-        .toggle input:checked + .slider { background: var(--primary-color, #aa55ff); }
-        .toggle input:checked + .slider:before { transform: translateX(20px); }
-
-        .color-picker-wrapper {
-            display: flex;
-            align-items: center;
-            gap: 14px;
-        }
-        .color-picker-wrapper input[type="color"] {
-            width: 60px;
-            height: 44px;
-            padding: 4px;
-            cursor: pointer;
-            border: 1px solid var(--primary-color, #aa55ff);
-            background: transparent;
-            flex-shrink: 0;
-        }
-        .color-hex {
-            font-size: 14px;
-            font-weight: normal;
-            color: var(--primary-color, #aa55ff);
-            font-family: 'Volter', monospace;
-            letter-spacing: 0.5px;
-        }
-
-        .save-btn {
-            font-family: 'Volter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-            width: 100%;
-            padding: 16px;
-            font-size: 16px;
-            font-weight: normal;
-            letter-spacing: 2px;
-            text-transform: uppercase;
-            color: #000000;
-            background: var(--primary-color, #aa55ff);
-            border: 6px solid var(--primary-color, #aa55ff);
-            border-radius: 0;
-            cursor: pointer;
-            transition: opacity 0.2s;
-            margin-top: 8px;
-        }
-        .save-btn:hover { opacity: 0.85; }
-        .save-btn:active { opacity: 0.7; }
-
-        .capability-note {
-            font-size: 10px;
-            color: var(--primary-color, #aa55ff);
-            opacity: 0.4;
-            margin-top: 6px;
-            letter-spacing: 0.3px;
-        }
-
-        select {
-            font-family: 'Volter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-            font-size: 14px;
-            padding: 8px 35px 8px 12px;
-            border: 1px solid var(--primary-color, #aa55ff);
-            border-radius: 0;
-            background: #000000;
-            color: var(--primary-color, #aa55ff);
-            width: 100%;
-            max-width: 300px;
-            appearance: none;
-            -webkit-appearance: none;
-            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%23aa55ff' stroke-width='1.5' fill='none'/%3E%3C/svg%3E");
-            background-repeat: no-repeat;
-            background-position: right 12px center;
-            background-size: 12px 8px;
-            cursor: pointer;
-            outline: none;
-        }
-
-        select:focus {
-            border-color: var(--primary-color, #aa55ff);
-            box-shadow: 0 0 0 2px rgba(170, 85, 255, 0.2);
-        }
-
-        select option {
-            background: #1a1a1a;
-            color: var(--primary-color, #aa55ff);
-        }
-
-        /* --- Responsive --- */
-        @media (max-width: 1050px) {
-            .wallpaper-grid { justify-content: flex-start; }
-        }
-
-        @media (max-width: 768px) {
-            .wallpaper-grid { justify-content: flex-start; }
-            .window-header { padding-right: 100px; font-size: 22px; padding: 16px 14px 10px 14px; min-height: 50px; }
-            .header-icons { right: 4px; top: 4px; bottom: 4px; height: 40px; gap: 4px; }
-            .header-icon-btn { width: 40px; height: 40px; }
-            .header-icon-btn img { width: 40px; height: 40px; }
-        }
-
-        @media (max-width: 550px) {
-            .wallpaper-grid { justify-content: flex-start; }
-            select { max-width: 100%; }
-        }
-
-        @media (max-width: 400px) {
-            .container { padding: 0 5px; }
-            .window-header { font-size: 18px; padding: 14px 10px 8px 10px; min-height: 44px; padding-right: 80px; }
-            .window-content { padding: 14px; }
-            .window { border-width: 4px; }
-            .wallpaper-grid { justify-content: flex-start; }
-            select { max-width: 100%; font-size: 13px; padding: 6px 30px 6px 10px; }
-            .header-icons { right: 3px; top: 3px; bottom: 3px; height: 32px; gap: 3px; }
-            .header-icon-btn { width: 32px; height: 32px; }
-            .header-icon-btn img { width: 32px; height: 32px; }
-        }
-
-        ::-webkit-scrollbar { width: 0; background: transparent; }
+        @font-face { font-family: 'Volter'; src: url('https://raw.githubusercontent.com/GuruGitHubTheG/TWM/main/Volter.ttf') format('truetype'); }
+        * { margin:0; padding:0; box-sizing:border-box; }
+        body { font-family:'Volter',sans-serif; background:#000; color:var(--primary,#aa55ff); padding:0; margin:0; min-height:100vh; display:flex; justify-content:center; align-items:flex-start; }
+        .container { width:100%; max-width:1200px; padding:0 10px; padding-top:20px; padding-bottom:40px; }
+        .window { background:#000; border:6px solid var(--primary,#aa55ff); border-radius:0; margin-bottom:16px; overflow:hidden; }
+        .window-header-wrapper { padding:0; position:relative; }
+        .window-header { display:flex; align-items:center; padding:20px 18px 12px 18px; background:#000; color:var(--primary,#aa55ff); font-size:28px; font-weight:normal; letter-spacing:1px; line-height:1; min-height:60px; padding-right:120px; }
+        .window-divider { height:12px; background:var(--primary,#aa55ff); }
+        .window-content { padding:18px; background:#000; }
+        .header-icons { position:absolute; right:6px; top:6px; bottom:6px; display:flex; align-items:center; gap:6px; height:48px; }
+        .header-icon-btn { width:48px; height:48px; padding:0; border:none; background:var(--primary,#aa55ff); cursor:pointer; display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+        .header-icon-btn img { width:48px; height:48px; object-fit:contain; display:block; }
+        .header-icon-btn:hover { opacity:0.8; }
+        .header-icon-btn:active { opacity:0.6; }
+        .wallpaper-grid { display:flex; flex-wrap:wrap; gap:20px 12px; justify-content:flex-start; }
+        .wallpaper-item { width:240px; cursor:pointer; border:6px solid transparent; background:transparent; transition:border-color 0.2s,background 0.2s; padding:0; position:relative; display:flex; flex-direction:column; align-items:flex-start; justify-content:flex-start; overflow:hidden; flex-shrink:0; }
+        .wallpaper-item.two-liner { height:217px; }
+        .wallpaper-item.one-liner { height:170px; }
+        .wallpaper-item.selected { border-color:rgb(74,50,126); background:rgb(38,24,64); }
+        .wallpaper-screenshot-wrapper { position:relative; width:126px; height:72px; margin-top:18px; margin-left:51px; flex-shrink:0; z-index:2; }
+        .wallpaper-shadow { position:absolute; top:3px; left:3px; width:100%; height:100%; background:#000; z-index:1; }
+        .wallpaper-screenshot { position:relative; width:100%; height:100%; object-fit:cover; z-index:2; display:block; background:#1a1a1a; }
+        .wallpaper-text-wrapper { position:absolute; top:111px; left:51px; width:126px; height:auto; min-height:33px; z-index:3; display:flex; flex-direction:column; align-items:center; justify-content:flex-start; pointer-events:none; gap:0; }
+        .wallpaper-label { font-size:29px; line-height:1; color:var(--primary,#aa55ff); text-align:center; letter-spacing:0.3px; display:inline-block; background:#000; padding:6px 6px 9px 3px; border-radius:0; white-space:pre; word-wrap:break-word; }
+        .setting { padding:10px 0; }
+        .setting + .setting { border-top:1px solid rgba(255,255,255,0.08); padding-top:14px; }
+        .setting-label { font-size:14px; font-weight:normal; margin-bottom:6px; color:var(--primary,#aa55ff); letter-spacing:0.5px; }
+        .setting-description { font-size:11px; color:var(--primary,#aa55ff); opacity:0.6; margin-bottom:8px; }
+        .toggle-row { display:flex; align-items:center; justify-content:space-between; }
+        .toggle-row .setting-label { margin-bottom:0; }
+        .toggle { position:relative; width:51px; height:31px; flex-shrink:0; }
+        .toggle input { opacity:0; width:0; height:0; }
+        .toggle .slider { position:absolute; cursor:pointer; top:0; left:0; right:0; bottom:0; background:rgba(255,255,255,0.15); transition:0.3s; border-radius:31px; }
+        .toggle .slider:before { content:""; position:absolute; height:27px; width:27px; left:2px; bottom:2px; background:#fff; transition:0.3s; border-radius:50%; box-shadow:0 1px 3px rgba(0,0,0,0.3); }
+        .toggle input:checked + .slider { background:var(--primary,#aa55ff); }
+        .toggle input:checked + .slider:before { transform:translateX(20px); }
+        .color-picker-wrapper { display:flex; align-items:center; gap:14px; }
+        .color-picker-wrapper input[type="color"] { width:60px; height:44px; padding:4px; cursor:pointer; border:1px solid var(--primary,#aa55ff); background:transparent; flex-shrink:0; }
+        .color-hex { font-size:14px; font-weight:normal; color:var(--primary,#aa55ff); font-family:'Volter',monospace; letter-spacing:0.5px; }
+        .save-btn { font-family:'Volter',sans-serif; width:100%; padding:16px; font-size:16px; font-weight:normal; letter-spacing:2px; text-transform:uppercase; color:#000; background:var(--primary,#aa55ff); border:6px solid var(--primary,#aa55ff); border-radius:0; cursor:pointer; transition:opacity 0.2s; margin-top:8px; }
+        .save-btn:hover { opacity:0.85; }
+        .save-btn:active { opacity:0.7; }
+        .capability-note { font-size:10px; color:var(--primary,#aa55ff); opacity:0.4; margin-top:6px; letter-spacing:0.3px; }
+        select { font-family:'Volter',sans-serif; font-size:14px; padding:8px 35px 8px 12px; border:1px solid var(--primary,#aa55ff); border-radius:0; background:#000; color:var(--primary,#aa55ff); width:100%; max-width:300px; appearance:none; -webkit-appearance:none; background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%23aa55ff' stroke-width='1.5' fill='none'/%3E%3C/svg%3E"); background-repeat:no-repeat; background-position:right 12px center; background-size:12px 8px; cursor:pointer; outline:none; }
+        select:focus { border-color:var(--primary,#aa55ff); box-shadow:0 0 0 2px rgba(170,85,255,0.2); }
+        select option { background:#1a1a1a; color:var(--primary,#aa55ff); }
+        @media (max-width:1050px) { .wallpaper-grid { justify-content:flex-start; } }
+        @media (max-width:768px) { .wallpaper-grid { justify-content:flex-start; } .window-header { padding-right:100px; font-size:22px; padding:16px 14px 10px 14px; min-height:50px; } .header-icons { right:4px; top:4px; bottom:4px; height:40px; gap:4px; } .header-icon-btn { width:40px; height:40px; } .header-icon-btn img { width:40px; height:40px; } }
+        @media (max-width:550px) { .wallpaper-grid { justify-content:flex-start; } select { max-width:100%; } }
+        @media (max-width:400px) { .container { padding:0 5px; } .window-header { font-size:18px; padding:14px 10px 8px 10px; min-height:44px; padding-right:80px; } .window-content { padding:14px; } .window { border-width:4px; } .wallpaper-grid { justify-content:flex-start; } select { max-width:100%; font-size:13px; padding:6px 30px 6px 10px; } .header-icons { right:3px; top:3px; bottom:3px; height:32px; gap:3px; } .header-icon-btn { width:32px; height:32px; } .header-icon-btn img { width:32px; height:32px; } }
+        ::-webkit-scrollbar { width:0; background:transparent; }
     </style>
 </head>
 <body>
-    <div class="container" id="app">
-        <!-- ===== Header Window ===== -->
-        <div class="window" style="border-color: var(--primary-color, #aa55ff); margin-bottom: 20px;">
-            <div class="window-header-wrapper">
-                <div class="window-header" style="padding-top: 20px; padding-bottom: 12px;">The World Machine</div>
-                <div class="header-icons">
-                    <button class="header-icon-btn" id="dismissBtnColor">
-                        <img src="https://github.com/GuruGitHubTheG/TWM/blob/main/icons/dismiss.png?raw=true" alt="dismiss">
-                    </button>
-                    <button class="header-icon-btn" id="closeBtnColor">
-                        <img src="https://github.com/GuruGitHubTheG/TWM/blob/main/icons/close.png?raw=true" alt="close">
-                    </button>
-                </div>
-            </div>
-            <div class="window-divider" style="background: var(--primary-color, #aa55ff);"></div>
-        </div>
-
-        <!-- ===== Customize Window ===== -->
-        <div class="window" id="customize-window">
-            <div class="window-header-wrapper">
-                <div class="window-header">Customize</div>
-                <div class="header-icons">
-                    <button class="header-icon-btn" id="dismissBtnColor2">
-                        <img src="https://github.com/GuruGitHubTheG/TWM/blob/main/icons/dismiss.png?raw=true" alt="dismiss">
-                    </button>
-                    <button class="header-icon-btn" id="closeBtnColor2">
-                        <img src="https://github.com/GuruGitHubTheG/TWM/blob/main/icons/close.png?raw=true" alt="close">
-                    </button>
-                </div>
-            </div>
-            <div class="window-divider" style="background: var(--primary-color, #aa55ff);"></div>
-            <div class="window-content">
-                <div class="setting">
-                    <div class="setting-label">Time Format</div>
-                    <select id="ClockMode">
-                        <option value="0">System</option>
-                        <option value="1">12-Hour</option>
-                        <option value="2">24-Hour</option>
-                    </select>
-                </div>
-                <div class="setting">
-                    <div class="toggle-row">
-                        <div>
-                            <div class="setting-label">Show Leading Zeros</div>
-                            <div class="setting-description">08:00 instead of 8:00</div>
-                        </div>
-                        <label class="toggle"><input type="checkbox" id="LeadingZeros"><span class="slider"></span></label>
-                    </div>
-                </div>
-                <div class="setting">
-                    <div class="toggle-row">
-                        <div>
-                            <div class="setting-label">Show AM/PM</div>
-                            <div class="setting-description">Display AM/PM indicator</div>
-                        </div>
-                        <label class="toggle"><input type="checkbox" id="ShowAMPM" checked><span class="slider"></span></label>
-                    </div>
-                </div>
+<div class="container" id="app">
+    <!-- Header -->
+    <div class="window" style="border-color:var(--primary,#aa55ff); margin-bottom:20px;">
+        <div class="window-header-wrapper">
+            <div class="window-header" style="padding-top:20px;padding-bottom:12px;">The World Machine</div>
+            <div class="header-icons">
+                <button class="header-icon-btn" id="dismissBtnColor"><img src="https://github.com/GuruGitHubTheG/TWM/blob/main/icons/dismiss.png?raw=true" alt="dismiss"></button>
+                <button class="header-icon-btn" id="closeBtnColor"><img src="https://github.com/GuruGitHubTheG/TWM/blob/main/icons/close.png?raw=true" alt="close"></button>
             </div>
         </div>
-
-        <!-- ===== Wallpapers Window ===== -->
-        <div class="window" id="wallpaper-window">
-            <div class="window-header-wrapper">
-                <div class="window-header">Wallpapers</div>
-                <div class="header-icons">
-                    <button class="header-icon-btn" id="dismissBtnColor3">
-                        <img src="https://github.com/GuruGitHubTheG/TWM/blob/main/icons/dismiss.png?raw=true" alt="dismiss">
-                    </button>
-                    <button class="header-icon-btn" id="closeBtnColor3">
-                        <img src="https://github.com/GuruGitHubTheG/TWM/blob/main/icons/close.png?raw=true" alt="close">
-                    </button>
-                </div>
-            </div>
-            <div class="window-divider" style="background: var(--primary-color, #aa55ff);"></div>
-            <div class="window-content">
-                <div class="wallpaper-grid" id="wallpaperGrid"></div>
-            </div>
-        </div>
-
-        <!-- ===== Themes Window ===== -->
-        <div class="window" id="themes-window">
-            <div class="window-header-wrapper">
-                <div class="window-header">Themes</div>
-                <div class="header-icons">
-                    <button class="header-icon-btn" id="dismissBtnColor4">
-                        <img src="https://github.com/GuruGitHubTheG/TWM/blob/main/icons/dismiss.png?raw=true" alt="dismiss">
-                    </button>
-                    <button class="header-icon-btn" id="closeBtnColor4">
-                        <img src="https://github.com/GuruGitHubTheG/TWM/blob/main/icons/close.png?raw=true" alt="close">
-                    </button>
-                </div>
-            </div>
-            <div class="window-divider" style="background: var(--primary-color, #aa55ff);"></div>
-            <div class="window-content">
-                <div class="setting">
-                    <div class="setting-label">UI Color</div>
-                    <div class="setting-description">Accent color for UI elements</div>
-                    <div class="color-picker-wrapper">
-                        <input type="color" id="UI_Color" value="#aa55ff">
-                        <span class="color-hex" id="colorHex">#aa55ff</span>
-                    </div>
-                    <div class="capability-note">Applies to color Pebble watches only</div>
-                </div>
-                <div class="setting" id="secondary-color-setting" style="opacity: 0.4; pointer-events: none;">
-                    <div class="setting-label">Secondary Color</div>
-                    <div class="setting-description">Coming soon – additional accent color</div>
-                    <div class="color-picker-wrapper">
-                        <input type="color" id="Secondary_Color" value="#ffffff">
-                        <span class="color-hex" id="secondaryColorHex">#ffffff</span>
-                    </div>
-                    <div class="capability-note">Future feature – not yet implemented</div>
-                </div>
-            </div>
-        </div>
-
-        <button class="save-btn" id="saveBtn">Save Settings</button>
+        <div class="window-divider" style="background:var(--primary,#aa55ff);"></div>
     </div>
 
-    <script>
-        (function() {
-            // ----- Helper: Get URL parameters -----
-            function getQueryParam(param) {
-                var urlParams = new URLSearchParams(window.location.search);
-                return urlParams.get(param);
+    <!-- Customize -->
+    <div class="window" id="customize-window">
+        <div class="window-header-wrapper">
+            <div class="window-header">Customize</div>
+            <div class="header-icons">
+                <button class="header-icon-btn" id="dismissBtnColor2"><img src="https://github.com/GuruGitHubTheG/TWM/blob/main/icons/dismiss.png?raw=true" alt="dismiss"></button>
+                <button class="header-icon-btn" id="closeBtnColor2"><img src="https://github.com/GuruGitHubTheG/TWM/blob/main/icons/close.png?raw=true" alt="close"></button>
+            </div>
+        </div>
+        <div class="window-divider" style="background:var(--primary,#aa55ff);"></div>
+        <div class="window-content">
+            <div class="setting">
+                <div class="setting-label">Time Format</div>
+                <select id="ClockMode">
+                    <option value="0">System</option>
+                    <option value="1">12-Hour</option>
+                    <option value="2">24-Hour</option>
+                </select>
+            </div>
+            <div class="setting">
+                <div class="toggle-row">
+                    <div><div class="setting-label">Show Leading Zeros</div><div class="setting-description">08:00 instead of 8:00</div></div>
+                    <label class="toggle"><input type="checkbox" id="LeadingZeros"><span class="slider"></span></label>
+                </div>
+            </div>
+            <div class="setting">
+                <div class="toggle-row">
+                    <div><div class="setting-label">Show AM/PM</div><div class="setting-description">Display AM/PM indicator</div></div>
+                    <label class="toggle"><input type="checkbox" id="ShowAMPM" checked><span class="slider"></span></label>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Wallpapers -->
+    <div class="window" id="wallpaper-window">
+        <div class="window-header-wrapper">
+            <div class="window-header">Wallpapers</div>
+            <div class="header-icons">
+                <button class="header-icon-btn" id="dismissBtnColor3"><img src="https://github.com/GuruGitHubTheG/TWM/blob/main/icons/dismiss.png?raw=true" alt="dismiss"></button>
+                <button class="header-icon-btn" id="closeBtnColor3"><img src="https://github.com/GuruGitHubTheG/TWM/blob/main/icons/close.png?raw=true" alt="close"></button>
+            </div>
+        </div>
+        <div class="window-divider" style="background:var(--primary,#aa55ff);"></div>
+        <div class="window-content">
+            <div class="wallpaper-grid" id="wallpaperGrid"></div>
+        </div>
+    </div>
+
+    <!-- Themes -->
+    <div class="window" id="themes-window">
+        <div class="window-header-wrapper">
+            <div class="window-header">Themes</div>
+            <div class="header-icons">
+                <button class="header-icon-btn" id="dismissBtnColor4"><img src="https://github.com/GuruGitHubTheG/TWM/blob/main/icons/dismiss.png?raw=true" alt="dismiss"></button>
+                <button class="header-icon-btn" id="closeBtnColor4"><img src="https://github.com/GuruGitHubTheG/TWM/blob/main/icons/close.png?raw=true" alt="close"></button>
+            </div>
+        </div>
+        <div class="window-divider" style="background:var(--primary,#aa55ff);"></div>
+        <div class="window-content">
+            <div class="setting">
+                <div class="setting-label">UI Color</div>
+                <div class="setting-description">Accent color for UI elements</div>
+                <div class="color-picker-wrapper">
+                    <input type="color" id="UI_Color" value="#aa55ff">
+                    <span class="color-hex" id="colorHex">#aa55ff</span>
+                </div>
+                <div class="capability-note">Applies to color Pebble watches only</div>
+            </div>
+            <div class="setting" id="secondary-color-setting" style="opacity:0.4; pointer-events:none;">
+                <div class="setting-label">Secondary Color</div>
+                <div class="setting-description">Coming soon – additional accent color</div>
+                <div class="color-picker-wrapper">
+                    <input type="color" id="Secondary_Color" value="#ffffff">
+                    <span class="color-hex" id="secondaryColorHex">#ffffff</span>
+                </div>
+                <div class="capability-note">Future feature – not yet implemented</div>
+            </div>
+        </div>
+    </div>
+
+    <button class="save-btn" id="saveBtn">Save Settings</button>
+</div>
+
+<script>
+(function() {
+    function getQueryParam(param) {
+        var urlParams = new URLSearchParams(window.location.search);
+        return urlParams.get(param);
+    }
+
+    var wallpapers = [
+        { id: 1, label: 'The World\nMachine', image: 'https://github.com/GuruGitHubTheG/TWM/blob/main/wallpapers/The_World_Machine_wallpaper.png?raw=true' },
+        { id: 2, label: 'Barrens\nCraters', image: 'https://github.com/GuruGitHubTheG/TWM/blob/main/wallpapers/Barrens_Craters_wallpaper.png?raw=true' },
+        { id: 3, label: 'Glen\nShoreline', image: 'https://github.com/GuruGitHubTheG/TWM/blob/main/wallpapers/Glen_Shoreline_wallpaper.png?raw=true' },
+        { id: 4, label: 'Refuge\nCityscape', image: 'https://github.com/GuruGitHubTheG/TWM/blob/main/wallpapers/Refuge_Cityscape_wallpaper.png?raw=true' },
+        { id: 5, label: 'Messiah', image: 'https://github.com/GuruGitHubTheG/TWM/blob/main/wallpapers/Messiah_wallpaper.png?raw=true' },
+        { id: 6, label: 'My Burden\nis Light', image: 'https://github.com/GuruGitHubTheG/TWM/blob/main/wallpapers/My_Burden_is_Light_wallpaper.png?raw=true' },
+        { id: 7, label: 'Asteroid', image: 'https://github.com/GuruGitHubTheG/TWM/blob/main/wallpapers/Asteroid_wallpaper.png?raw=true' },
+        { id: 0, label: 'Blank', image: '' }
+    ];
+
+    var selectedWallpaperId = 1;
+    var primaryColor = '#aa55ff';
+
+    function applyStyles(color) {
+        primaryColor = color;
+        document.documentElement.style.setProperty('--primary', color);
+        document.querySelectorAll('.window, .save-btn').forEach(function(el) { el.style.borderColor = color; });
+        document.querySelectorAll('.window-header, .setting-label, .color-hex, .capability-note, .wallpaper-label').forEach(function(el) { el.style.color = color; });
+        document.querySelectorAll('.window-divider, .save-btn').forEach(function(el) { el.style.background = color; });
+        document.querySelectorAll('.header-icon-btn').forEach(function(el) { el.style.background = color; });
+        document.querySelectorAll('.setting-description').forEach(function(el) { el.style.color = color; el.style.opacity = '0.6'; });
+        document.querySelectorAll('select').forEach(function(el) {
+            el.style.color = color;
+            el.style.borderColor = color;
+            var enc = color.replace('#','%23');
+            el.style.backgroundImage = "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='" + enc + "' stroke-width='1.5' fill='none'/%3E%3C/svg%3E\")";
+        });
+        document.querySelectorAll('.color-picker-wrapper input[type="color"]').forEach(function(el) { el.style.borderColor = color; });
+        var style = document.getElementById('dynamicToggleStyle') || (function() { var s=document.createElement('style'); s.id='dynamicToggleStyle'; document.head.appendChild(s); return s; })();
+        style.textContent = '.toggle input:checked + .slider { background: ' + color + ' !important; }';
+    }
+
+    // Dismiss buttons
+    document.querySelectorAll('#dismissBtnColor, #dismissBtnColor2, #dismissBtnColor3, #dismissBtnColor4').forEach(function(btn) {
+        btn.addEventListener('click', function() {
+            var returnTo = getQueryParam('return_to');
+            if (returnTo) window.location = returnTo;
+            else window.location = 'pebblejs://close';
+        });
+    });
+    document.querySelectorAll('#closeBtnColor, #closeBtnColor2, #closeBtnColor3, #closeBtnColor4').forEach(function(btn) {
+        btn.addEventListener('click', function() {
+            document.getElementById('saveBtn').click();
+        });
+    });
+
+    function loadConfig() {
+        var stored = localStorage.getItem('twm_config');
+        if (!stored) return;
+        try {
+            var config = JSON.parse(stored);
+            if (config.ClockMode !== undefined) document.getElementById('ClockMode').value = config.ClockMode;
+            if (config.LeadingZeros !== undefined) document.getElementById('LeadingZeros').checked = config.LeadingZeros === true;
+            if (config.ShowAMPM !== undefined) document.getElementById('ShowAMPM').checked = config.ShowAMPM !== false;
+            if (config.Wallpaper !== undefined) {
+                selectedWallpaperId = parseInt(config.Wallpaper) || 1;
+                document.querySelectorAll('.wallpaper-item').forEach(function(el) {
+                    el.classList.toggle('selected', parseInt(el.dataset.id) === selectedWallpaperId);
+                });
             }
-
-            // ----- Wallpaper data -----
-            var wallpapers = [
-                { id: 1, label: 'The World\nMachine', image: 'https://github.com/GuruGitHubTheG/TWM/blob/main/wallpapers/The_World_Machine_wallpaper.png?raw=true' },
-                { id: 2, label: 'Barrens\nCraters', image: 'https://github.com/GuruGitHubTheG/TWM/blob/main/wallpapers/Barrens_Craters_wallpaper.png?raw=true' },
-                { id: 3, label: 'Glen\nShoreline', image: 'https://github.com/GuruGitHubTheG/TWM/blob/main/wallpapers/Glen_Shoreline_wallpaper.png?raw=true' },
-                { id: 4, label: 'Refuge\nCityscape', image: 'https://github.com/GuruGitHubTheG/TWM/blob/main/wallpapers/Refuge_Cityscape_wallpaper.png?raw=true' },
-                { id: 5, label: 'Messiah', image: 'https://github.com/GuruGitHubTheG/TWM/blob/main/wallpapers/Messiah_wallpaper.png?raw=true' },
-                { id: 6, label: 'My Burden\nis Light', image: 'https://github.com/GuruGitHubTheG/TWM/blob/main/wallpapers/My_Burden_is_Light_wallpaper.png?raw=true' },
-                { id: 7, label: 'Asteroid', image: 'https://github.com/GuruGitHubTheG/TWM/blob/main/wallpapers/Asteroid_wallpaper.png?raw=true' },
-                { id: 0, label: 'Blank', image: '' }
-            ];
-
-            var selectedWallpaperId = 1;
-
-            function getPrimaryColorFromStored() {
-                var stored = localStorage.getItem('twm_config');
-                if (stored) {
-                    try {
-                        var config = JSON.parse(stored);
-                        if (config.UI_Color) {
-                            var color = config.UI_Color;
-                            if (!color.startsWith('#')) color = '#' + color;
-                            return color;
-                        }
-                    } catch (e) {}
-                }
-                return '#aa55ff';
+            if (config.UI_Color) {
+                var c = config.UI_Color;
+                if (!c.startsWith('#')) c = '#' + c;
+                document.getElementById('UI_Color').value = c;
+                document.getElementById('colorHex').textContent = c;
+                applyStyles(c);
             }
-
-            var primaryColor = getPrimaryColorFromStored();
-            document.documentElement.style.setProperty('--primary-color', primaryColor);
-
-            function applyStyles(color) {
-                // Apply color to all elements that depend on the primary color
-                document.querySelectorAll('.window, .save-btn').forEach(function(el) {
-                    el.style.borderColor = color;
-                });
-                document.querySelectorAll('.window-header, .setting-label, .color-hex, .capability-note, .wallpaper-label').forEach(function(el) {
-                    el.style.color = color;
-                });
-                document.querySelectorAll('.window-divider, .save-btn').forEach(function(el) {
-                    el.style.background = color;
-                });
-                document.querySelectorAll('.header-icon-btn').forEach(function(el) {
-                    el.style.background = color;
-                });
-                document.querySelectorAll('.setting-description').forEach(function(el) {
-                    el.style.color = color;
-                    el.style.opacity = '0.6';
-                });
-
-                document.querySelectorAll('select').forEach(function(el) {
-                    el.style.color = color;
-                    el.style.borderColor = color;
-                    var encodedColor = color.replace('#', '%23');
-                    el.style.backgroundImage = "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='" + encodedColor + "' stroke-width='1.5' fill='none'/%3E%3C/svg%3E\")";
-                });
-
-                document.querySelectorAll('.color-picker-wrapper input[type="color"]').forEach(function(el) {
-                    el.style.borderColor = color;
-                });
-
-                // Update toggle slider checked color
-                var style = document.createElement('style');
-                style.textContent = '.toggle input:checked + .slider { background: ' + color + ' !important; }';
-                // Remove any previous dynamic style
-                var oldStyle = document.getElementById('dynamicToggleStyle');
-                if (oldStyle) oldStyle.remove();
-                style.id = 'dynamicToggleStyle';
-                document.head.appendChild(style);
+            if (config.Secondary_Color) {
+                var sc = config.Secondary_Color;
+                if (!sc.startsWith('#')) sc = '#' + sc;
+                document.getElementById('Secondary_Color').value = sc;
+                document.getElementById('secondaryColorHex').textContent = sc;
             }
+            console.log('Loaded config:', config);
+        } catch(e) { console.warn('Error loading config', e); }
+    }
 
-            applyStyles(primaryColor);
+    function buildGrid() {
+        var grid = document.getElementById('wallpaperGrid');
+        grid.innerHTML = '';
+        wallpapers.forEach(function(wp) {
+            var lines = wp.label.split('\n');
+            var item = document.createElement('div');
+            item.className = 'wallpaper-item' + (selectedWallpaperId === wp.id ? ' selected' : '') + (lines.length === 1 ? ' one-liner' : ' two-liner');
+            item.dataset.id = wp.id;
 
-            // ----- Icon click handlers -----
-            document.querySelectorAll('#dismissBtnColor, #dismissBtnColor2, #dismissBtnColor3, #dismissBtnColor4').forEach(function(btn) {
-                btn.addEventListener('click', function() {
-                    var returnTo = getQueryParam('return_to');
-                    if (returnTo) {
-                        window.location = returnTo;
-                    } else {
-                        window.location = 'pebblejs://close';
-                    }
-                });
+            var wrapper = document.createElement('div');
+            wrapper.className = 'wallpaper-screenshot-wrapper';
+            var shadow = document.createElement('div');
+            shadow.className = 'wallpaper-shadow';
+            var img = document.createElement('img');
+            img.className = 'wallpaper-screenshot';
+            img.src = wp.image || 'data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7';
+            img.alt = wp.label.replace('\n', ' ');
+            wrapper.appendChild(shadow);
+            wrapper.appendChild(img);
+            item.appendChild(wrapper);
+
+            var textWrapper = document.createElement('div');
+            textWrapper.className = 'wallpaper-text-wrapper';
+            lines.forEach(function(line) {
+                var span = document.createElement('span');
+                span.className = 'wallpaper-label';
+                span.textContent = line;
+                textWrapper.appendChild(span);
+            });
+            item.appendChild(textWrapper);
+
+            item.addEventListener('click', function() {
+                document.querySelectorAll('.wallpaper-item').forEach(function(el) { el.classList.remove('selected'); });
+                this.classList.add('selected');
+                selectedWallpaperId = wp.id;
+                console.log('Selected wallpaper:', wp.id);
             });
 
-            document.querySelectorAll('#closeBtnColor, #closeBtnColor2, #closeBtnColor3, #closeBtnColor4').forEach(function(btn) {
-                btn.addEventListener('click', function() {
-                    document.getElementById('saveBtn').click();
-                });
-            });
+            grid.appendChild(item);
+        });
+    }
 
-            // ----- LOAD CONFIG FROM LOCALSTORAGE -----
-            function loadConfig() {
-                var config = null;
-                var stored = localStorage.getItem('twm_config');
-                
-                if (stored) {
-                    try {
-                        config = JSON.parse(stored);
-                        console.log('Loaded from localStorage:', config);
-                    } catch (e) {
-                        console.warn('Failed to parse stored config', e);
-                    }
-                }
-                
-                if (config) {
-                    if (config.ClockMode !== undefined) document.getElementById('ClockMode').value = config.ClockMode;
-                    if (config.LeadingZeros !== undefined) document.getElementById('LeadingZeros').checked = config.LeadingZeros === true;
-                    if (config.ShowAMPM !== undefined) document.getElementById('ShowAMPM').checked = config.ShowAMPM !== false;
-                    
-                    if (config.Wallpaper !== undefined) {
-                        var wallpaperValue = parseInt(config.Wallpaper) || 1;
-                        selectedWallpaperId = wallpaperValue;
-                        document.querySelectorAll('.wallpaper-item').forEach(function(el) {
-                            if (parseInt(el.dataset.id) === wallpaperValue) {
-                                el.classList.add('selected');
-                            } else {
-                                el.classList.remove('selected');
-                            }
-                        });
-                    }
-                    
-                    if (config.UI_Color) {
-                        var color = config.UI_Color;
-                        if (!color.startsWith('#')) color = '#' + color;
-                        document.getElementById('UI_Color').value = color;
-                        document.getElementById('colorHex').textContent = color;
-                        primaryColor = color;
-                        document.documentElement.style.setProperty('--primary-color', color);
-                        applyStyles(color);
-                    }
-                    
-                    if (config.Secondary_Color) {
-                        var secColor = config.Secondary_Color;
-                        if (!secColor.startsWith('#')) secColor = '#' + secColor;
-                        document.getElementById('Secondary_Color').value = secColor;
-                        document.getElementById('secondaryColorHex').textContent = secColor;
-                    }
-                } else {
-                    console.log('No config found – using defaults');
-                }
-            }
+    function getConfig() {
+        var config = {
+            ClockMode: document.getElementById('ClockMode').value,
+            LeadingZeros: document.getElementById('LeadingZeros').checked,
+            ShowAMPM: document.getElementById('ShowAMPM').checked,
+            Wallpaper: selectedWallpaperId,
+            UI_Color: document.getElementById('UI_Color').value.replace('#', '')
+        };
+        var sec = document.getElementById('Secondary_Color').value.replace('#', '');
+        if (sec) config.Secondary_Color = sec;
+        return config;
+    }
 
-            function buildGrid() {
-                var grid = document.getElementById('wallpaperGrid');
-                grid.innerHTML = '';
+    document.getElementById('saveBtn').addEventListener('click', function() {
+        var config = getConfig();
+        var json = JSON.stringify(config);
+        var encoded = encodeURIComponent(json);
+        localStorage.setItem('twm_config', json);
+        console.log('Saved to localStorage:', json);
+        var returnTo = getQueryParam('return_to');
+        if (returnTo) {
+            window.location = returnTo + encoded;
+        } else {
+            window.location = 'pebblejs://close#' + encoded;
+        }
+    });
 
-                wallpapers.forEach(function(wp) {
-                    var item = document.createElement('div');
-                    var lines = wp.label.split('\n');
-                    item.className = 'wallpaper-item' + (selectedWallpaperId === wp.id ? ' selected' : '') + (lines.length === 1 ? ' one-liner' : ' two-liner');
-                    item.dataset.id = wp.id;
+    document.getElementById('UI_Color').addEventListener('input', function() {
+        var c = this.value;
+        document.getElementById('colorHex').textContent = c;
+        applyStyles(c);
+    });
+    document.getElementById('Secondary_Color').addEventListener('input', function() {
+        document.getElementById('secondaryColorHex').textContent = this.value;
+    });
 
-                    var wrapper = document.createElement('div');
-                    wrapper.className = 'wallpaper-screenshot-wrapper';
-                    var shadow = document.createElement('div');
-                    shadow.className = 'wallpaper-shadow';
-
-                    var img = document.createElement('img');
-                    img.className = 'wallpaper-screenshot';
-                    if (wp.image) {
-                        img.src = wp.image;
-                    } else {
-                        img.src = 'data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7';
-                        img.style.background = 'transparent';
-                    }
-                    img.alt = wp.label.replace('\n', ' ');
-
-                    wrapper.appendChild(shadow);
-                    wrapper.appendChild(img);
-                    item.appendChild(wrapper);
-
-                    var textWrapper = document.createElement('div');
-                    textWrapper.className = 'wallpaper-text-wrapper';
-
-                    lines.forEach(function(line, index) {
-                        var span = document.createElement('span');
-                        span.className = 'wallpaper-label';
-                        span.textContent = line;
-                        textWrapper.appendChild(span);
-                    });
-
-                    item.appendChild(textWrapper);
-
-                    item.addEventListener('click', function() {
-                        document.querySelectorAll('.wallpaper-item').forEach(function(el) {
-                            el.classList.remove('selected');
-                        });
-                        this.classList.add('selected');
-                        selectedWallpaperId = wp.id;
-                        console.log('Selected wallpaper: ' + wp.id);
-                    });
-
-                    grid.appendChild(item);
-                });
-            }
-
-            function getConfig() {
-                var config = {
-                    ClockMode: document.getElementById('ClockMode').value,
-                    LeadingZeros: document.getElementById('LeadingZeros').checked,
-                    ShowAMPM: document.getElementById('ShowAMPM').checked,
-                    Wallpaper: selectedWallpaperId,
-                    UI_Color: document.getElementById('UI_Color').value.replace('#', '')
-                };
-                var secColor = document.getElementById('Secondary_Color').value.replace('#', '');
-                if (secColor) {
-                    config.Secondary_Color = secColor;
-                }
-                return config;
-            }
-
-            // ----- SAVE BUTTON: Use return_to if available -----
-            document.getElementById('saveBtn').addEventListener('click', function() {
-                var config = getConfig();
-                var json = JSON.stringify(config);
-                var encoded = encodeURIComponent(json);
-                
-                // Save to localStorage (for fallback)
-                localStorage.setItem('twm_config', json);
-                console.log('Saved to localStorage:', json);
-                
-                // Check for return_to parameter (emulator/CloudPebble)
-                var returnTo = getQueryParam('return_to');
-                
-                if (returnTo) {
-                    // Emulator: append encoded data directly to return_to URL
-                    console.log('Using return_to:', returnTo + encoded);
-                    window.location = returnTo + encoded;
-                } else {
-                    // Real watch: use pebblejs://close# with fragment
-                    console.log('Using pebblejs://close#');
-                    window.location = 'pebblejs://close#' + encoded;
-                }
-            });
-
-            // Live preview of UI color
-            document.getElementById('UI_Color').addEventListener('input', function() {
-                var color = this.value;
-                document.getElementById('colorHex').textContent = color;
-                primaryColor = color;
-                document.documentElement.style.setProperty('--primary-color', color);
-                applyStyles(color);
-            });
-
-            document.getElementById('Secondary_Color').addEventListener('input', function() {
-                document.getElementById('secondaryColorHex').textContent = this.value;
-            });
-
-            buildGrid();
-            loadConfig();
-
-            console.log('REMINDER: Secondary Color is saved but NOT yet used by the watchface.');
-        })();
-    </script>
+    buildGrid();
+    loadConfig();
+    // Apply stored color if any (already done in loadConfig, but ensure default)
+    if (!localStorage.getItem('twm_config')) {
+        applyStyles('#aa55ff');
+    }
+})();
+</script>
 </body>
 </html>
