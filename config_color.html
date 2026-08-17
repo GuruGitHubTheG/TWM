@@ -528,12 +528,11 @@
 
             var selectedWallpaperId = 1;
 
-            function getPrimaryColor() {
-                var params = new URLSearchParams(window.location.search);
-                var configJson = params.get('config');
-                if (configJson) {
+            function getPrimaryColorFromStored() {
+                var stored = localStorage.getItem('twm_config');
+                if (stored) {
                     try {
-                        var config = JSON.parse(decodeURIComponent(configJson));
+                        var config = JSON.parse(stored);
                         if (config.UI_Color) {
                             var color = config.UI_Color;
                             if (!color.startsWith('#')) color = '#' + color;
@@ -544,43 +543,50 @@
                 return '#aa55ff';
             }
 
-            var primaryColor = getPrimaryColor();
+            var primaryColor = getPrimaryColorFromStored();
             document.documentElement.style.setProperty('--primary-color', primaryColor);
 
-            function applyStyles() {
+            function applyStyles(color) {
+                // Apply color to all elements that depend on the primary color
                 document.querySelectorAll('.window, .save-btn').forEach(function(el) {
-                    el.style.borderColor = primaryColor;
+                    el.style.borderColor = color;
                 });
                 document.querySelectorAll('.window-header, .setting-label, .color-hex, .capability-note, .wallpaper-label').forEach(function(el) {
-                    el.style.color = primaryColor;
+                    el.style.color = color;
                 });
                 document.querySelectorAll('.window-divider, .save-btn').forEach(function(el) {
-                    el.style.background = primaryColor;
+                    el.style.background = color;
                 });
                 document.querySelectorAll('.header-icon-btn').forEach(function(el) {
-                    el.style.background = primaryColor;
+                    el.style.background = color;
                 });
                 document.querySelectorAll('.setting-description').forEach(function(el) {
-                    el.style.color = primaryColor;
+                    el.style.color = color;
                     el.style.opacity = '0.6';
                 });
 
                 document.querySelectorAll('select').forEach(function(el) {
-                    el.style.color = primaryColor;
-                    el.style.borderColor = primaryColor;
-                    var encodedColor = primaryColor.replace('#', '%23');
+                    el.style.color = color;
+                    el.style.borderColor = color;
+                    var encodedColor = color.replace('#', '%23');
                     el.style.backgroundImage = "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='" + encodedColor + "' stroke-width='1.5' fill='none'/%3E%3C/svg%3E\")";
                 });
 
                 document.querySelectorAll('.color-picker-wrapper input[type="color"]').forEach(function(el) {
-                    el.style.borderColor = primaryColor;
+                    el.style.borderColor = color;
                 });
 
+                // Update toggle slider checked color
                 var style = document.createElement('style');
-                style.textContent = '.toggle input:checked + .slider { background: ' + primaryColor + ' !important; }';
+                style.textContent = '.toggle input:checked + .slider { background: ' + color + ' !important; }';
+                // Remove any previous dynamic style
+                var oldStyle = document.getElementById('dynamicToggleStyle');
+                if (oldStyle) oldStyle.remove();
+                style.id = 'dynamicToggleStyle';
                 document.head.appendChild(style);
             }
-            applyStyles();
+
+            applyStyles(primaryColor);
 
             // ----- Icon click handlers -----
             document.querySelectorAll('#dismissBtnColor, #dismissBtnColor2, #dismissBtnColor3, #dismissBtnColor4').forEach(function(btn) {
@@ -638,7 +644,7 @@
                         document.getElementById('colorHex').textContent = color;
                         primaryColor = color;
                         document.documentElement.style.setProperty('--primary-color', color);
-                        applyStyles();
+                        applyStyles(color);
                     }
                     
                     if (config.Secondary_Color) {
@@ -745,12 +751,13 @@
                 }
             });
 
+            // Live preview of UI color
             document.getElementById('UI_Color').addEventListener('input', function() {
                 var color = this.value;
                 document.getElementById('colorHex').textContent = color;
                 primaryColor = color;
                 document.documentElement.style.setProperty('--primary-color', color);
-                applyStyles();
+                applyStyles(color);
             });
 
             document.getElementById('Secondary_Color').addEventListener('input', function() {
