@@ -56,6 +56,7 @@
         @media (max-width:550px) { .wallpaper-grid { justify-content:flex-start; } select { max-width:100%; } }
         @media (max-width:400px) { .container { padding:0 5px; } .window-header { font-size:18px; padding:14px 10px 8px 10px; min-height:44px; padding-right:80px; } .window-content { padding:14px; } .window { border-width:4px; } .wallpaper-grid { justify-content:flex-start; } select { max-width:100%; font-size:13px; padding:6px 30px 6px 10px; } .header-icons { right:3px; top:3px; bottom:3px; height:32px; gap:3px; } .header-icon-btn { width:32px; height:32px; } .header-icon-btn img { width:32px; height:32px; } }
         ::-webkit-scrollbar { width:0; background:transparent; }
+        .loading { text-align:center; padding:40px 20px; font-size:18px; color:var(--primary,#aa55ff); }
     </style>
 </head>
 <body>
@@ -210,35 +211,53 @@
         });
     });
 
-    function loadConfig() {
+    function loadConfig(retries) {
+        retries = retries || 3;
         var stored = localStorage.getItem('twm_config');
-        if (!stored) return;
-        try {
-            var config = JSON.parse(stored);
-            if (config.ClockMode !== undefined) document.getElementById('ClockMode').value = config.ClockMode;
-            if (config.LeadingZeros !== undefined) document.getElementById('LeadingZeros').checked = config.LeadingZeros === true;
-            if (config.ShowAMPM !== undefined) document.getElementById('ShowAMPM').checked = config.ShowAMPM !== false;
-            if (config.Wallpaper !== undefined) {
-                selectedWallpaperId = parseInt(config.Wallpaper) || 1;
-                document.querySelectorAll('.wallpaper-item').forEach(function(el) {
-                    el.classList.toggle('selected', parseInt(el.dataset.id) === selectedWallpaperId);
-                });
+        if (stored) {
+            try {
+                var config = JSON.parse(stored);
+                if (config.ClockMode !== undefined) document.getElementById('ClockMode').value = config.ClockMode;
+                if (config.LeadingZeros !== undefined) document.getElementById('LeadingZeros').checked = config.LeadingZeros === true;
+                if (config.ShowAMPM !== undefined) document.getElementById('ShowAMPM').checked = config.ShowAMPM !== false;
+                if (config.Wallpaper !== undefined) {
+                    selectedWallpaperId = parseInt(config.Wallpaper) || 1;
+                    document.querySelectorAll('.wallpaper-item').forEach(function(el) {
+                        el.classList.toggle('selected', parseInt(el.dataset.id) === selectedWallpaperId);
+                    });
+                }
+                if (config.UI_Color) {
+                    var c = config.UI_Color;
+                    if (!c.startsWith('#')) c = '#' + c;
+                    document.getElementById('UI_Color').value = c;
+                    document.getElementById('colorHex').textContent = c;
+                    applyStyles(c);
+                }
+                if (config.Secondary_Color) {
+                    var sc = config.Secondary_Color;
+                    if (!sc.startsWith('#')) sc = '#' + sc;
+                    document.getElementById('Secondary_Color').value = sc;
+                    document.getElementById('secondaryColorHex').textContent = sc;
+                }
+                console.log('Loaded config:', config);
+                document.getElementById('loadingIndicator').style.display = 'none';
+                return true;
+            } catch(e) {
+                console.warn('Error loading config', e);
             }
-            if (config.UI_Color) {
-                var c = config.UI_Color;
-                if (!c.startsWith('#')) c = '#' + c;
-                document.getElementById('UI_Color').value = c;
-                document.getElementById('colorHex').textContent = c;
-                applyStyles(c);
-            }
-            if (config.Secondary_Color) {
-                var sc = config.Secondary_Color;
-                if (!sc.startsWith('#')) sc = '#' + sc;
-                document.getElementById('Secondary_Color').value = sc;
-                document.getElementById('secondaryColorHex').textContent = sc;
-            }
-            console.log('Loaded config:', config);
-        } catch(e) { console.warn('Error loading config', e); }
+        }
+        if (retries > 0) {
+            document.getElementById('loadingIndicator').style.display = 'block';
+            setTimeout(function() {
+                loadConfig(retries - 1);
+            }, 500);
+            return false;
+        } else {
+            document.getElementById('loadingIndicator').style.display = 'none';
+            console.log('No config – using defaults');
+            applyStyles('#aa55ff');
+            return false;
+        }
     }
 
     function buildGrid() {
@@ -319,12 +338,16 @@
         document.getElementById('secondaryColorHex').textContent = this.value;
     });
 
+    // Loading indicator
+    var loadingDiv = document.createElement('div');
+    loadingDiv.id = 'loadingIndicator';
+    loadingDiv.className = 'loading';
+    loadingDiv.textContent = 'Loading settings...';
+    loadingDiv.style.display = 'none';
+    document.getElementById('app').prepend(loadingDiv);
+
     buildGrid();
-    loadConfig();
-    // Apply stored color if any (already done in loadConfig, but ensure default)
-    if (!localStorage.getItem('twm_config')) {
-        applyStyles('#aa55ff');
-    }
+    loadConfig(5);
 })();
 </script>
 </body>
