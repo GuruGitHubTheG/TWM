@@ -9,6 +9,7 @@
         * { margin:0; padding:0; box-sizing:border-box; }
         body { font-family:'Volter',sans-serif; background:#000; color:var(--primary,#aa55ff); padding:0; margin:0; min-height:100vh; }
 
+        /* Fixed top bar */
         #topBar {
             position: fixed;
             top: 0;
@@ -22,6 +23,16 @@
             display: flex;
             align-items: center;
             transition: border-color 0.3s, background 0.3s;
+        }
+        .topBar-left {
+            display: flex;
+            align-items: center;
+            gap: 12px; /* gap between icon and title */
+        }
+        .topBar-icon {
+            width: 48px;
+            height: 48px;
+            flex-shrink: 0;
         }
         #topBarTitle {
             font-size: 28px;
@@ -50,6 +61,7 @@
             display: flex;
             align-items: center;
             justify-content: center;
+            flex-shrink: 0;
         }
         .header-icon-btn img {
             width: 48px;
@@ -88,6 +100,14 @@
             color: var(--primary, #aa55ff);
             min-height: 60px;
         }
+        .window-header-left {
+            display: flex;
+            align-items: center;
+            gap: 15px; /* gap between icon and title */
+        }
+        .window-header-icon {
+            flex-shrink: 0;
+        }
         .window-header-title {
             font-size: 28px;
             font-weight: normal;
@@ -112,6 +132,7 @@
             background: #000;
         }
 
+        /* ---- Wallpaper grid (unchanged) ---- */
         .wallpaper-grid {
             display: flex;
             flex-wrap: wrap;
@@ -195,6 +216,7 @@
             word-wrap: break-word;
         }
 
+        /* ---- Settings (unchanged) ---- */
         .setting { padding:10px 0; }
         .setting + .setting {
             border-top: 1px solid rgba(255,255,255,0.08);
@@ -323,7 +345,7 @@
         }
         select option { background:#1a1a1a; color:var(--primary, #aa55ff); }
 
-        /* ----- Only container padding changes on very narrow screens ----- */
+        /* ----- Responsive: only container padding changes ----- */
         @media (max-width: 400px) {
             .container {
                 padding: 0 5px;
@@ -333,14 +355,16 @@
             .window { border-width: 4px; }
             .window-divider { height: 10px; }
         }
-
         ::-webkit-scrollbar { width:0; background:transparent; }
     </style>
 </head>
 <body>
     <!-- Fixed Top Bar -->
     <div id="topBar">
-        <span id="topBarTitle">Loading…</span>
+        <div class="topBar-left">
+            <div class="topBar-icon" id="topBarIcon"></div>
+            <span id="topBarTitle">The World Machine</span>
+        </div>
         <div class="header-icons">
             <button class="header-icon-btn" id="dismissBtnTop"><img src="https://github.com/GuruGitHubTheG/TWM/blob/main/icons/dismiss.png?raw=true" alt="dismiss"></button>
             <button class="header-icon-btn" id="closeBtnTop"><img src="https://github.com/GuruGitHubTheG/TWM/blob/main/icons/close.png?raw=true" alt="close"></button>
@@ -352,7 +376,10 @@
         <div class="window" id="customize-window">
             <div class="window-header-wrapper">
                 <div class="window-header">
-                    <span class="window-header-title">Customize</span>
+                    <div class="window-header-left">
+                        <div class="window-header-icon" id="customizeIcon" style="width:42px; height:42px;"></div>
+                        <span class="window-header-title">Customize</span>
+                    </div>
                     <div class="header-icons">
                         <button class="header-icon-btn" id="dismissBtnColor2"><img src="https://github.com/GuruGitHubTheG/TWM/blob/main/icons/dismiss.png?raw=true" alt="dismiss"></button>
                         <button class="header-icon-btn" id="closeBtnColor2"><img src="https://github.com/GuruGitHubTheG/TWM/blob/main/icons/close.png?raw=true" alt="close"></button>
@@ -388,7 +415,10 @@
         <div class="window" id="wallpaper-window">
             <div class="window-header-wrapper">
                 <div class="window-header">
-                    <span class="window-header-title">Wallpapers</span>
+                    <div class="window-header-left">
+                        <div class="window-header-icon" id="wallpaperIcon" style="width:42px; height:36px;"></div>
+                        <span class="window-header-title">Wallpapers</span>
+                    </div>
                     <div class="header-icons">
                         <button class="header-icon-btn" id="dismissBtnColor3"><img src="https://github.com/GuruGitHubTheG/TWM/blob/main/icons/dismiss.png?raw=true" alt="dismiss"></button>
                         <button class="header-icon-btn" id="closeBtnColor3"><img src="https://github.com/GuruGitHubTheG/TWM/blob/main/icons/close.png?raw=true" alt="close"></button>
@@ -401,7 +431,7 @@
             </div>
         </div>
 
-        <!-- Themes Window -->
+        <!-- Themes Window (no icon yet) -->
         <div class="window" id="themes-window">
             <div class="window-header-wrapper">
                 <div class="window-header">
@@ -445,6 +475,7 @@
                 return urlParams.get(param);
             }
 
+            // ---------- Wallpaper data ----------
             var wallpapers = [
                 { id: 1, label: 'The World\nMachine', image: 'https://github.com/GuruGitHubTheG/TWM/blob/main/wallpapers/The_World_Machine_wallpaper.png?raw=true' },
                 { id: 2, label: 'Barrens\nCraters', image: 'https://github.com/GuruGitHubTheG/TWM/blob/main/wallpapers/Barrens_Craters_wallpaper.png?raw=true' },
@@ -459,6 +490,19 @@
             var selectedWallpaperId = 1;
             var primaryColor = '#aa55ff';
 
+            // ---------- Recolor helper for color watches ----------
+            function createColoredIcon(iconUrl, width, height, color) {
+                // Returns an SVG data URI that draws the icon in the given color.
+                var svg = '<svg xmlns="http://www.w3.org/2000/svg" width="' + width + '" height="' + height + '" viewBox="0 0 ' + width + ' ' + height + '">' +
+                    '<defs><mask id="m">' +
+                    '<image href="' + iconUrl + '" width="' + width + '" height="' + height + '" />' +
+                    '</mask></defs>' +
+                    '<rect width="' + width + '" height="' + height + '" fill="' + color + '" mask="url(#m)" />' +
+                    '</svg>';
+                return 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svg);
+            }
+
+            // ---------- Apply styles (color) ----------
             function applyStyles(color) {
                 primaryColor = color;
                 document.documentElement.style.setProperty('--primary', color);
@@ -475,8 +519,31 @@
                 document.querySelectorAll('.color-picker-wrapper input[type="color"]').forEach(function(el) { el.style.borderColor = color; });
                 var style = document.getElementById('dynamicToggleStyle') || (function() { var s=document.createElement('style'); s.id='dynamicToggleStyle'; document.head.appendChild(s); return s; })();
                 style.textContent = '.toggle input:checked + .slider { background: ' + color + ' !important; }';
+
+                // Recolor icons
+                recolorIcons(color);
             }
 
+            // ---------- Recolor all colored icons ----------
+            function recolorIcons(color) {
+                // Top bar oneshot
+                var topIcon = document.getElementById('topBarIcon');
+                if (topIcon) {
+                    topIcon.innerHTML = '<img src="' + createColoredIcon('https://github.com/GuruGitHubTheG/TWM/blob/main/icons/oneshot.png?raw=true', 48, 48, color) + '" width="48" height="48" style="display:block;">';
+                }
+                // Customize gear
+                var custIcon = document.getElementById('customizeIcon');
+                if (custIcon) {
+                    custIcon.innerHTML = '<img src="' + createColoredIcon('https://github.com/GuruGitHubTheG/TWM/blob/main/icons/gear.png?raw=true', 42, 42, color) + '" width="42" height="42" style="display:block;">';
+                }
+                // Wallpaper folder
+                var wallIcon = document.getElementById('wallpaperIcon');
+                if (wallIcon) {
+                    wallIcon.innerHTML = '<img src="' + createColoredIcon('https://github.com/GuruGitHubTheG/TWM/blob/main/icons/folder.png?raw=true', 42, 36, color) + '" width="42" height="36" style="display:block;">';
+                }
+            }
+
+            // ---------- Buttons and other logic ----------
             document.getElementById('dismissBtnTop').addEventListener('click', function() {
                 var returnTo = getQueryParam('return_to');
                 if (returnTo) window.location = returnTo;
@@ -497,6 +564,7 @@
                 });
             });
 
+            // ---------- Load config ----------
             function loadConfig(retries) {
                 retries = retries || 3;
                 var stored = localStorage.getItem('twm_config');
@@ -529,7 +597,7 @@
                             document.getElementById('secondaryColorHex').textContent = sc;
                         }
                         console.log('Loaded config:', config);
-                        document.getElementById('topBarTitle').textContent = 'Done!';
+                        document.getElementById('topBarTitle').textContent = 'The World Machine';
                         return true;
                     } catch(e) {
                         console.warn('Error loading config', e);
@@ -543,11 +611,12 @@
                 } else {
                     console.log('No config – using defaults');
                     applyStyles('#aa55ff');
-                    document.getElementById('topBarTitle').textContent = 'Done!';
+                    document.getElementById('topBarTitle').textContent = 'The World Machine';
                     return false;
                 }
             }
 
+            // ---------- Build wallpaper grid ----------
             function buildGrid() {
                 var grid = document.getElementById('wallpaperGrid');
                 grid.innerHTML = '';
@@ -590,6 +659,7 @@
                 });
             }
 
+            // ---------- Save ----------
             function getConfig() {
                 var config = {
                     ClockMode: document.getElementById('ClockMode').value,
@@ -626,6 +696,7 @@
                 document.getElementById('secondaryColorHex').textContent = this.value;
             });
 
+            // ---------- Init ----------
             buildGrid();
             loadConfig(5);
         })();

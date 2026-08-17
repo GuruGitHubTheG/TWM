@@ -10,7 +10,7 @@
         body { font-family:'Volter',sans-serif; background:#000; color:#fff; padding:0; margin:0; min-height:100vh; transition:background 0.3s,color 0.3s; }
         body.inverted { background:#fff; color:#000; }
 
-        /* Fixed top bar – absolute icons */
+        /* Fixed top bar */
         #topBar {
             position: fixed;
             top: 0;
@@ -29,6 +29,21 @@
             background: #fff;
             border-bottom-color: #000;
         }
+        .topBar-left {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        .topBar-icon {
+            width: 48px;
+            height: 48px;
+            flex-shrink: 0;
+        }
+        .topBar-icon img {
+            width: 48px;
+            height: 48px;
+            display: block;
+        }
         #topBarTitle {
             font-size: 28px;
             font-weight: normal;
@@ -40,7 +55,6 @@
         body.inverted #topBarTitle {
             color: #000;
         }
-        /* Icons – absolutely positioned */
         #topBar .header-icons {
             position: absolute;
             right: 6px;
@@ -70,6 +84,11 @@
             height: 48px;
             object-fit: contain;
             display: block;
+            /* Invert white icons to black when not inverted */
+            filter: invert(1);
+        }
+        body.inverted .header-icon-btn img {
+            filter: invert(0);
         }
         .header-icon-btn:hover { opacity:0.8; }
         .header-icon-btn:active { opacity:0.6; }
@@ -78,7 +97,7 @@
             width: 100%;
             max-width: 1200px;
             padding: 0 10px;
-            padding-top: 82px;   /* bar height + 16px gap */
+            padding-top: 82px;
             padding-bottom: 40px;
             margin: 0 auto;
         }
@@ -112,13 +131,28 @@
             background: #fff;
             color: #000;
         }
+        .window-header-left {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        .window-header-icon {
+            flex-shrink: 0;
+        }
+        .window-header-icon img {
+            display: block;
+            /* Invert white icons to black when not inverted */
+            filter: invert(1);
+        }
+        body.inverted .window-header-icon img {
+            filter: invert(0);
+        }
         .window-header-title {
             font-size: 28px;
             font-weight: normal;
             letter-spacing: 1px;
             line-height: 1;
         }
-        /* Window header icons – absolutely positioned */
         .window-header-wrapper .header-icons {
             position: absolute;
             right: 6px;
@@ -145,6 +179,7 @@
             background: #fff;
         }
 
+        /* ---- Wallpaper grid (unchanged) ---- */
         .wallpaper-grid {
             display: flex;
             flex-wrap: wrap;
@@ -245,6 +280,7 @@
             background: #fff;
         }
 
+        /* ---- Settings (unchanged) ---- */
         .setting { padding:10px 0; }
         .setting + .setting {
             border-top: 1px solid rgba(255,255,255,0.08);
@@ -375,27 +411,29 @@
         select option { background:#1a1a1a; color:#fff; }
         body.inverted select option { background:#e5e5e5; color:#000; }
 
-        /* ----- Only container padding changes on very narrow screens ----- */
+        /* ----- Responsive: only container padding changes ----- */
         @media (max-width: 400px) {
             .container {
                 padding: 0 5px;
-                padding-top: 76px; /* adjust for smaller container padding */
+                padding-top: 76px;
             }
             .window-content { padding: 12px; }
             .window { border-width: 4px; }
             .window-divider { height: 10px; }
         }
-        /* No changes to header padding, icon sizes, or font sizes */
         ::-webkit-scrollbar { width:0; background:transparent; }
     </style>
 </head>
 <body>
     <!-- Fixed Top Bar -->
     <div id="topBar">
-        <span id="topBarTitle">Loading…</span>
+        <div class="topBar-left">
+            <div class="topBar-icon"><img src="https://github.com/GuruGitHubTheG/TWM/blob/main/icons/oneshot.png?raw=true" alt="oneshot"></div>
+            <span id="topBarTitle">The World Machine</span>
+        </div>
         <div class="header-icons">
-            <button class="header-icon-btn" id="dismissBtnTop"><img class="icon-dismiss" src="https://github.com/GuruGitHubTheG/TWM/blob/main/icons/dismiss.png?raw=true" alt="dismiss"></button>
-            <button class="header-icon-btn" id="closeBtnTop"><img class="icon-close" src="https://github.com/GuruGitHubTheG/TWM/blob/main/icons/close.png?raw=true" alt="close"></button>
+            <button class="header-icon-btn" id="dismissBtnTop"><img src="https://github.com/GuruGitHubTheG/TWM/blob/main/icons/dismiss.png?raw=true" alt="dismiss"></button>
+            <button class="header-icon-btn" id="closeBtnTop"><img src="https://github.com/GuruGitHubTheG/TWM/blob/main/icons/close.png?raw=true" alt="close"></button>
         </div>
     </div>
 
@@ -404,10 +442,13 @@
         <div class="window" id="customize-window">
             <div class="window-header-wrapper">
                 <div class="window-header">
-                    <span class="window-header-title">Customize</span>
+                    <div class="window-header-left">
+                        <div class="window-header-icon"><img src="https://github.com/GuruGitHubTheG/TWM/blob/main/icons/gear.png?raw=true" width="42" height="42" alt="gear"></div>
+                        <span class="window-header-title">Customize</span>
+                    </div>
                     <div class="header-icons">
-                        <button class="header-icon-btn" id="dismissBtnBW2"><img class="icon-dismiss" src="https://github.com/GuruGitHubTheG/TWM/blob/main/icons/dismiss.png?raw=true" alt="dismiss"></button>
-                        <button class="header-icon-btn" id="closeBtnBW2"><img class="icon-close" src="https://github.com/GuruGitHubTheG/TWM/blob/main/icons/close.png?raw=true" alt="close"></button>
+                        <button class="header-icon-btn" id="dismissBtnBW2"><img src="https://github.com/GuruGitHubTheG/TWM/blob/main/icons/dismiss.png?raw=true" alt="dismiss"></button>
+                        <button class="header-icon-btn" id="closeBtnBW2"><img src="https://github.com/GuruGitHubTheG/TWM/blob/main/icons/close.png?raw=true" alt="close"></button>
                     </div>
                 </div>
             </div>
@@ -440,10 +481,13 @@
         <div class="window" id="wallpaper-window">
             <div class="window-header-wrapper">
                 <div class="window-header">
-                    <span class="window-header-title">Wallpapers</span>
+                    <div class="window-header-left">
+                        <div class="window-header-icon"><img src="https://github.com/GuruGitHubTheG/TWM/blob/main/icons/folder.png?raw=true" width="42" height="36" alt="folder"></div>
+                        <span class="window-header-title">Wallpapers</span>
+                    </div>
                     <div class="header-icons">
-                        <button class="header-icon-btn" id="dismissBtnBW3"><img class="icon-dismiss" src="https://github.com/GuruGitHubTheG/TWM/blob/main/icons/dismiss.png?raw=true" alt="dismiss"></button>
-                        <button class="header-icon-btn" id="closeBtnBW3"><img class="icon-close" src="https://github.com/GuruGitHubTheG/TWM/blob/main/icons/close.png?raw=true" alt="close"></button>
+                        <button class="header-icon-btn" id="dismissBtnBW3"><img src="https://github.com/GuruGitHubTheG/TWM/blob/main/icons/dismiss.png?raw=true" alt="dismiss"></button>
+                        <button class="header-icon-btn" id="closeBtnBW3"><img src="https://github.com/GuruGitHubTheG/TWM/blob/main/icons/close.png?raw=true" alt="close"></button>
                     </div>
                 </div>
             </div>
@@ -459,8 +503,8 @@
                 <div class="window-header">
                     <span class="window-header-title">Themes</span>
                     <div class="header-icons">
-                        <button class="header-icon-btn" id="dismissBtnBW4"><img class="icon-dismiss" src="https://github.com/GuruGitHubTheG/TWM/blob/main/icons/dismiss.png?raw=true" alt="dismiss"></button>
-                        <button class="header-icon-btn" id="closeBtnBW4"><img class="icon-close" src="https://github.com/GuruGitHubTheG/TWM/blob/main/icons/close.png?raw=true" alt="close"></button>
+                        <button class="header-icon-btn" id="dismissBtnBW4"><img src="https://github.com/GuruGitHubTheG/TWM/blob/main/icons/dismiss.png?raw=true" alt="dismiss"></button>
+                        <button class="header-icon-btn" id="closeBtnBW4"><img src="https://github.com/GuruGitHubTheG/TWM/blob/main/icons/close.png?raw=true" alt="close"></button>
                     </div>
                 </div>
             </div>
@@ -480,7 +524,6 @@
     </div>
 
     <script>
-        // (same JavaScript as before – unchanged)
         (function() {
             function getQueryParam(param) {
                 var urlParams = new URLSearchParams(window.location.search);
@@ -503,16 +546,7 @@
             function applyInversion(enabled) {
                 if (enabled) document.body.classList.add('inverted');
                 else document.body.classList.remove('inverted');
-                updateIcons(enabled);
-            }
-
-            function updateIcons(inverted) {
-                document.querySelectorAll('.icon-dismiss').forEach(function(el) {
-                    el.src = inverted ? 'https://github.com/GuruGitHubTheG/TWM/blob/main/icons/dismiss-inverted.png?raw=true' : 'https://github.com/GuruGitHubTheG/TWM/blob/main/icons/dismiss.png?raw=true';
-                });
-                document.querySelectorAll('.icon-close').forEach(function(el) {
-                    el.src = inverted ? 'https://github.com/GuruGitHubTheG/TWM/blob/main/icons/close-inverted.png?raw=true' : 'https://github.com/GuruGitHubTheG/TWM/blob/main/icons/close.png?raw=true';
-                });
+                // No need to update icon sources – CSS handles inversion.
             }
 
             document.getElementById('dismissBtnTop').addEventListener('click', function() {
@@ -559,7 +593,7 @@
                             applyInversion(inv);
                         }
                         console.log('Loaded config:', config);
-                        document.getElementById('topBarTitle').textContent = 'Done!';
+                        document.getElementById('topBarTitle').textContent = 'The World Machine';
                         return true;
                     } catch(e) {
                         console.warn('Error loading config', e);
@@ -572,7 +606,7 @@
                     return false;
                 } else {
                     console.log('No config – using defaults');
-                    document.getElementById('topBarTitle').textContent = 'Done!';
+                    document.getElementById('topBarTitle').textContent = 'The World Machine';
                     return false;
                 }
             }
@@ -647,7 +681,6 @@
                 applyInversion(this.checked);
             });
 
-            updateIcons(false);
             buildGrid();
             loadConfig(5);
         })();
