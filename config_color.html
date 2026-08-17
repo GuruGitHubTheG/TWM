@@ -9,7 +9,6 @@
         * { margin:0; padding:0; box-sizing:border-box; }
         body { font-family:'Volter',sans-serif; background:#000; color:var(--primary,#aa55ff); padding:0; margin:0; min-height:100vh; }
 
-        /* Fixed top bar */
         #topBar {
             position: fixed;
             top: 0;
@@ -18,21 +17,29 @@
             z-index: 100;
             background: #000;
             border-bottom: 6px solid var(--primary, #aa55ff);
-            padding: 20px 18px 12px 18px;
+            padding: 6px 18px 6px 6px;
             min-height: 60px;
             display: flex;
             align-items: center;
-            transition: border-color 0.3s, background 0.3s;
         }
         .topBar-left {
             display: flex;
             align-items: center;
-            gap: 12px; /* gap between icon and title */
+            gap: 12px;
         }
         .topBar-icon {
             width: 48px;
             height: 48px;
             flex-shrink: 0;
+            background-color: var(--primary, #aa55ff);
+            -webkit-mask-image: url('https://raw.githubusercontent.com/GuruGitHubTheG/TWM/main/icons/oneshot.png');
+            mask-image: url('https://raw.githubusercontent.com/GuruGitHubTheG/TWM/main/icons/oneshot.png');
+            -webkit-mask-size: contain;
+            mask-size: contain;
+            -webkit-mask-repeat: no-repeat;
+            mask-repeat: no-repeat;
+            -webkit-mask-position: center;
+            mask-position: center;
         }
         #topBarTitle {
             font-size: 28px;
@@ -40,7 +47,6 @@
             letter-spacing: 1px;
             line-height: 1;
             color: var(--primary, #aa55ff);
-            transition: color 0.3s;
         }
         #topBar .header-icons {
             position: absolute;
@@ -95,18 +101,50 @@
         .window-header {
             display: flex;
             align-items: center;
-            padding: 20px 18px 12px 18px;
             background: #000;
             color: var(--primary, #aa55ff);
             min-height: 60px;
+            padding-left: 18px;
+            padding-right: 18px;
+        }
+        #customize-window .window-header {
+            padding-top: 9px;
+            padding-bottom: 9px;
+        }
+        #wallpaper-window .window-header {
+            padding-top: 12px;
+            padding-bottom: 12px;
+        }
+        #themes-window .window-header {
+            padding-top: 20px;
+            padding-bottom: 12px;
         }
         .window-header-left {
             display: flex;
             align-items: center;
-            gap: 15px; /* gap between icon and title */
+            gap: 15px;
         }
         .window-header-icon {
             flex-shrink: 0;
+            background-color: var(--primary, #aa55ff);
+            -webkit-mask-size: contain;
+            mask-size: contain;
+            -webkit-mask-repeat: no-repeat;
+            mask-repeat: no-repeat;
+            -webkit-mask-position: center;
+            mask-position: center;
+        }
+        #customizeIcon {
+            width: 42px;
+            height: 42px;
+            -webkit-mask-image: url('https://raw.githubusercontent.com/GuruGitHubTheG/TWM/main/icons/gear.png');
+            mask-image: url('https://raw.githubusercontent.com/GuruGitHubTheG/TWM/main/icons/gear.png');
+        }
+        #wallpaperIcon {
+            width: 42px;
+            height: 36px;
+            -webkit-mask-image: url('https://raw.githubusercontent.com/GuruGitHubTheG/TWM/main/icons/folder.png');
+            mask-image: url('https://raw.githubusercontent.com/GuruGitHubTheG/TWM/main/icons/folder.png');
         }
         .window-header-title {
             font-size: 28px;
@@ -132,7 +170,6 @@
             background: #000;
         }
 
-        /* ---- Wallpaper grid (unchanged) ---- */
         .wallpaper-grid {
             display: flex;
             flex-wrap: wrap;
@@ -144,7 +181,6 @@
             cursor: pointer;
             border: 6px solid transparent;
             background: transparent;
-            transition: border-color 0.2s, background 0.2s;
             padding: 0;
             position: relative;
             display: flex;
@@ -216,7 +252,6 @@
             word-wrap: break-word;
         }
 
-        /* ---- Settings (unchanged) ---- */
         .setting { padding:10px 0; }
         .setting + .setting {
             border-top: 1px solid rgba(255,255,255,0.08);
@@ -253,7 +288,6 @@
             cursor:pointer;
             top:0; left:0; right:0; bottom:0;
             background:rgba(255,255,255,0.15);
-            transition:0.3s;
             border-radius:31px;
         }
         .toggle .slider:before {
@@ -264,7 +298,6 @@
             left:2px;
             bottom:2px;
             background:#fff;
-            transition:0.3s;
             border-radius:50%;
             box-shadow:0 1px 3px rgba(0,0,0,0.3);
         }
@@ -306,7 +339,6 @@
             border:6px solid var(--primary, #aa55ff);
             border-radius:0;
             cursor:pointer;
-            transition:opacity 0.2s;
             margin-top:8px;
         }
         .save-btn:hover { opacity:0.85; }
@@ -345,7 +377,6 @@
         }
         select option { background:#1a1a1a; color:var(--primary, #aa55ff); }
 
-        /* ----- Responsive: only container padding changes ----- */
         @media (max-width: 400px) {
             .container {
                 padding: 0 5px;
@@ -366,8 +397,8 @@
             <span id="topBarTitle">The World Machine</span>
         </div>
         <div class="header-icons">
-            <button class="header-icon-btn" id="dismissBtnTop"><img src="https://github.com/GuruGitHubTheG/TWM/blob/main/icons/dismiss.png?raw=true" alt="dismiss"></button>
-            <button class="header-icon-btn" id="closeBtnTop"><img src="https://github.com/GuruGitHubTheG/TWM/blob/main/icons/close.png?raw=true" alt="close"></button>
+            <button class="header-icon-btn" id="dismissBtnTop"><img src="https://raw.githubusercontent.com/GuruGitHubTheG/TWM/main/icons/dismiss.png" alt="dismiss"></button>
+            <button class="header-icon-btn" id="closeBtnTop"><img src="https://raw.githubusercontent.com/GuruGitHubTheG/TWM/main/icons/close.png" alt="close"></button>
         </div>
     </div>
 
@@ -377,12 +408,12 @@
             <div class="window-header-wrapper">
                 <div class="window-header">
                     <div class="window-header-left">
-                        <div class="window-header-icon" id="customizeIcon" style="width:42px; height:42px;"></div>
+                        <div class="window-header-icon" id="customizeIcon"></div>
                         <span class="window-header-title">Customize</span>
                     </div>
                     <div class="header-icons">
-                        <button class="header-icon-btn" id="dismissBtnColor2"><img src="https://github.com/GuruGitHubTheG/TWM/blob/main/icons/dismiss.png?raw=true" alt="dismiss"></button>
-                        <button class="header-icon-btn" id="closeBtnColor2"><img src="https://github.com/GuruGitHubTheG/TWM/blob/main/icons/close.png?raw=true" alt="close"></button>
+                        <button class="header-icon-btn" id="dismissBtnColor2"><img src="https://raw.githubusercontent.com/GuruGitHubTheG/TWM/main/icons/dismiss.png" alt="dismiss"></button>
+                        <button class="header-icon-btn" id="closeBtnColor2"><img src="https://raw.githubusercontent.com/GuruGitHubTheG/TWM/main/icons/close.png" alt="close"></button>
                     </div>
                 </div>
             </div>
@@ -416,12 +447,12 @@
             <div class="window-header-wrapper">
                 <div class="window-header">
                     <div class="window-header-left">
-                        <div class="window-header-icon" id="wallpaperIcon" style="width:42px; height:36px;"></div>
+                        <div class="window-header-icon" id="wallpaperIcon"></div>
                         <span class="window-header-title">Wallpapers</span>
                     </div>
                     <div class="header-icons">
-                        <button class="header-icon-btn" id="dismissBtnColor3"><img src="https://github.com/GuruGitHubTheG/TWM/blob/main/icons/dismiss.png?raw=true" alt="dismiss"></button>
-                        <button class="header-icon-btn" id="closeBtnColor3"><img src="https://github.com/GuruGitHubTheG/TWM/blob/main/icons/close.png?raw=true" alt="close"></button>
+                        <button class="header-icon-btn" id="dismissBtnColor3"><img src="https://raw.githubusercontent.com/GuruGitHubTheG/TWM/main/icons/dismiss.png" alt="dismiss"></button>
+                        <button class="header-icon-btn" id="closeBtnColor3"><img src="https://raw.githubusercontent.com/GuruGitHubTheG/TWM/main/icons/close.png" alt="close"></button>
                     </div>
                 </div>
             </div>
@@ -431,14 +462,14 @@
             </div>
         </div>
 
-        <!-- Themes Window (no icon yet) -->
+        <!-- Themes Window -->
         <div class="window" id="themes-window">
             <div class="window-header-wrapper">
                 <div class="window-header">
                     <span class="window-header-title">Themes</span>
                     <div class="header-icons">
-                        <button class="header-icon-btn" id="dismissBtnColor4"><img src="https://github.com/GuruGitHubTheG/TWM/blob/main/icons/dismiss.png?raw=true" alt="dismiss"></button>
-                        <button class="header-icon-btn" id="closeBtnColor4"><img src="https://github.com/GuruGitHubTheG/TWM/blob/main/icons/close.png?raw=true" alt="close"></button>
+                        <button class="header-icon-btn" id="dismissBtnColor4"><img src="https://raw.githubusercontent.com/GuruGitHubTheG/TWM/main/icons/dismiss.png" alt="dismiss"></button>
+                        <button class="header-icon-btn" id="closeBtnColor4"><img src="https://raw.githubusercontent.com/GuruGitHubTheG/TWM/main/icons/close.png" alt="close"></button>
                     </div>
                 </div>
             </div>
@@ -475,34 +506,20 @@
                 return urlParams.get(param);
             }
 
-            // ---------- Wallpaper data ----------
             var wallpapers = [
-                { id: 1, label: 'The World\nMachine', image: 'https://github.com/GuruGitHubTheG/TWM/blob/main/wallpapers/The_World_Machine_wallpaper.png?raw=true' },
-                { id: 2, label: 'Barrens\nCraters', image: 'https://github.com/GuruGitHubTheG/TWM/blob/main/wallpapers/Barrens_Craters_wallpaper.png?raw=true' },
-                { id: 3, label: 'Glen\nShoreline', image: 'https://github.com/GuruGitHubTheG/TWM/blob/main/wallpapers/Glen_Shoreline_wallpaper.png?raw=true' },
-                { id: 4, label: 'Refuge\nCityscape', image: 'https://github.com/GuruGitHubTheG/TWM/blob/main/wallpapers/Refuge_Cityscape_wallpaper.png?raw=true' },
-                { id: 5, label: 'Messiah', image: 'https://github.com/GuruGitHubTheG/TWM/blob/main/wallpapers/Messiah_wallpaper.png?raw=true' },
-                { id: 6, label: 'My Burden\nis Light', image: 'https://github.com/GuruGitHubTheG/TWM/blob/main/wallpapers/My_Burden_is_Light_wallpaper.png?raw=true' },
-                { id: 7, label: 'Asteroid', image: 'https://github.com/GuruGitHubTheG/TWM/blob/main/wallpapers/Asteroid_wallpaper.png?raw=true' },
+                { id: 1, label: 'The World\nMachine', image: 'https://raw.githubusercontent.com/GuruGitHubTheG/TWM/main/wallpapers/The_World_Machine_wallpaper.png' },
+                { id: 2, label: 'Barrens\nCraters', image: 'https://raw.githubusercontent.com/GuruGitHubTheG/TWM/main/wallpapers/Barrens_Craters_wallpaper.png' },
+                { id: 3, label: 'Glen\nShoreline', image: 'https://raw.githubusercontent.com/GuruGitHubTheG/TWM/main/wallpapers/Glen_Shoreline_wallpaper.png' },
+                { id: 4, label: 'Refuge\nCityscape', image: 'https://raw.githubusercontent.com/GuruGitHubTheG/TWM/main/wallpapers/Refuge_Cityscape_wallpaper.png' },
+                { id: 5, label: 'Messiah', image: 'https://raw.githubusercontent.com/GuruGitHubTheG/TWM/main/wallpapers/Messiah_wallpaper.png' },
+                { id: 6, label: 'My Burden\nis Light', image: 'https://raw.githubusercontent.com/GuruGitHubTheG/TWM/main/wallpapers/My_Burden_is_Light_wallpaper.png' },
+                { id: 7, label: 'Asteroid', image: 'https://raw.githubusercontent.com/GuruGitHubTheG/TWM/main/wallpapers/Asteroid_wallpaper.png' },
                 { id: 0, label: 'Blank', image: '' }
             ];
 
             var selectedWallpaperId = 1;
             var primaryColor = '#aa55ff';
 
-            // ---------- Recolor helper for color watches ----------
-            function createColoredIcon(iconUrl, width, height, color) {
-                // Returns an SVG data URI that draws the icon in the given color.
-                var svg = '<svg xmlns="http://www.w3.org/2000/svg" width="' + width + '" height="' + height + '" viewBox="0 0 ' + width + ' ' + height + '">' +
-                    '<defs><mask id="m">' +
-                    '<image href="' + iconUrl + '" width="' + width + '" height="' + height + '" />' +
-                    '</mask></defs>' +
-                    '<rect width="' + width + '" height="' + height + '" fill="' + color + '" mask="url(#m)" />' +
-                    '</svg>';
-                return 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svg);
-            }
-
-            // ---------- Apply styles (color) ----------
             function applyStyles(color) {
                 primaryColor = color;
                 document.documentElement.style.setProperty('--primary', color);
@@ -519,31 +536,8 @@
                 document.querySelectorAll('.color-picker-wrapper input[type="color"]').forEach(function(el) { el.style.borderColor = color; });
                 var style = document.getElementById('dynamicToggleStyle') || (function() { var s=document.createElement('style'); s.id='dynamicToggleStyle'; document.head.appendChild(s); return s; })();
                 style.textContent = '.toggle input:checked + .slider { background: ' + color + ' !important; }';
-
-                // Recolor icons
-                recolorIcons(color);
             }
 
-            // ---------- Recolor all colored icons ----------
-            function recolorIcons(color) {
-                // Top bar oneshot
-                var topIcon = document.getElementById('topBarIcon');
-                if (topIcon) {
-                    topIcon.innerHTML = '<img src="' + createColoredIcon('https://github.com/GuruGitHubTheG/TWM/blob/main/icons/oneshot.png?raw=true', 48, 48, color) + '" width="48" height="48" style="display:block;">';
-                }
-                // Customize gear
-                var custIcon = document.getElementById('customizeIcon');
-                if (custIcon) {
-                    custIcon.innerHTML = '<img src="' + createColoredIcon('https://github.com/GuruGitHubTheG/TWM/blob/main/icons/gear.png?raw=true', 42, 42, color) + '" width="42" height="42" style="display:block;">';
-                }
-                // Wallpaper folder
-                var wallIcon = document.getElementById('wallpaperIcon');
-                if (wallIcon) {
-                    wallIcon.innerHTML = '<img src="' + createColoredIcon('https://github.com/GuruGitHubTheG/TWM/blob/main/icons/folder.png?raw=true', 42, 36, color) + '" width="42" height="36" style="display:block;">';
-                }
-            }
-
-            // ---------- Buttons and other logic ----------
             document.getElementById('dismissBtnTop').addEventListener('click', function() {
                 var returnTo = getQueryParam('return_to');
                 if (returnTo) window.location = returnTo;
@@ -564,7 +558,6 @@
                 });
             });
 
-            // ---------- Load config ----------
             function loadConfig(retries) {
                 retries = retries || 3;
                 var stored = localStorage.getItem('twm_config');
@@ -616,7 +609,6 @@
                 }
             }
 
-            // ---------- Build wallpaper grid ----------
             function buildGrid() {
                 var grid = document.getElementById('wallpaperGrid');
                 grid.innerHTML = '';
@@ -659,7 +651,6 @@
                 });
             }
 
-            // ---------- Save ----------
             function getConfig() {
                 var config = {
                     ClockMode: document.getElementById('ClockMode').value,
@@ -696,7 +687,6 @@
                 document.getElementById('secondaryColorHex').textContent = this.value;
             });
 
-            // ---------- Init ----------
             buildGrid();
             loadConfig(5);
         })();

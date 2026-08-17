@@ -7,10 +7,9 @@
     <style>
         @font-face { font-family: 'Volter'; src: url('https://raw.githubusercontent.com/GuruGitHubTheG/TWM/main/Volter.ttf') format('truetype'); }
         * { margin:0; padding:0; box-sizing:border-box; }
-        body { font-family:'Volter',sans-serif; background:#000; color:#fff; padding:0; margin:0; min-height:100vh; transition:background 0.3s,color 0.3s; }
+        body { font-family:'Volter',sans-serif; background:#000; color:#fff; padding:0; margin:0; min-height:100vh; }
         body.inverted { background:#fff; color:#000; }
 
-        /* Fixed top bar */
         #topBar {
             position: fixed;
             top: 0;
@@ -19,11 +18,10 @@
             z-index: 100;
             background: #000;
             border-bottom: 6px solid #fff;
-            padding: 20px 18px 12px 18px;
+            padding: 6px 18px 6px 6px;
             min-height: 60px;
             display: flex;
             align-items: center;
-            transition: background 0.3s, border-color 0.3s, color 0.3s;
         }
         body.inverted #topBar {
             background: #fff;
@@ -50,7 +48,6 @@
             letter-spacing: 1px;
             line-height: 1;
             color: #fff;
-            transition: color 0.3s;
         }
         body.inverted #topBarTitle {
             color: #000;
@@ -64,6 +61,28 @@
             align-items: center;
             gap: 6px;
         }
+        .header-icon-btn img,
+        .window-header-icon img,
+        .topBar-icon img {
+            width: 48px;
+            height: 48px;
+            object-fit: contain;
+            display: block;
+            filter: invert(0);
+        }
+        body.inverted .header-icon-btn img,
+        body.inverted .window-header-icon img,
+        body.inverted .topBar-icon img {
+            filter: invert(1);
+        }
+        .window-header-icon img {
+            width: auto;
+            height: auto;
+            filter: invert(0);
+        }
+        body.inverted .window-header-icon img {
+            filter: invert(1);
+        }
         .header-icon-btn {
             width: 48px;
             height: 48px;
@@ -74,21 +93,9 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            transition: background 0.3s;
         }
         body.inverted .header-icon-btn {
             background: #000;
-        }
-        .header-icon-btn img {
-            width: 48px;
-            height: 48px;
-            object-fit: contain;
-            display: block;
-            /* Invert white icons to black when not inverted */
-            filter: invert(1);
-        }
-        body.inverted .header-icon-btn img {
-            filter: invert(0);
         }
         .header-icon-btn:hover { opacity:0.8; }
         .header-icon-btn:active { opacity:0.6; }
@@ -108,7 +115,6 @@
             border-radius: 0;
             margin-bottom: 16px;
             overflow: hidden;
-            transition: border-color 0.3s, background 0.3s;
         }
         body.inverted .window {
             background: #fff;
@@ -121,15 +127,27 @@
         .window-header {
             display: flex;
             align-items: center;
-            padding: 20px 18px 12px 18px;
             background: #000;
             color: #fff;
             min-height: 60px;
-            transition: background 0.3s, color 0.3s;
+            padding-left: 18px;
+            padding-right: 18px;
         }
         body.inverted .window-header {
             background: #fff;
             color: #000;
+        }
+        #customize-window .window-header {
+            padding-top: 9px;
+            padding-bottom: 9px;
+        }
+        #wallpaper-window .window-header {
+            padding-top: 12px;
+            padding-bottom: 12px;
+        }
+        #themes-window .window-header {
+            padding-top: 20px;
+            padding-bottom: 12px;
         }
         .window-header-left {
             display: flex;
@@ -141,11 +159,6 @@
         }
         .window-header-icon img {
             display: block;
-            /* Invert white icons to black when not inverted */
-            filter: invert(1);
-        }
-        body.inverted .window-header-icon img {
-            filter: invert(0);
         }
         .window-header-title {
             font-size: 28px;
@@ -165,7 +178,6 @@
         .window-divider {
             height: 12px;
             background: #fff;
-            transition: background 0.3s;
         }
         body.inverted .window-divider {
             background: #000;
@@ -173,13 +185,11 @@
         .window-content {
             padding: 18px;
             background: #000;
-            transition: background 0.3s;
         }
         body.inverted .window-content {
             background: #fff;
         }
 
-        /* ---- Wallpaper grid (unchanged) ---- */
         .wallpaper-grid {
             display: flex;
             flex-wrap: wrap;
@@ -191,7 +201,6 @@
             cursor: pointer;
             border: 6px solid transparent;
             background: transparent;
-            transition: border-color 0.2s, background 0.2s;
             padding: 0;
             position: relative;
             display: flex;
@@ -273,14 +282,12 @@
             border-radius: 0;
             white-space: pre;
             word-wrap: break-word;
-            transition: color 0.3s, background 0.3s;
         }
         body.inverted .wallpaper-label {
             color: #000;
             background: #fff;
         }
 
-        /* ---- Settings (unchanged) ---- */
         .setting { padding:10px 0; }
         .setting + .setting {
             border-top: 1px solid rgba(255,255,255,0.08);
@@ -295,7 +302,6 @@
             margin-bottom:6px;
             color:#fff;
             letter-spacing:0.5px;
-            transition:color 0.3s;
         }
         body.inverted .setting-label { color:#000; }
         .setting-description {
@@ -303,7 +309,6 @@
             color:#fff;
             opacity:0.6;
             margin-bottom:8px;
-            transition:color 0.3s,opacity 0.3s;
         }
         body.inverted .setting-description { color:#000; opacity:0.6; }
         .toggle-row {
@@ -324,7 +329,6 @@
             cursor:pointer;
             top:0; left:0; right:0; bottom:0;
             background:rgba(255,255,255,0.15);
-            transition:0.3s;
             border-radius:31px;
         }
         body.inverted .toggle .slider { background:rgba(0,0,0,0.15); }
@@ -336,7 +340,6 @@
             left:2px;
             bottom:2px;
             background:#fff;
-            transition:0.3s;
             border-radius:50%;
             box-shadow:0 1px 3px rgba(0,0,0,0.3);
         }
@@ -359,7 +362,6 @@
             border:6px solid #fff;
             border-radius:0;
             cursor:pointer;
-            transition:background 0.3s,color 0.3s,border-color 0.3s,opacity 0.2s;
             margin-top:8px;
         }
         body.inverted .save-btn {
@@ -376,7 +378,6 @@
             opacity:0.4;
             margin-top:6px;
             letter-spacing:0.3px;
-            transition:color 0.3s,opacity 0.3s;
         }
         body.inverted .capability-note { color:#000; opacity:0.4; }
 
@@ -398,7 +399,6 @@
             background-size:12px 8px;
             cursor:pointer;
             outline:none;
-            transition:border-color 0.3s,color 0.3s,background 0.3s;
         }
         body.inverted select {
             border-color:#000;
@@ -411,7 +411,6 @@
         select option { background:#1a1a1a; color:#fff; }
         body.inverted select option { background:#e5e5e5; color:#000; }
 
-        /* ----- Responsive: only container padding changes ----- */
         @media (max-width: 400px) {
             .container {
                 padding: 0 5px;
@@ -428,12 +427,12 @@
     <!-- Fixed Top Bar -->
     <div id="topBar">
         <div class="topBar-left">
-            <div class="topBar-icon"><img src="https://github.com/GuruGitHubTheG/TWM/blob/main/icons/oneshot.png?raw=true" alt="oneshot"></div>
+            <div class="topBar-icon"><img src="https://raw.githubusercontent.com/GuruGitHubTheG/TWM/main/icons/oneshot.png" alt="oneshot"></div>
             <span id="topBarTitle">The World Machine</span>
         </div>
         <div class="header-icons">
-            <button class="header-icon-btn" id="dismissBtnTop"><img src="https://github.com/GuruGitHubTheG/TWM/blob/main/icons/dismiss.png?raw=true" alt="dismiss"></button>
-            <button class="header-icon-btn" id="closeBtnTop"><img src="https://github.com/GuruGitHubTheG/TWM/blob/main/icons/close.png?raw=true" alt="close"></button>
+            <button class="header-icon-btn" id="dismissBtnTop"><img src="https://raw.githubusercontent.com/GuruGitHubTheG/TWM/main/icons/dismiss.png" alt="dismiss"></button>
+            <button class="header-icon-btn" id="closeBtnTop"><img src="https://raw.githubusercontent.com/GuruGitHubTheG/TWM/main/icons/close.png" alt="close"></button>
         </div>
     </div>
 
@@ -443,12 +442,12 @@
             <div class="window-header-wrapper">
                 <div class="window-header">
                     <div class="window-header-left">
-                        <div class="window-header-icon"><img src="https://github.com/GuruGitHubTheG/TWM/blob/main/icons/gear.png?raw=true" width="42" height="42" alt="gear"></div>
+                        <div class="window-header-icon"><img src="https://raw.githubusercontent.com/GuruGitHubTheG/TWM/main/icons/gear.png" width="42" height="42" alt="gear"></div>
                         <span class="window-header-title">Customize</span>
                     </div>
                     <div class="header-icons">
-                        <button class="header-icon-btn" id="dismissBtnBW2"><img src="https://github.com/GuruGitHubTheG/TWM/blob/main/icons/dismiss.png?raw=true" alt="dismiss"></button>
-                        <button class="header-icon-btn" id="closeBtnBW2"><img src="https://github.com/GuruGitHubTheG/TWM/blob/main/icons/close.png?raw=true" alt="close"></button>
+                        <button class="header-icon-btn" id="dismissBtnBW2"><img src="https://raw.githubusercontent.com/GuruGitHubTheG/TWM/main/icons/dismiss.png" alt="dismiss"></button>
+                        <button class="header-icon-btn" id="closeBtnBW2"><img src="https://raw.githubusercontent.com/GuruGitHubTheG/TWM/main/icons/close.png" alt="close"></button>
                     </div>
                 </div>
             </div>
@@ -482,12 +481,12 @@
             <div class="window-header-wrapper">
                 <div class="window-header">
                     <div class="window-header-left">
-                        <div class="window-header-icon"><img src="https://github.com/GuruGitHubTheG/TWM/blob/main/icons/folder.png?raw=true" width="42" height="36" alt="folder"></div>
+                        <div class="window-header-icon"><img src="https://raw.githubusercontent.com/GuruGitHubTheG/TWM/main/icons/folder.png" width="42" height="36" alt="folder"></div>
                         <span class="window-header-title">Wallpapers</span>
                     </div>
                     <div class="header-icons">
-                        <button class="header-icon-btn" id="dismissBtnBW3"><img src="https://github.com/GuruGitHubTheG/TWM/blob/main/icons/dismiss.png?raw=true" alt="dismiss"></button>
-                        <button class="header-icon-btn" id="closeBtnBW3"><img src="https://github.com/GuruGitHubTheG/TWM/blob/main/icons/close.png?raw=true" alt="close"></button>
+                        <button class="header-icon-btn" id="dismissBtnBW3"><img src="https://raw.githubusercontent.com/GuruGitHubTheG/TWM/main/icons/dismiss.png" alt="dismiss"></button>
+                        <button class="header-icon-btn" id="closeBtnBW3"><img src="https://raw.githubusercontent.com/GuruGitHubTheG/TWM/main/icons/close.png" alt="close"></button>
                     </div>
                 </div>
             </div>
@@ -503,8 +502,8 @@
                 <div class="window-header">
                     <span class="window-header-title">Themes</span>
                     <div class="header-icons">
-                        <button class="header-icon-btn" id="dismissBtnBW4"><img src="https://github.com/GuruGitHubTheG/TWM/blob/main/icons/dismiss.png?raw=true" alt="dismiss"></button>
-                        <button class="header-icon-btn" id="closeBtnBW4"><img src="https://github.com/GuruGitHubTheG/TWM/blob/main/icons/close.png?raw=true" alt="close"></button>
+                        <button class="header-icon-btn" id="dismissBtnBW4"><img src="https://raw.githubusercontent.com/GuruGitHubTheG/TWM/main/icons/dismiss.png" alt="dismiss"></button>
+                        <button class="header-icon-btn" id="closeBtnBW4"><img src="https://raw.githubusercontent.com/GuruGitHubTheG/TWM/main/icons/close.png" alt="close"></button>
                     </div>
                 </div>
             </div>
@@ -531,13 +530,13 @@
             }
 
             var wallpapers = [
-                { id: 1, label: 'The World\nMachine', image: 'https://github.com/GuruGitHubTheG/TWM/blob/main/wallpapers/The_World_Machine_wallpaper.png?raw=true' },
-                { id: 2, label: 'Barrens\nCraters', image: 'https://github.com/GuruGitHubTheG/TWM/blob/main/wallpapers/Barrens_Craters_wallpaper.png?raw=true' },
-                { id: 3, label: 'Glen\nShoreline', image: 'https://github.com/GuruGitHubTheG/TWM/blob/main/wallpapers/Glen_Shoreline_wallpaper.png?raw=true' },
-                { id: 4, label: 'Refuge\nCityscape', image: 'https://github.com/GuruGitHubTheG/TWM/blob/main/wallpapers/Refuge_Cityscape_wallpaper.png?raw=true' },
-                { id: 5, label: 'Messiah', image: 'https://github.com/GuruGitHubTheG/TWM/blob/main/wallpapers/Messiah_wallpaper.png?raw=true' },
-                { id: 6, label: 'My Burden\nis Light', image: 'https://github.com/GuruGitHubTheG/TWM/blob/main/wallpapers/My_Burden_is_Light_wallpaper.png?raw=true' },
-                { id: 7, label: 'Asteroid', image: 'https://github.com/GuruGitHubTheG/TWM/blob/main/wallpapers/Asteroid_wallpaper.png?raw=true' },
+                { id: 1, label: 'The World\nMachine', image: 'https://raw.githubusercontent.com/GuruGitHubTheG/TWM/main/wallpapers/The_World_Machine_wallpaper.png' },
+                { id: 2, label: 'Barrens\nCraters', image: 'https://raw.githubusercontent.com/GuruGitHubTheG/TWM/main/wallpapers/Barrens_Craters_wallpaper.png' },
+                { id: 3, label: 'Glen\nShoreline', image: 'https://raw.githubusercontent.com/GuruGitHubTheG/TWM/main/wallpapers/Glen_Shoreline_wallpaper.png' },
+                { id: 4, label: 'Refuge\nCityscape', image: 'https://raw.githubusercontent.com/GuruGitHubTheG/TWM/main/wallpapers/Refuge_Cityscape_wallpaper.png' },
+                { id: 5, label: 'Messiah', image: 'https://raw.githubusercontent.com/GuruGitHubTheG/TWM/main/wallpapers/Messiah_wallpaper.png' },
+                { id: 6, label: 'My Burden\nis Light', image: 'https://raw.githubusercontent.com/GuruGitHubTheG/TWM/main/wallpapers/My_Burden_is_Light_wallpaper.png' },
+                { id: 7, label: 'Asteroid', image: 'https://raw.githubusercontent.com/GuruGitHubTheG/TWM/main/wallpapers/Asteroid_wallpaper.png' },
                 { id: 0, label: 'Blank', image: '' }
             ];
 
@@ -546,7 +545,6 @@
             function applyInversion(enabled) {
                 if (enabled) document.body.classList.add('inverted');
                 else document.body.classList.remove('inverted');
-                // No need to update icon sources – CSS handles inversion.
             }
 
             document.getElementById('dismissBtnTop').addEventListener('click', function() {
