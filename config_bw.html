@@ -731,22 +731,23 @@
                 };
             }
 
-            // ----- SAVE BUTTON: Save to localStorage and close -----
+            // ----- SAVE BUTTON: Save to localStorage AND send data when closing -----
             document.getElementById('saveBtn').addEventListener('click', function() {
                 var config = getConfig();
                 var json = JSON.stringify(config);
+                var encoded = encodeURIComponent(json);
                 
-                // 1. Save to localStorage
+                // 1. Save to localStorage (for fallback)
                 localStorage.setItem('twm_config', json);
                 console.log('Saved to localStorage:', json);
                 
-                // 2. Close the config page
+                // 2. Close the page and send the data via fragment
                 var params = new URLSearchParams(window.location.search);
                 var returnTo = params.get('return_to');
                 if (returnTo) {
-                    window.location = returnTo;
+                    window.location = returnTo + encoded;
                 } else {
-                    window.location = 'pebblejs://close';
+                    window.location = 'pebblejs://close#' + encoded;
                 }
             });
 
