@@ -589,17 +589,17 @@
                 });
             });
 
+            // ----- LOAD CONFIG FROM URL OR LOCALSTORAGE -----
             function loadConfig() {
                 var config = null;
                 
-                // 1. First check URL (fresh data from watch)
+                // 1. Check URL first (fresh data from watch)
                 var params = new URLSearchParams(window.location.search);
                 var configJson = params.get('config');
                 
                 if (configJson) {
                     try {
                         config = JSON.parse(decodeURIComponent(configJson));
-                        // Cache in localStorage for future use
                         localStorage.setItem('twm_config', JSON.stringify(config));
                         console.log('Loaded from URL:', config);
                     } catch (e) {
@@ -622,12 +622,10 @@
                 
                 // 3. Apply the config
                 if (config) {
-                    // Clock settings
                     if (config.ClockMode !== undefined) document.getElementById('ClockMode').value = config.ClockMode;
                     if (config.LeadingZeros !== undefined) document.getElementById('LeadingZeros').checked = config.LeadingZeros === true;
                     if (config.ShowAMPM !== undefined) document.getElementById('ShowAMPM').checked = config.ShowAMPM !== false;
                     
-                    // Wallpaper
                     if (config.Wallpaper !== undefined) {
                         var wallpaperValue = parseInt(config.Wallpaper) || 1;
                         selectedWallpaperId = wallpaperValue;
@@ -640,7 +638,6 @@
                         });
                     }
                     
-                    // UI Color
                     if (config.UI_Color) {
                         var color = config.UI_Color;
                         if (!color.startsWith('#')) color = '#' + color;
@@ -651,13 +648,14 @@
                         applyStyles();
                     }
                     
-                    // Secondary Color
                     if (config.Secondary_Color) {
                         var secColor = config.Secondary_Color;
                         if (!secColor.startsWith('#')) secColor = '#' + secColor;
                         document.getElementById('Secondary_Color').value = secColor;
                         document.getElementById('secondaryColorHex').textContent = secColor;
                     }
+                } else {
+                    console.log('No config found – using defaults');
                 }
             }
 
