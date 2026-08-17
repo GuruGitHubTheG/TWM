@@ -106,7 +106,6 @@
             height: 48px;
             object-fit: contain;
             display: block;
-            /* NO FILTERS - images display as-is */
         }
 
         .header-icon-btn:hover {
@@ -590,6 +589,78 @@
                 });
             });
 
+            function loadConfig() {
+                var config = null;
+                
+                // 1. First check URL (fresh data from watch)
+                var params = new URLSearchParams(window.location.search);
+                var configJson = params.get('config');
+                
+                if (configJson) {
+                    try {
+                        config = JSON.parse(decodeURIComponent(configJson));
+                        // Cache in localStorage for future use
+                        localStorage.setItem('twm_config', JSON.stringify(config));
+                        console.log('Loaded from URL:', config);
+                    } catch (e) {
+                        console.warn('Failed to parse URL config', e);
+                    }
+                }
+                
+                // 2. If no URL config, try localStorage
+                if (!config) {
+                    var stored = localStorage.getItem('twm_config');
+                    if (stored) {
+                        try {
+                            config = JSON.parse(stored);
+                            console.log('Loaded from localStorage:', config);
+                        } catch (e) {
+                            console.warn('Failed to parse stored config', e);
+                        }
+                    }
+                }
+                
+                // 3. Apply the config
+                if (config) {
+                    // Clock settings
+                    if (config.ClockMode !== undefined) document.getElementById('ClockMode').value = config.ClockMode;
+                    if (config.LeadingZeros !== undefined) document.getElementById('LeadingZeros').checked = config.LeadingZeros === true;
+                    if (config.ShowAMPM !== undefined) document.getElementById('ShowAMPM').checked = config.ShowAMPM !== false;
+                    
+                    // Wallpaper
+                    if (config.Wallpaper !== undefined) {
+                        var wallpaperValue = parseInt(config.Wallpaper) || 1;
+                        selectedWallpaperId = wallpaperValue;
+                        document.querySelectorAll('.wallpaper-item').forEach(function(el) {
+                            if (parseInt(el.dataset.id) === wallpaperValue) {
+                                el.classList.add('selected');
+                            } else {
+                                el.classList.remove('selected');
+                            }
+                        });
+                    }
+                    
+                    // UI Color
+                    if (config.UI_Color) {
+                        var color = config.UI_Color;
+                        if (!color.startsWith('#')) color = '#' + color;
+                        document.getElementById('UI_Color').value = color;
+                        document.getElementById('colorHex').textContent = color;
+                        primaryColor = color;
+                        document.documentElement.style.setProperty('--primary-color', color);
+                        applyStyles();
+                    }
+                    
+                    // Secondary Color
+                    if (config.Secondary_Color) {
+                        var secColor = config.Secondary_Color;
+                        if (!secColor.startsWith('#')) secColor = '#' + secColor;
+                        document.getElementById('Secondary_Color').value = secColor;
+                        document.getElementById('secondaryColorHex').textContent = secColor;
+                    }
+                }
+            }
+
             function buildGrid() {
                 var grid = document.getElementById('wallpaperGrid');
                 grid.innerHTML = '';
@@ -642,47 +713,6 @@
 
                     grid.appendChild(item);
                 });
-            }
-
-            function loadConfig() {
-                var params = new URLSearchParams(window.location.search);
-                var configJson = params.get('config');
-                if (configJson) {
-                    try {
-                        var config = JSON.parse(decodeURIComponent(configJson));
-                        document.getElementById('ClockMode').value = config.ClockMode || '0';
-                        document.getElementById('LeadingZeros').checked = config.LeadingZeros === true;
-                        document.getElementById('ShowAMPM').checked = config.ShowAMPM !== false;
-
-                        var wallpaperValue = parseInt(config.Wallpaper) || 1;
-                        selectedWallpaperId = wallpaperValue;
-                        document.querySelectorAll('.wallpaper-item').forEach(function(el) {
-                            if (parseInt(el.dataset.id) === wallpaperValue) {
-                                el.classList.add('selected');
-                            } else {
-                                el.classList.remove('selected');
-                            }
-                        });
-
-                        if (config.UI_Color) {
-                            var color = config.UI_Color;
-                            if (!color.startsWith('#')) color = '#' + color;
-                            document.getElementById('UI_Color').value = color;
-                            document.getElementById('colorHex').textContent = color;
-                            primaryColor = color;
-                            document.documentElement.style.setProperty('--primary-color', color);
-                            applyStyles();
-                        }
-                        if (config.Secondary_Color) {
-                            var secColor = config.Secondary_Color;
-                            if (!secColor.startsWith('#')) secColor = '#' + secColor;
-                            document.getElementById('Secondary_Color').value = secColor;
-                            document.getElementById('secondaryColorHex').textContent = secColor;
-                        }
-                    } catch (e) {
-                        console.warn('Failed to parse config', e);
-                    }
-                }
             }
 
             function getConfig() {
