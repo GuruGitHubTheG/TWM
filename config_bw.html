@@ -31,6 +31,7 @@
             display: flex;
             align-items: center;
             gap: 12px;
+            min-width: 0;
         }
         .topBar-icon {
             width: 48px;
@@ -43,11 +44,16 @@
             display: block;
         }
         #topBarTitle {
-            font-size: 28px;
+            font-size: clamp(12px, 4.5vw, 28px);
             font-weight: normal;
             letter-spacing: 1px;
             line-height: 1;
             color: #fff;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: clip;
+            flex: 0 1 auto;
+            min-width: 0;
         }
         body.inverted #topBarTitle {
             color: #000;
@@ -153,6 +159,7 @@
             display: flex;
             align-items: center;
             gap: 15px;
+            min-width: 0;
         }
         .window-header-icon {
             flex-shrink: 0;
@@ -161,10 +168,15 @@
             display: block;
         }
         .window-header-title {
-            font-size: 28px;
+            font-size: clamp(12px, 4.5vw, 28px);
             font-weight: normal;
             letter-spacing: 1px;
             line-height: 1;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: clip;
+            flex: 0 1 auto;
+            min-width: 0;
         }
         .window-header-wrapper .header-icons {
             position: absolute;
