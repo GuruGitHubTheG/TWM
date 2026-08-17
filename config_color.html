@@ -9,7 +9,6 @@
         * { margin:0; padding:0; box-sizing:border-box; }
         body { font-family:'Volter',sans-serif; background:#000; color:var(--primary,#aa55ff); padding:0; margin:0; min-height:100vh; }
 
-        /* Fixed top bar – matches window header style */
         #topBar {
             position: fixed;
             top: 0;
@@ -30,10 +29,8 @@
             letter-spacing: 1px;
             line-height: 1;
             color: var(--primary, #aa55ff);
-            flex: 1;
             transition: color 0.3s;
         }
-        /* Icons – positioned absolutely, same as other headers */
         #topBar .header-icons {
             position: absolute;
             right: 6px;
@@ -53,7 +50,6 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            flex-shrink: 0;
         }
         .header-icon-btn img {
             width: 48px;
@@ -68,7 +64,7 @@
             width: 100%;
             max-width: 1200px;
             padding: 0 10px;
-            padding-top: 82px;   /* bar height (~66) + 16px gap */
+            padding-top: 82px;
             padding-bottom: 40px;
             margin: 0 auto;
         }
@@ -90,14 +86,14 @@
             padding: 20px 18px 12px 18px;
             background: #000;
             color: var(--primary, #aa55ff);
+            min-height: 60px;
+        }
+        .window-header-title {
             font-size: 28px;
             font-weight: normal;
             letter-spacing: 1px;
             line-height: 1;
-            min-height: 60px;
-            padding-right: 120px;  /* space for absolute icons */
         }
-        /* Window header icons – same as top bar */
         .window-header-wrapper .header-icons {
             position: absolute;
             right: 6px;
@@ -327,34 +323,17 @@
         }
         select option { background:#1a1a1a; color:var(--primary, #aa55ff); }
 
-        @media (max-width:1050px) { .wallpaper-grid { justify-content:flex-start; } }
-        @media (max-width:768px) {
-            .wallpaper-grid { justify-content:flex-start; }
-            #topBar { padding:16px 14px 10px 14px; min-height:50px; }
-            #topBarTitle { font-size:22px; }
-            #topBar .header-icons, .window-header-wrapper .header-icons { right:4px; top:4px; bottom:4px; gap:4px; }
-            .header-icon-btn { width:40px; height:40px; }
-            .header-icon-btn img { width:40px; height:40px; }
-            .window-header { padding:16px 14px 10px 14px; min-height:50px; padding-right:100px; font-size:22px; }
-            .container { padding-top:72px; }
+        /* ----- Only container padding changes on very narrow screens ----- */
+        @media (max-width: 400px) {
+            .container {
+                padding: 0 5px;
+                padding-top: 76px;
+            }
+            .window-content { padding: 12px; }
+            .window { border-width: 4px; }
+            .window-divider { height: 10px; }
         }
-        @media (max-width:550px) {
-            .wallpaper-grid { justify-content:flex-start; }
-            select { max-width:100%; }
-        }
-        @media (max-width:400px) {
-            .container { padding:0 5px; padding-top:62px; }
-            .window-header { font-size:18px; padding:14px 10px 8px 10px; min-height:44px; padding-right:80px; }
-            .window-content { padding:14px; }
-            .window { border-width:4px; }
-            .wallpaper-grid { justify-content:flex-start; }
-            select { max-width:100%; font-size:13px; padding:6px 30px 6px 10px; }
-            #topBar .header-icons, .window-header-wrapper .header-icons { right:3px; top:3px; bottom:3px; gap:3px; }
-            .header-icon-btn { width:32px; height:32px; }
-            .header-icon-btn img { width:32px; height:32px; }
-            #topBar { padding:14px 10px 8px 10px; min-height:44px; }
-            #topBarTitle { font-size:18px; }
-        }
+
         ::-webkit-scrollbar { width:0; background:transparent; }
     </style>
 </head>
@@ -372,10 +351,12 @@
         <!-- Customize Window -->
         <div class="window" id="customize-window">
             <div class="window-header-wrapper">
-                <div class="window-header">Customize</div>
-                <div class="header-icons">
-                    <button class="header-icon-btn" id="dismissBtnColor2"><img src="https://github.com/GuruGitHubTheG/TWM/blob/main/icons/dismiss.png?raw=true" alt="dismiss"></button>
-                    <button class="header-icon-btn" id="closeBtnColor2"><img src="https://github.com/GuruGitHubTheG/TWM/blob/main/icons/close.png?raw=true" alt="close"></button>
+                <div class="window-header">
+                    <span class="window-header-title">Customize</span>
+                    <div class="header-icons">
+                        <button class="header-icon-btn" id="dismissBtnColor2"><img src="https://github.com/GuruGitHubTheG/TWM/blob/main/icons/dismiss.png?raw=true" alt="dismiss"></button>
+                        <button class="header-icon-btn" id="closeBtnColor2"><img src="https://github.com/GuruGitHubTheG/TWM/blob/main/icons/close.png?raw=true" alt="close"></button>
+                    </div>
                 </div>
             </div>
             <div class="window-divider" style="background:var(--primary, #aa55ff);"></div>
@@ -406,10 +387,12 @@
         <!-- Wallpapers Window -->
         <div class="window" id="wallpaper-window">
             <div class="window-header-wrapper">
-                <div class="window-header">Wallpapers</div>
-                <div class="header-icons">
-                    <button class="header-icon-btn" id="dismissBtnColor3"><img src="https://github.com/GuruGitHubTheG/TWM/blob/main/icons/dismiss.png?raw=true" alt="dismiss"></button>
-                    <button class="header-icon-btn" id="closeBtnColor3"><img src="https://github.com/GuruGitHubTheG/TWM/blob/main/icons/close.png?raw=true" alt="close"></button>
+                <div class="window-header">
+                    <span class="window-header-title">Wallpapers</span>
+                    <div class="header-icons">
+                        <button class="header-icon-btn" id="dismissBtnColor3"><img src="https://github.com/GuruGitHubTheG/TWM/blob/main/icons/dismiss.png?raw=true" alt="dismiss"></button>
+                        <button class="header-icon-btn" id="closeBtnColor3"><img src="https://github.com/GuruGitHubTheG/TWM/blob/main/icons/close.png?raw=true" alt="close"></button>
+                    </div>
                 </div>
             </div>
             <div class="window-divider" style="background:var(--primary, #aa55ff);"></div>
@@ -421,10 +404,12 @@
         <!-- Themes Window -->
         <div class="window" id="themes-window">
             <div class="window-header-wrapper">
-                <div class="window-header">Themes</div>
-                <div class="header-icons">
-                    <button class="header-icon-btn" id="dismissBtnColor4"><img src="https://github.com/GuruGitHubTheG/TWM/blob/main/icons/dismiss.png?raw=true" alt="dismiss"></button>
-                    <button class="header-icon-btn" id="closeBtnColor4"><img src="https://github.com/GuruGitHubTheG/TWM/blob/main/icons/close.png?raw=true" alt="close"></button>
+                <div class="window-header">
+                    <span class="window-header-title">Themes</span>
+                    <div class="header-icons">
+                        <button class="header-icon-btn" id="dismissBtnColor4"><img src="https://github.com/GuruGitHubTheG/TWM/blob/main/icons/dismiss.png?raw=true" alt="dismiss"></button>
+                        <button class="header-icon-btn" id="closeBtnColor4"><img src="https://github.com/GuruGitHubTheG/TWM/blob/main/icons/close.png?raw=true" alt="close"></button>
+                    </div>
                 </div>
             </div>
             <div class="window-divider" style="background:var(--primary, #aa55ff);"></div>
@@ -478,7 +463,7 @@
                 primaryColor = color;
                 document.documentElement.style.setProperty('--primary', color);
                 document.querySelectorAll('.window, .save-btn, #topBar').forEach(function(el) { el.style.borderColor = color; });
-                document.querySelectorAll('.window-header, .setting-label, .color-hex, .capability-note, .wallpaper-label, #topBarTitle').forEach(function(el) { el.style.color = color; });
+                document.querySelectorAll('.window-header, .window-header-title, .setting-label, .color-hex, .capability-note, .wallpaper-label, #topBarTitle').forEach(function(el) { el.style.color = color; });
                 document.querySelectorAll('.window-divider, .save-btn, .header-icon-btn').forEach(function(el) { el.style.background = color; });
                 document.querySelectorAll('.setting-description').forEach(function(el) { el.style.color = color; el.style.opacity = '0.6'; });
                 document.querySelectorAll('select').forEach(function(el) {
@@ -492,7 +477,6 @@
                 style.textContent = '.toggle input:checked + .slider { background: ' + color + ' !important; }';
             }
 
-            // Top bar buttons
             document.getElementById('dismissBtnTop').addEventListener('click', function() {
                 var returnTo = getQueryParam('return_to');
                 if (returnTo) window.location = returnTo;
@@ -502,7 +486,6 @@
                 document.getElementById('saveBtn').click();
             });
 
-            // Other dismiss/close buttons (inside windows)
             document.querySelectorAll('#dismissBtnColor2, #dismissBtnColor3, #dismissBtnColor4').forEach(function(btn) {
                 btn.addEventListener('click', function() {
                     document.getElementById('dismissBtnTop').click();
