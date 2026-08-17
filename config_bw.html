@@ -9,7 +9,7 @@
         * { margin:0; padding:0; box-sizing:border-box; }
         body { font-family:'Volter',sans-serif; background:#000; color:#fff; padding:0; margin:0; min-height:100vh; display:flex; justify-content:center; align-items:flex-start; transition:background 0.3s,color 0.3s; }
         body.inverted { background:#fff; color:#000; }
-        .container { width:100%; max-width:1200px; padding:0 10px; padding-top:20px; padding-bottom:40px; }
+        .container { width:100%; max-width:1200px; padding:0 10px; padding-top:20px; padding-bottom:40px; display: none; } /* hidden initially */
         .window { background:#000; border:6px solid #fff; border-radius:0; margin-bottom:16px; overflow:hidden; transition:border-color 0.3s,background 0.3s; }
         body.inverted .window { background:#fff; border-color:#000; }
         .window-header-wrapper { padding:0; position:relative; }
@@ -75,8 +75,6 @@
         @media (max-width:550px) { .wallpaper-grid { justify-content:flex-start; } select { max-width:100%; } }
         @media (max-width:400px) { .container { padding:0 5px; } .window-header { font-size:18px; padding:14px 10px 8px 10px; min-height:44px; padding-right:80px; } .window-content { padding:14px; } .window { border-width:4px; } .wallpaper-grid { justify-content:flex-start; } select { max-width:100%; font-size:13px; padding:6px 30px 6px 10px; } .header-icons { right:3px; top:3px; bottom:3px; height:32px; gap:3px; } .header-icon-btn { width:32px; height:32px; } .header-icon-btn img { width:32px; height:32px; } }
         ::-webkit-scrollbar { width:0; background:transparent; }
-        .loading { text-align:center; padding:40px 20px; font-size:18px; color:#fff; }
-        body.inverted .loading { color:#000; }
     </style>
 </head>
 <body>
@@ -217,7 +215,10 @@
         });
     });
 
-    // Try to load config from localStorage, with retry
+    function showContainer() {
+        document.querySelector('.container').style.display = 'block';
+    }
+
     function loadConfig(retries) {
         retries = retries || 3;
         var stored = localStorage.getItem('twm_config');
@@ -227,7 +228,6 @@
                 if (config.ClockMode !== undefined) document.getElementById('ClockMode').value = config.ClockMode;
                 if (config.LeadingZeros !== undefined) document.getElementById('LeadingZeros').checked = config.LeadingZeros === true;
                 if (config.ShowAMPM !== undefined) document.getElementById('ShowAMPM').checked = config.ShowAMPM !== false;
-                // Fix for wallpaper 0:
                 if (config.Wallpaper !== undefined) {
                     var wp = parseInt(config.Wallpaper, 10);
                     if (!isNaN(wp)) {
@@ -242,32 +242,21 @@
                     document.getElementById('Inverted').checked = inv;
                     applyInversion(inv);
                 }
-                // For color page, also handle UI_Color
-                if (config.UI_Color) {
-                    var c = config.UI_Color;
-                    if (!c.startsWith('#')) c = '#' + c;
-                    document.getElementById('UI_Color').value = c;
-                    document.getElementById('colorHex').textContent = c;
-                    applyStyles(c);
-                }
                 console.log('Loaded config:', config);
-                document.getElementById('loadingIndicator').style.display = 'none';
+                showContainer();
                 return true;
             } catch(e) {
                 console.warn('Error loading config', e);
             }
         }
         if (retries > 0) {
-            document.getElementById('loadingIndicator').style.display = 'block';
             setTimeout(function() {
                 loadConfig(retries - 1);
             }, 500);
             return false;
         } else {
-            document.getElementById('loadingIndicator').style.display = 'none';
             console.log('No config – using defaults');
-            // For color page, apply default color
-            if (typeof applyStyles === 'function') applyStyles('#aa55ff');
+            showContainer();
             return false;
         }
     }
@@ -342,17 +331,9 @@
         applyInversion(this.checked);
     });
 
-    // Add a loading indicator
-    var loadingDiv = document.createElement('div');
-    loadingDiv.id = 'loadingIndicator';
-    loadingDiv.className = 'loading';
-    loadingDiv.textContent = 'Loading settings...';
-    loadingDiv.style.display = 'none';
-    document.getElementById('app').prepend(loadingDiv);
-
     updateIcons(false);
     buildGrid();
-    loadConfig(5); // try up to 5 times
+    loadConfig(5);
 })();
 </script>
 </body>
