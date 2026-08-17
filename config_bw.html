@@ -38,16 +38,15 @@
 
         .container {
             width: 100%;
-            max-width: 600px;
-            padding: 0 2.5%;
+            max-width: 1200px;
+            padding: 0 10px;
             padding-top: 20px;
             padding-bottom: 40px;
         }
 
-        /* --- Window / Card --- */
         .window {
             background: #000000;
-            border: 1px solid #ffffff;
+            border: 6px solid #ffffff;
             border-radius: 0;
             margin-bottom: 16px;
             overflow: hidden;
@@ -59,33 +58,24 @@
             border-color: #000000;
         }
 
-        /* --- Window: Top border (6px) – UI COLOR (white) --- */
-        .window-top-border {
-            height: 6px;
-            background: #ffffff;
-            transition: background 0.3s;
-        }
-
-        body.inverted .window-top-border {
-            background: #000000;
-        }
-
-        /* --- Window: Header row – BLACK background, UI COLOR text --- */
         .window-header-wrapper {
             padding: 0;
+            position: relative;
         }
 
         .window-header {
-            height: 60px;
             display: flex;
             align-items: center;
-            padding: 0 18px;
+            padding: 20px 18px 12px 18px;
             background: #000000;
             color: #ffffff;
-            font-size: 18px;
+            font-size: 28px;
             font-weight: normal;
             letter-spacing: 1px;
-            text-transform: uppercase;
+            line-height: 1;
+            min-height: 60px;
+            height: auto;
+            padding-right: 120px;
             transition: background 0.3s, color 0.3s;
         }
 
@@ -94,20 +84,18 @@
             color: #000000;
         }
 
-        /* --- Window: Bottom border (6px) – UI COLOR (white) --- */
-        .window-bottom-border {
-            height: 6px;
+        .window-divider {
+            height: 12px;
             background: #ffffff;
             transition: background 0.3s;
         }
 
-        body.inverted .window-bottom-border {
+        body.inverted .window-divider {
             background: #000000;
         }
 
-        /* --- Window: Content area --- */
         .window-content {
-            padding: 18px;
+            padding: 18px 18px 18px 18px;
             background: #000000;
             transition: background 0.3s;
         }
@@ -116,16 +104,181 @@
             background: #ffffff;
         }
 
-        /* --- Settings items --- */
+        /* --- Header Icons --- */
+        .header-icons {
+            position: absolute;
+            right: 6px;
+            top: 6px;
+            bottom: 6px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            height: 48px;
+        }
+
+        .header-icon-btn {
+            width: 48px;
+            height: 48px;
+            padding: 0;
+            border: none;
+            background: #ffffff;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            transition: background 0.3s;
+        }
+
+        body.inverted .header-icon-btn {
+            background: #000000;
+        }
+
+        .header-icon-btn img {
+            width: 48px;
+            height: 48px;
+            object-fit: contain;
+            display: block;
+            /* NO FILTERS - images display as-is */
+        }
+
+        .header-icon-btn:hover {
+            opacity: 0.8;
+        }
+
+        .header-icon-btn:active {
+            opacity: 0.6;
+        }
+
+        /* --- Wallpaper Grid --- */
+        .wallpaper-grid {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20px 12px;
+            padding: 0;
+            margin: 0;
+            justify-content: flex-start;
+        }
+
+        .wallpaper-item {
+            width: 240px;
+            cursor: pointer;
+            border: 6px solid transparent;
+            background: transparent;
+            transition: border-color 0.2s, background 0.2s;
+            padding: 0;
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+            justify-content: flex-start;
+            box-sizing: border-box;
+            overflow: hidden;
+            flex-shrink: 0;
+        }
+
+        .wallpaper-item.two-liner {
+            height: 217px;
+        }
+
+        .wallpaper-item.one-liner {
+            height: 170px;
+        }
+
+        .wallpaper-item.selected {
+            border-color: #ffffff;
+            background: rgba(255, 255, 255, 0.15);
+        }
+
+        body.inverted .wallpaper-item.selected {
+            border-color: #000000;
+            background: rgba(0, 0, 0, 0.15);
+        }
+
+        .wallpaper-screenshot-wrapper {
+            position: relative;
+            width: 126px;
+            height: 72px;
+            margin-top: 18px;
+            margin-left: 51px;
+            flex-shrink: 0;
+            z-index: 2;
+        }
+
+        .wallpaper-shadow {
+            position: absolute;
+            top: 3px;
+            left: 3px;
+            width: 100%;
+            height: 100%;
+            background: #000000;
+            z-index: 1;
+        }
+
+        body.inverted .wallpaper-shadow {
+            background: #e0e0e0;
+        }
+
+        .wallpaper-screenshot {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            z-index: 2;
+            display: block;
+            background: #1a1a1a;
+            filter: grayscale(100%);
+        }
+
+        body.inverted .wallpaper-screenshot {
+            background: #e5e5e5;
+            filter: grayscale(100%);
+        }
+
+        .wallpaper-text-wrapper {
+            position: absolute;
+            top: 111px;
+            left: 51px;
+            width: 126px;
+            height: auto;
+            min-height: 33px;
+            z-index: 3;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: flex-start;
+            pointer-events: none;
+            gap: 0;
+        }
+
+        .wallpaper-label {
+            font-size: 29px;
+            line-height: 1;
+            color: #ffffff;
+            text-align: center;
+            letter-spacing: 0.3px;
+            display: inline-block;
+            background: #000000;
+            padding: 6px 6px 9px 3px;
+            border-radius: 0;
+            white-space: pre;
+            word-wrap: break-word;
+            transition: color 0.3s, background 0.3s;
+        }
+
+        body.inverted .wallpaper-label {
+            color: #000000;
+            background: #ffffff;
+        }
+
+        /* --- Settings --- */
         .setting {
             padding: 10px 0;
         }
-
         .setting + .setting {
             border-top: 1px solid rgba(255, 255, 255, 0.08);
             padding-top: 14px;
         }
-
         body.inverted .setting + .setting {
             border-top: 1px solid rgba(0, 0, 0, 0.08);
         }
@@ -138,10 +291,7 @@
             letter-spacing: 0.5px;
             transition: color 0.3s;
         }
-
-        body.inverted .setting-label {
-            color: #000000;
-        }
+        body.inverted .setting-label { color: #000000; }
 
         .setting-description {
             font-size: 11px;
@@ -150,42 +300,112 @@
             margin-bottom: 8px;
             transition: color 0.3s, opacity 0.3s;
         }
+        body.inverted .setting-description { color: #000000; opacity: 0.6; }
 
-        body.inverted .setting-description {
-            color: #000000;
-            opacity: 0.6;
+        .toggle-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
         }
+        .toggle-row .setting-label { margin-bottom: 0; }
 
-        /* --- Select dropdown --- */
+        .toggle {
+            position: relative;
+            width: 51px;
+            height: 31px;
+            flex-shrink: 0;
+        }
+        .toggle input { opacity: 0; width: 0; height: 0; }
+        .toggle .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(255, 255, 255, 0.15);
+            transition: 0.3s;
+            border-radius: 31px;
+        }
+        body.inverted .toggle .slider { background: rgba(0, 0, 0, 0.15); }
+        .toggle .slider:before {
+            content: "";
+            position: absolute;
+            height: 27px;
+            width: 27px;
+            left: 2px;
+            bottom: 2px;
+            background: #ffffff;
+            transition: 0.3s;
+            border-radius: 50%;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+        }
+        body.inverted .toggle .slider:before { background: #000000; }
+        .toggle input:checked + .slider { background: #ffffff; }
+        body.inverted .toggle input:checked + .slider { background: #000000; }
+        .toggle input:checked + .slider:before { transform: translateX(20px); }
+        body.inverted .toggle input:checked + .slider:before { background: #ffffff; }
+
+        .save-btn {
+            font-family: 'Volter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            width: 100%;
+            padding: 16px;
+            font-size: 16px;
+            font-weight: normal;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            color: #000000;
+            background: #ffffff;
+            border: 6px solid #ffffff;
+            border-radius: 0;
+            cursor: pointer;
+            transition: background 0.3s, color 0.3s, border-color 0.3s, opacity 0.2s;
+            margin-top: 8px;
+        }
+        body.inverted .save-btn {
+            background: #000000;
+            color: #ffffff;
+            border-color: #000000;
+        }
+        .save-btn:hover { opacity: 0.85; }
+        .save-btn:active { opacity: 0.7; }
+
+        .capability-note {
+            font-size: 10px;
+            color: #ffffff;
+            opacity: 0.4;
+            margin-top: 6px;
+            letter-spacing: 0.3px;
+            transition: color 0.3s, opacity 0.3s;
+        }
+        body.inverted .capability-note { color: #000000; opacity: 0.4; }
+
         select {
             font-family: 'Volter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
             font-size: 14px;
-            padding: 10px 14px;
+            padding: 8px 35px 8px 12px;
             border: 1px solid #ffffff;
             border-radius: 0;
-            background: rgba(255, 255, 255, 0.05);
+            background: #000000;
             color: #ffffff;
             width: 100%;
-            max-width: 100%;
+            max-width: 300px;
             appearance: none;
             -webkit-appearance: none;
             background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='white' stroke-width='1.5' fill='none'/%3E%3C/svg%3E");
             background-repeat: no-repeat;
-            background-position: right 14px center;
+            background-position: right 12px center;
             background-size: 12px 8px;
             cursor: pointer;
-            transition: border-color 0.3s, background 0.3s, color 0.3s;
+            outline: none;
+            transition: border-color 0.3s, color 0.3s, background 0.3s;
         }
 
         body.inverted select {
             border-color: #000000;
-            background: rgba(0, 0, 0, 0.05);
             color: #000000;
+            background-color: #ffffff;
             background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='black' stroke-width='1.5' fill='none'/%3E%3C/svg%3E");
         }
 
         select:focus {
-            outline: none;
             border-color: #ffffff;
         }
 
@@ -203,162 +423,72 @@
             color: #000000;
         }
 
-        /* --- Toggle switch --- */
-        .toggle-row {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-        }
-
-        .toggle-row .setting-label {
-            margin-bottom: 0;
-        }
-
-        .toggle {
-            position: relative;
-            width: 51px;
-            height: 31px;
-            flex-shrink: 0;
-        }
-
-        .toggle input {
-            opacity: 0;
-            width: 0;
-            height: 0;
-        }
-
-        .toggle .slider {
-            position: absolute;
-            cursor: pointer;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: rgba(255, 255, 255, 0.15);
-            transition: 0.3s;
-            border-radius: 31px;
-        }
-
-        body.inverted .toggle .slider {
-            background: rgba(0, 0, 0, 0.15);
-        }
-
-        .toggle .slider:before {
-            content: "";
-            position: absolute;
-            height: 27px;
-            width: 27px;
-            left: 2px;
-            bottom: 2px;
-            background: #ffffff;
-            transition: 0.3s;
-            border-radius: 50%;
-            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
-        }
-
-        body.inverted .toggle .slider:before {
-            background: #000000;
-        }
-
-        .toggle input:checked + .slider {
-            background: #ffffff;
-        }
-
-        body.inverted .toggle input:checked + .slider {
-            background: #000000;
-        }
-
-        .toggle input:checked + .slider:before {
-            transform: translateX(20px);
-        }
-
-        body.inverted .toggle input:checked + .slider:before {
-            background: #ffffff;
-        }
-
-        /* --- Save button – UI COLOR (white) --- */
-        .save-btn {
-            font-family: 'Volter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-            width: 100%;
-            padding: 16px;
-            font-size: 16px;
-            font-weight: normal;
-            letter-spacing: 2px;
-            text-transform: uppercase;
-            color: #000000;
-            background: #ffffff;
-            border: none;
-            border-radius: 0;
-            cursor: pointer;
-            transition: background 0.3s, color 0.3s, opacity 0.2s;
-            margin-top: 8px;
-        }
-
-        body.inverted .save-btn {
-            background: #000000;
-            color: #ffffff;
-        }
-
-        .save-btn:hover {
-            opacity: 0.85;
-        }
-
-        .save-btn:active {
-            opacity: 0.7;
-        }
-
-        /* --- Capability note --- */
-        .capability-note {
-            font-size: 10px;
-            color: #ffffff;
-            opacity: 0.4;
-            margin-top: 6px;
-            letter-spacing: 0.3px;
-            transition: color 0.3s, opacity 0.3s;
-        }
-
-        body.inverted .capability-note {
-            color: #000000;
-            opacity: 0.4;
-        }
-
         /* --- Responsive --- */
-        @media (max-width: 400px) {
-            .container { padding: 0 2%; padding-top: 12px; }
-            .window-header { font-size: 15px; height: 50px; padding: 0 14px; }
-            .window-content { padding: 14px; }
-            .setting-label { font-size: 13px; }
+        @media (max-width: 1050px) {
+            .wallpaper-grid { justify-content: flex-start; }
         }
 
-        /* --- Hide scrollbar --- */
+        @media (max-width: 768px) {
+            .wallpaper-grid { justify-content: flex-start; }
+            .window-header { padding-right: 100px; font-size: 22px; padding: 16px 14px 10px 14px; min-height: 50px; }
+            .header-icons { right: 4px; top: 4px; bottom: 4px; height: 40px; gap: 4px; }
+            .header-icon-btn { width: 40px; height: 40px; }
+            .header-icon-btn img { width: 40px; height: 40px; }
+        }
+
+        @media (max-width: 550px) {
+            .wallpaper-grid { justify-content: flex-start; }
+            select { max-width: 100%; }
+        }
+
+        @media (max-width: 400px) {
+            .container { padding: 0 5px; }
+            .window-header { font-size: 18px; padding: 14px 10px 8px 10px; min-height: 44px; padding-right: 80px; }
+            .window-content { padding: 14px; }
+            .window { border-width: 4px; }
+            .wallpaper-grid { justify-content: flex-start; }
+            select { max-width: 100%; font-size: 13px; padding: 6px 30px 6px 10px; }
+            .header-icons { right: 3px; top: 3px; bottom: 3px; height: 32px; gap: 3px; }
+            .header-icon-btn { width: 32px; height: 32px; }
+            .header-icon-btn img { width: 32px; height: 32px; }
+        }
+
         ::-webkit-scrollbar { width: 0; background: transparent; }
     </style>
 </head>
 <body>
     <div class="container" id="app">
-        <!-- Header -->
-        <div class="window">
-            <div class="window-top-border"></div>
+        <!-- ===== Header Window ===== -->
+        <div class="window" style="margin-bottom: 20px;">
             <div class="window-header-wrapper">
-                <div class="window-header">
-                    The World Machine
+                <div class="window-header" style="padding-top: 20px; padding-bottom: 12px;">The World Machine</div>
+                <div class="header-icons">
+                    <button class="header-icon-btn" id="dismissBtnBW">
+                        <img class="icon-dismiss" src="https://github.com/GuruGitHubTheG/TWM/blob/main/icons/dismiss.png?raw=true" alt="dismiss">
+                    </button>
+                    <button class="header-icon-btn" id="closeBtnBW">
+                        <img class="icon-close" src="https://github.com/GuruGitHubTheG/TWM/blob/main/icons/close.png?raw=true" alt="close">
+                    </button>
                 </div>
             </div>
-            <div class="window-bottom-border"></div>
+            <div class="window-divider"></div>
         </div>
 
         <!-- ===== Customize Window ===== -->
         <div class="window" id="customize-window">
-            <div class="window-top-border"></div>
             <div class="window-header-wrapper">
-                <div class="window-header">
-                    Customize
+                <div class="window-header">Customize</div>
+                <div class="header-icons">
+                    <button class="header-icon-btn" id="dismissBtnBW2">
+                        <img class="icon-dismiss" src="https://github.com/GuruGitHubTheG/TWM/blob/main/icons/dismiss.png?raw=true" alt="dismiss">
+                    </button>
+                    <button class="header-icon-btn" id="closeBtnBW2">
+                        <img class="icon-close" src="https://github.com/GuruGitHubTheG/TWM/blob/main/icons/close.png?raw=true" alt="close">
+                    </button>
                 </div>
             </div>
-            <div class="window-bottom-border"></div>
-
+            <div class="window-divider"></div>
             <div class="window-content">
-                <!-- Clock Mode -->
                 <div class="setting">
                     <div class="setting-label">Time Format</div>
                     <select id="ClockMode">
@@ -367,32 +497,22 @@
                         <option value="2">24-Hour</option>
                     </select>
                 </div>
-
-                <!-- Leading Zeros -->
                 <div class="setting">
                     <div class="toggle-row">
                         <div>
                             <div class="setting-label">Show Leading Zeros</div>
                             <div class="setting-description">08:00 instead of 8:00</div>
                         </div>
-                        <label class="toggle">
-                            <input type="checkbox" id="LeadingZeros">
-                            <span class="slider"></span>
-                        </label>
+                        <label class="toggle"><input type="checkbox" id="LeadingZeros"><span class="slider"></span></label>
                     </div>
                 </div>
-
-                <!-- Show AM/PM -->
                 <div class="setting">
                     <div class="toggle-row">
                         <div>
                             <div class="setting-label">Show AM/PM</div>
                             <div class="setting-description">Display AM/PM indicator</div>
                         </div>
-                        <label class="toggle">
-                            <input type="checkbox" id="ShowAMPM" checked>
-                            <span class="slider"></span>
-                        </label>
+                        <label class="toggle"><input type="checkbox" id="ShowAMPM" checked><span class="slider"></span></label>
                     </div>
                 </div>
             </div>
@@ -400,41 +520,37 @@
 
         <!-- ===== Wallpapers Window ===== -->
         <div class="window" id="wallpaper-window">
-            <div class="window-top-border"></div>
             <div class="window-header-wrapper">
-                <div class="window-header">
-                    Wallpapers
+                <div class="window-header">Wallpapers</div>
+                <div class="header-icons">
+                    <button class="header-icon-btn" id="dismissBtnBW3">
+                        <img class="icon-dismiss" src="https://github.com/GuruGitHubTheG/TWM/blob/main/icons/dismiss.png?raw=true" alt="dismiss">
+                    </button>
+                    <button class="header-icon-btn" id="closeBtnBW3">
+                        <img class="icon-close" src="https://github.com/GuruGitHubTheG/TWM/blob/main/icons/close.png?raw=true" alt="close">
+                    </button>
                 </div>
             </div>
-            <div class="window-bottom-border"></div>
-
+            <div class="window-divider"></div>
             <div class="window-content">
-                <div class="setting">
-                    <div class="setting-label">Select Wallpaper</div>
-                    <select id="Wallpaper">
-                        <option value="1">The World Machine</option>
-                        <option value="2">Barrens Craters</option>
-                        <option value="3">Glen Shoreline</option>
-                        <option value="4">Refuge Cityscape</option>
-                        <option value="5">Messiah</option>
-                        <option value="6">My Burden is Light</option>
-                        <option value="7">Asteroid</option>
-                        <option value="0">Blank</option>
-                    </select>
-                </div>
+                <div class="wallpaper-grid" id="wallpaperGrid"></div>
             </div>
         </div>
 
-        <!-- ===== Themes Window (BW only) ===== -->
+        <!-- ===== Themes Window ===== -->
         <div class="window" id="themes-window">
-            <div class="window-top-border"></div>
             <div class="window-header-wrapper">
-                <div class="window-header">
-                    Themes
+                <div class="window-header">Themes</div>
+                <div class="header-icons">
+                    <button class="header-icon-btn" id="dismissBtnBW4">
+                        <img class="icon-dismiss" src="https://github.com/GuruGitHubTheG/TWM/blob/main/icons/dismiss.png?raw=true" alt="dismiss">
+                    </button>
+                    <button class="header-icon-btn" id="closeBtnBW4">
+                        <img class="icon-close" src="https://github.com/GuruGitHubTheG/TWM/blob/main/icons/close.png?raw=true" alt="close">
+                    </button>
                 </div>
             </div>
-            <div class="window-bottom-border"></div>
-
+            <div class="window-divider"></div>
             <div class="window-content">
                 <div class="setting">
                     <div class="toggle-row">
@@ -442,32 +558,126 @@
                             <div class="setting-label">Inverted UI</div>
                             <div class="setting-description">Swap black and white (BW only)</div>
                         </div>
-                        <label class="toggle">
-                            <input type="checkbox" id="Inverted">
-                            <span class="slider"></span>
-                        </label>
+                        <label class="toggle"><input type="checkbox" id="Inverted"><span class="slider"></span></label>
                     </div>
                     <div class="capability-note">Applies to black-and-white Pebble watches only</div>
                 </div>
             </div>
         </div>
 
-        <!-- ===== Save Button ===== -->
         <button class="save-btn" id="saveBtn">Save Settings</button>
     </div>
 
     <script>
         (function() {
-            // ----- Inversion handler -----
+            // ----- Wallpaper data -----
+            var wallpapers = [
+                { id: 1, label: 'The World\nMachine', image: 'https://github.com/GuruGitHubTheG/TWM/blob/main/wallpapers/The_World_Machine_wallpaper.png?raw=true' },
+                { id: 2, label: 'Barrens\nCraters', image: 'https://github.com/GuruGitHubTheG/TWM/blob/main/wallpapers/Barrens_Craters_wallpaper.png?raw=true' },
+                { id: 3, label: 'Glen\nShoreline', image: 'https://github.com/GuruGitHubTheG/TWM/blob/main/wallpapers/Glen_Shoreline_wallpaper.png?raw=true' },
+                { id: 4, label: 'Refuge\nCityscape', image: 'https://github.com/GuruGitHubTheG/TWM/blob/main/wallpapers/Refuge_Cityscape_wallpaper.png?raw=true' },
+                { id: 5, label: 'Messiah', image: 'https://github.com/GuruGitHubTheG/TWM/blob/main/wallpapers/Messiah_wallpaper.png?raw=true' },
+                { id: 6, label: 'My Burden\nis Light', image: 'https://github.com/GuruGitHubTheG/TWM/blob/main/wallpapers/My_Burden_is_Light_wallpaper.png?raw=true' },
+                { id: 7, label: 'Asteroid', image: 'https://github.com/GuruGitHubTheG/TWM/blob/main/wallpapers/Asteroid_wallpaper.png?raw=true' },
+                { id: 0, label: 'Blank', image: '' }
+            ];
+
+            var selectedWallpaperId = 1;
+
+            function updateIcons(inverted) {
+                // Update icon images based on inversion state
+                document.querySelectorAll('.icon-dismiss').forEach(function(el) {
+                    if (inverted) {
+                        el.src = 'https://github.com/GuruGitHubTheG/TWM/blob/main/icons/dismiss-inverted.png?raw=true';
+                    } else {
+                        el.src = 'https://github.com/GuruGitHubTheG/TWM/blob/main/icons/dismiss.png?raw=true';
+                    }
+                });
+                document.querySelectorAll('.icon-close').forEach(function(el) {
+                    if (inverted) {
+                        el.src = 'https://github.com/GuruGitHubTheG/TWM/blob/main/icons/close-inverted.png?raw=true';
+                    } else {
+                        el.src = 'https://github.com/GuruGitHubTheG/TWM/blob/main/icons/close.png?raw=true';
+                    }
+                });
+            }
+
             function applyInversion(enabled) {
                 if (enabled) {
                     document.body.classList.add('inverted');
                 } else {
                     document.body.classList.remove('inverted');
                 }
+                updateIcons(enabled);
             }
 
-            // ----- Load saved config from URL -----
+            // ----- Icon click handlers -----
+            document.querySelectorAll('#dismissBtnBW, #dismissBtnBW2, #dismissBtnBW3, #dismissBtnBW4').forEach(function(btn) {
+                btn.addEventListener('click', function() {
+                    window.location = 'pebblejs://close';
+                });
+            });
+
+            document.querySelectorAll('#closeBtnBW, #closeBtnBW2, #closeBtnBW3, #closeBtnBW4').forEach(function(btn) {
+                btn.addEventListener('click', function() {
+                    document.getElementById('saveBtn').click();
+                });
+            });
+
+            function buildGrid() {
+                var grid = document.getElementById('wallpaperGrid');
+                grid.innerHTML = '';
+
+                wallpapers.forEach(function(wp) {
+                    var item = document.createElement('div');
+                    var lines = wp.label.split('\n');
+                    item.className = 'wallpaper-item' + (selectedWallpaperId === wp.id ? ' selected' : '') + (lines.length === 1 ? ' one-liner' : ' two-liner');
+                    item.dataset.id = wp.id;
+
+                    var wrapper = document.createElement('div');
+                    wrapper.className = 'wallpaper-screenshot-wrapper';
+                    var shadow = document.createElement('div');
+                    shadow.className = 'wallpaper-shadow';
+
+                    var img = document.createElement('img');
+                    img.className = 'wallpaper-screenshot';
+                    if (wp.image) {
+                        img.src = wp.image;
+                    } else {
+                        img.src = 'data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7';
+                        img.style.background = 'transparent';
+                    }
+                    img.alt = wp.label.replace('\n', ' ');
+
+                    wrapper.appendChild(shadow);
+                    wrapper.appendChild(img);
+                    item.appendChild(wrapper);
+
+                    var textWrapper = document.createElement('div');
+                    textWrapper.className = 'wallpaper-text-wrapper';
+
+                    lines.forEach(function(line, index) {
+                        var span = document.createElement('span');
+                        span.className = 'wallpaper-label';
+                        span.textContent = line;
+                        textWrapper.appendChild(span);
+                    });
+
+                    item.appendChild(textWrapper);
+
+                    item.addEventListener('click', function() {
+                        document.querySelectorAll('.wallpaper-item').forEach(function(el) {
+                            el.classList.remove('selected');
+                        });
+                        this.classList.add('selected');
+                        selectedWallpaperId = wp.id;
+                        console.log('Selected wallpaper: ' + wp.id);
+                    });
+
+                    grid.appendChild(item);
+                });
+            }
+
             function loadConfig() {
                 var params = new URLSearchParams(window.location.search);
                 var configJson = params.get('config');
@@ -477,55 +687,56 @@
                         document.getElementById('ClockMode').value = config.ClockMode || '0';
                         document.getElementById('LeadingZeros').checked = config.LeadingZeros === true;
                         document.getElementById('ShowAMPM').checked = config.ShowAMPM !== false;
-                        document.getElementById('Wallpaper').value = config.Wallpaper || '1';
+
+                        var wallpaperValue = parseInt(config.Wallpaper) || 1;
+                        selectedWallpaperId = wallpaperValue;
+                        document.querySelectorAll('.wallpaper-item').forEach(function(el) {
+                            if (parseInt(el.dataset.id) === wallpaperValue) {
+                                el.classList.add('selected');
+                            } else {
+                                el.classList.remove('selected');
+                            }
+                        });
+
                         var inverted = config.Inverted === true;
                         document.getElementById('Inverted').checked = inverted;
                         applyInversion(inverted);
-                    } catch (e) {
-                        console.warn('Failed to parse config', e);
-                    }
+                    } catch (e) { console.warn('Failed to parse config', e); }
                 }
             }
 
-            // ----- Get current config -----
             function getConfig() {
                 return {
                     ClockMode: document.getElementById('ClockMode').value,
                     LeadingZeros: document.getElementById('LeadingZeros').checked,
                     ShowAMPM: document.getElementById('ShowAMPM').checked,
-                    Wallpaper: document.getElementById('Wallpaper').value,
+                    Wallpaper: selectedWallpaperId,
                     Inverted: document.getElementById('Inverted').checked
                 };
             }
 
-            // ----- Save button -----
             document.getElementById('saveBtn').addEventListener('click', function() {
                 var config = getConfig();
                 var json = JSON.stringify(config);
                 var encoded = encodeURIComponent(json);
                 console.log('Saving config: ' + json);
-
                 var params = new URLSearchParams(window.location.search);
                 var returnTo = params.get('return_to');
-                if (returnTo) {
-                    window.location = returnTo + encoded;
-                } else {
-                    window.location = 'pebblejs://close#' + encoded;
-                }
+                if (returnTo) { window.location = returnTo + encoded; }
+                else { window.location = 'pebblejs://close#' + encoded; }
             });
 
-            // ----- Inversion toggle live preview -----
             document.getElementById('Inverted').addEventListener('change', function() {
                 applyInversion(this.checked);
             });
 
+            // Initial icon state (not inverted by default)
+            updateIcons(false);
+
+            buildGrid();
             loadConfig();
 
             console.log('REMINDER: Secondary Color is available in config_color.html but not yet used.');
-            console.log('   Add MESSAGE_KEY_Secondary_Color to CloudPebble when ready.');
-            console.log('   Add SETTINGS_KEY_SECONDARY_COLOR to C code.');
-            console.log('   Add secondary_color to the C struct and persistence.');
-            console.log('   Update update_colors_and_resources() to use secondary_color.');
         })();
     </script>
 </body>
