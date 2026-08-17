@@ -42,7 +42,6 @@
             display: flex;
             align-items: center;
             gap: 6px;
-            height: 48px;
         }
         .header-icon-btn {
             width: 48px;
@@ -96,7 +95,17 @@
             letter-spacing: 1px;
             line-height: 1;
             min-height: 60px;
-            padding-right: 120px;
+            padding-right: 120px;  /* space for absolute icons */
+        }
+        /* Window header icons – same as top bar */
+        .window-header-wrapper .header-icons {
+            position: absolute;
+            right: 6px;
+            top: 6px;
+            bottom: 6px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
         }
         .window-divider {
             height: 12px;
@@ -323,9 +332,10 @@
             .wallpaper-grid { justify-content:flex-start; }
             #topBar { padding:16px 14px 10px 14px; min-height:50px; }
             #topBarTitle { font-size:22px; }
-            #topBar .header-icons { right:4px; top:4px; bottom:4px; height:40px; gap:4px; }
+            #topBar .header-icons, .window-header-wrapper .header-icons { right:4px; top:4px; bottom:4px; gap:4px; }
             .header-icon-btn { width:40px; height:40px; }
             .header-icon-btn img { width:40px; height:40px; }
+            .window-header { padding:16px 14px 10px 14px; min-height:50px; padding-right:100px; font-size:22px; }
             .container { padding-top:72px; }
         }
         @media (max-width:550px) {
@@ -339,7 +349,7 @@
             .window { border-width:4px; }
             .wallpaper-grid { justify-content:flex-start; }
             select { max-width:100%; font-size:13px; padding:6px 30px 6px 10px; }
-            #topBar .header-icons { right:3px; top:3px; bottom:3px; height:32px; gap:3px; }
+            #topBar .header-icons, .window-header-wrapper .header-icons { right:3px; top:3px; bottom:3px; gap:3px; }
             .header-icon-btn { width:32px; height:32px; }
             .header-icon-btn img { width:32px; height:32px; }
             #topBar { padding:14px 10px 8px 10px; min-height:44px; }
@@ -363,7 +373,7 @@
         <div class="window" id="customize-window">
             <div class="window-header-wrapper">
                 <div class="window-header">Customize</div>
-                <div class="header-icons" style="position:absolute; right:6px; top:6px; bottom:6px; display:flex; align-items:center; gap:6px; height:48px;">
+                <div class="header-icons">
                     <button class="header-icon-btn" id="dismissBtnColor2"><img src="https://github.com/GuruGitHubTheG/TWM/blob/main/icons/dismiss.png?raw=true" alt="dismiss"></button>
                     <button class="header-icon-btn" id="closeBtnColor2"><img src="https://github.com/GuruGitHubTheG/TWM/blob/main/icons/close.png?raw=true" alt="close"></button>
                 </div>
@@ -397,7 +407,7 @@
         <div class="window" id="wallpaper-window">
             <div class="window-header-wrapper">
                 <div class="window-header">Wallpapers</div>
-                <div class="header-icons" style="position:absolute; right:6px; top:6px; bottom:6px; display:flex; align-items:center; gap:6px; height:48px;">
+                <div class="header-icons">
                     <button class="header-icon-btn" id="dismissBtnColor3"><img src="https://github.com/GuruGitHubTheG/TWM/blob/main/icons/dismiss.png?raw=true" alt="dismiss"></button>
                     <button class="header-icon-btn" id="closeBtnColor3"><img src="https://github.com/GuruGitHubTheG/TWM/blob/main/icons/close.png?raw=true" alt="close"></button>
                 </div>
@@ -412,7 +422,7 @@
         <div class="window" id="themes-window">
             <div class="window-header-wrapper">
                 <div class="window-header">Themes</div>
-                <div class="header-icons" style="position:absolute; right:6px; top:6px; bottom:6px; display:flex; align-items:center; gap:6px; height:48px;">
+                <div class="header-icons">
                     <button class="header-icon-btn" id="dismissBtnColor4"><img src="https://github.com/GuruGitHubTheG/TWM/blob/main/icons/dismiss.png?raw=true" alt="dismiss"></button>
                     <button class="header-icon-btn" id="closeBtnColor4"><img src="https://github.com/GuruGitHubTheG/TWM/blob/main/icons/close.png?raw=true" alt="close"></button>
                 </div>
