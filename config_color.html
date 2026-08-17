@@ -508,6 +508,12 @@
 
     <script>
         (function() {
+            // ----- Helper: Get URL parameters -----
+            function getQueryParam(param) {
+                var urlParams = new URLSearchParams(window.location.search);
+                return urlParams.get(param);
+            }
+
             // ----- Wallpaper data -----
             var wallpapers = [
                 { id: 1, label: 'The World\nMachine', image: 'https://github.com/GuruGitHubTheG/TWM/blob/main/wallpapers/The_World_Machine_wallpaper.png?raw=true' },
@@ -579,8 +585,7 @@
             // ----- Icon click handlers -----
             document.querySelectorAll('#dismissBtnColor, #dismissBtnColor2, #dismissBtnColor3, #dismissBtnColor4').forEach(function(btn) {
                 btn.addEventListener('click', function() {
-                    var params = new URLSearchParams(window.location.search);
-                    var returnTo = params.get('return_to');
+                    var returnTo = getQueryParam('return_to');
                     if (returnTo) {
                         window.location = returnTo;
                     } else {
@@ -716,24 +721,26 @@
                 return config;
             }
 
-            // ----- SAVE BUTTON: Save to localStorage AND send data when closing -----
+            // ----- SAVE BUTTON: Use return_to if available -----
             document.getElementById('saveBtn').addEventListener('click', function() {
                 var config = getConfig();
                 var json = JSON.stringify(config);
                 var encoded = encodeURIComponent(json);
                 
-                // 1. Save to localStorage (for fallback)
+                // Save to localStorage (for fallback)
                 localStorage.setItem('twm_config', json);
                 console.log('Saved to localStorage:', json);
                 
-                // 2. Close the page and send the data via fragment
-                var params = new URLSearchParams(window.location.search);
-                var returnTo = params.get('return_to');
+                // Check for return_to parameter (emulator/CloudPebble)
+                var returnTo = getQueryParam('return_to');
+                
                 if (returnTo) {
-                    // For emulator/CloudPebble: append encoded data to return_to URL
+                    // Emulator: append encoded data directly to return_to URL
+                    console.log('Using return_to:', returnTo + encoded);
                     window.location = returnTo + encoded;
                 } else {
-                    // For real watch: use pebblejs://close with fragment
+                    // Real watch: use pebblejs://close# with fragment
+                    console.log('Using pebblejs://close#');
                     window.location = 'pebblejs://close#' + encoded;
                 }
             });
