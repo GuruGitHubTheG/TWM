@@ -179,6 +179,7 @@
         }
         ::-webkit-scrollbar { width:0; background:transparent; }
     </style>
+    <script src="https://cdn.jsdelivr.net/npm/lz-string@1.4.4/libs/lz-string.min.js"></script>
 </head>
 <body>
     <!-- Fixed Top Bar -->
@@ -336,14 +337,13 @@
             ];
 
             var selectedWallpaperId = 1;
-
             var timeOptions = ['System', '12-Hour', '24-Hour'];
             var timeIndex = 0;
             var zerosOn = false;
             var ampmOn = true;
             var invertedOn = false;
 
-            var customPhotoData = null; // { pixelData: Array, palette: Array, color: false }
+            var customPhotoData = null; // { compressed, palette, color }
             var photoLoadGeneration = 0;
             var photoLoadTimer = null;
             var canvas = document.getElementById('photoCanvas');
@@ -415,14 +415,10 @@
             });
 
             document.querySelectorAll('#dismissBtnBW2, #dismissBtnBW3, #dismissBtnBW4').forEach(function(btn) {
-                btn.addEventListener('click', function() {
-                    document.getElementById('dismissBtnTop').click();
-                });
+                btn.addEventListener('click', function() { document.getElementById('dismissBtnTop').click(); });
             });
             document.querySelectorAll('#closeBtnBW2, #closeBtnBW3, #closeBtnBW4').forEach(function(btn) {
-                btn.addEventListener('click', function() {
-                    document.getElementById('closeBtnTop').click();
-                });
+                btn.addEventListener('click', function() { document.getElementById('closeBtnTop').click(); });
             });
 
             function loadConfig(retries) {
@@ -462,9 +458,7 @@
                     }
                 }
                 if (retries > 0) {
-                    setTimeout(function() {
-                        loadConfig(retries - 1);
-                    }, 500);
+                    setTimeout(function() { loadConfig(retries - 1); }, 500);
                     return false;
                 } else {
                     console.log('No config – using defaults');
@@ -582,6 +576,7 @@
                 document.getElementById('photoProxyBtn').style.display = 'block';
             }
 
+            // 1-bit quantization with Floyd–Steinberg dithering
             function quantizeBWAndPack(imageData, width, height) {
                 var rowBytes = Math.floor((width + 7) / 8);
                 var pixelData = new Uint8Array(rowBytes * height);
@@ -623,7 +618,7 @@
                 }
 
                 var palette = [0xC0, 0xFF]; // black, white
-                return { pixelData: Array.from(pixelData), palette: palette, color: false };
+                return { pixelData: pixelData, palette: palette, color: false };
             }
 
             function prepareImage(image, generation, sourceLabel, blockedRetry) {
@@ -646,7 +641,21 @@
                     var result = quantizeBWAndPack(imageData, watchWidth, watchHeight);
                     ctx.putImageData(imageData,0,0);
                     canvas.style.display = 'block';
-                    customPhotoData = result;
+
+                    // Convert Uint8Array to binary string, then base64
+                    var binary = '';
+                    for (var i = 0; i < result.pixelData.length; i++) {
+                        binary += String.fromCharCode(result.pixelData[i]);
+                    }
+                    var base64 = btoa(binary);
+                    // Compress with LZString
+                    var compressed = LZString.compressToBase64(base64);
+
+                    customPhotoData = {
+                        compressed: compressed,
+                        palette: result.palette,
+                        color: false
+                    };
                     setSubmitDisabled(false);
                     setPhotoStatus('Ready: ' + watchWidth + '×' + watchHeight + ' B/W custom photo.', false);
                     if (photoLoadTimer) { clearTimeout(photoLoadTimer); photoLoadTimer = null; }

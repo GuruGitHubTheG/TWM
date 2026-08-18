@@ -168,6 +168,7 @@
         }
         ::-webkit-scrollbar { width:0; background:transparent; }
     </style>
+    <script src="https://cdn.jsdelivr.net/npm/lz-string@1.4.4/libs/lz-string.min.js"></script>
 </head>
 <body>
     <!-- Fixed Top Bar -->
@@ -316,7 +317,7 @@
                 return urlParams.get(param);
             }
 
-            // Get watch dimensions from URL
+            // Get watch dimensions
             var watchWidth = parseInt(getQueryParam('width'), 10) || 144;
             var watchHeight = parseInt(getQueryParam('height'), 10) || 168;
 
@@ -340,7 +341,7 @@
             var zerosOn = false;
             var ampmOn = true;
 
-            var customPhotoData = null; // { pixelData: Array, palette: Array, color: true }
+            var customPhotoData = null; // { compressed, palette, color }
             var photoLoadGeneration = 0;
             var photoLoadTimer = null;
             var canvas = document.getElementById('photoCanvas');
@@ -408,14 +409,10 @@
             });
 
             document.querySelectorAll('#dismissBtnColor2, #dismissBtnColor3, #dismissBtnColor4').forEach(function(btn) {
-                btn.addEventListener('click', function() {
-                    document.getElementById('dismissBtnTop').click();
-                });
+                btn.addEventListener('click', function() { document.getElementById('dismissBtnTop').click(); });
             });
             document.querySelectorAll('#closeBtnColor2, #closeBtnColor3, #closeBtnColor4').forEach(function(btn) {
-                btn.addEventListener('click', function() {
-                    document.getElementById('closeBtnTop').click();
-                });
+                btn.addEventListener('click', function() { document.getElementById('closeBtnTop').click(); });
             });
 
             function loadConfig(retries) {
@@ -464,9 +461,7 @@
                     }
                 }
                 if (retries > 0) {
-                    setTimeout(function() {
-                        loadConfig(retries - 1);
-                    }, 500);
+                    setTimeout(function() { loadConfig(retries - 1); }, 500);
                     return false;
                 } else {
                     console.log('No config – using defaults');
@@ -585,6 +580,7 @@
                 document.getElementById('photoProxyBtn').style.display = 'block';
             }
 
+            // Color quantization (4-bit palette)
             function colorId(r,g,b) { return (r<<4)|(g<<2)|b; }
             function colorFromId(id) { return { r:(id>>4)&3, g:(id>>2)&3, b:id&3 }; }
             function clamp(v,l,h) { return Math.max(l, Math.min(h, v)); }
@@ -745,7 +741,7 @@
                     paletteBytes[p] = 0xC0 | id;
                 }
 
-                return { pixelData: Array.from(pixelData), palette: Array.from(paletteBytes), color: true };
+                return { pixelData: pixelData, palette: Array.from(paletteBytes), color: true };
             }
 
             function prepareImage(image, generation, sourceLabel, blockedRetry) {
@@ -768,7 +764,21 @@
                     var result = quantizeColorAndPack(imageData, watchWidth, watchHeight);
                     ctx.putImageData(imageData,0,0);
                     canvas.style.display = 'block';
-                    customPhotoData = result;
+
+                    // Convert Uint8Array to binary string, then base64
+                    var binary = '';
+                    for (var i = 0; i < result.pixelData.length; i++) {
+                        binary += String.fromCharCode(result.pixelData[i]);
+                    }
+                    var base64 = btoa(binary);
+                    // Compress with LZString
+                    var compressed = LZString.compressToBase64(base64);
+
+                    customPhotoData = {
+                        compressed: compressed,
+                        palette: result.palette,
+                        color: true
+                    };
                     setSubmitDisabled(false);
                     setPhotoStatus('Ready: ' + watchWidth + '×' + watchHeight + ' custom photo.', false);
                     if (photoLoadTimer) { clearTimeout(photoLoadTimer); photoLoadTimer = null; }
