@@ -595,7 +595,7 @@
             var customImagePreview = document.getElementById('customImagePreview');
             var ctx = customImagePreview.getContext('2d');
 
-            // Target dimensions for BW watches (Aplite/Diorite = 144x168)
+            // Target dimensions for BW watches (Aplite/Diorite/Flint = 144x168)
             var targetWidth = 144;
             var targetHeight = 168;
 
@@ -606,7 +606,7 @@
                     var gray = 0.299 * data[i] + 0.587 * data[i+1] + 0.114 * data[i+2];
                     data[i] = data[i+1] = data[i+2] = gray;
                 }
-                // Simple threshold – you can add Floyd‑Steinberg here if desired
+                // Simple threshold
                 for (var i = 0; i < data.length; i += 4) {
                     data[i] = data[i] > 127 ? 255 : 0;
                     data[i+1] = data[i+2] = data[i];
@@ -681,6 +681,7 @@
                 }
             });
 
+            // ---------- Save ----------
             function getConfig() {
                 var config = {
                     ClockMode: timeIndex,
@@ -689,12 +690,12 @@
                     Wallpaper: selectedWallpaperId,
                     Inverted: invertedOn
                 };
-                // If custom wallpaper is loaded, include it and set wallpaper to 8
+                // If custom wallpaper is loaded, include it
                 if (customWallpaperData) {
                     config.CustomWallpaperData = customWallpaperData;
                     config.CustomWallpaperWidth = customWallpaperWidth;
                     config.CustomWallpaperHeight = customWallpaperHeight;
-                    config.Wallpaper = 8;
+                    config.Wallpaper = 8; // force custom wallpaper selection
                 }
                 return config;
             }
@@ -702,15 +703,10 @@
             document.getElementById('saveBtn').addEventListener('click', function() {
                 var config = getConfig();
                 var json = JSON.stringify(config);
-                var encoded = encodeURIComponent(json);
                 localStorage.setItem('twm_config', json);
                 console.log('Saved to localStorage:', json);
-                var returnTo = getQueryParam('return_to');
-                if (returnTo) {
-                    window.location = returnTo + encoded;
-                } else {
-                    window.location = 'pebblejs://close#' + encoded;
-                }
+                // Close the webview with a minimal fragment – no data in URL
+                window.location = 'pebblejs://close#';
             });
 
             buildGrid();

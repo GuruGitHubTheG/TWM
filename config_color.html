@@ -574,8 +574,6 @@
             var customImagePreview = document.getElementById('customImagePreview');
             var ctx = customImagePreview.getContext('2d');
 
-            // Target dimensions for color watches (Basalt/Chalk = 144x168, Emery = 200x228)
-            // We'll use 144x168 as default; user can manually override if needed.
             var targetWidth = 144;
             var targetHeight = 168;
 
@@ -583,7 +581,6 @@
                 var img = new Image();
                 img.crossOrigin = 'Anonymous';
                 img.onload = function() {
-                    // Crop to square (center)
                     var size = Math.min(img.width, img.height);
                     var sx = (img.width - size) / 2;
                     var sy = (img.height - size) / 2;
@@ -594,7 +591,6 @@
                     ctx.drawImage(img, sx, sy, size, size, 0, 0, targetWidth, targetHeight);
                     customImagePreview.style.display = 'block';
 
-                    // Get image data
                     var imageData = ctx.getImageData(0, 0, targetWidth, targetHeight);
                     var data = imageData.data;
 
@@ -610,21 +606,17 @@
                     var packed = new Uint8Array(Math.ceil(targetWidth * targetHeight / 2));
                     var idx = 0;
                     for (var i = 0; i < data.length; i += 8) {
-                        // Pixel 1
                         var r1 = Math.round(data[i] / 85);
                         var g1 = Math.round(data[i+1] / 85);
                         var b1 = Math.round(data[i+2] / 85);
-                        // Pixel 2
                         var r2 = Math.round(data[i+4] / 85);
                         var g2 = Math.round(data[i+5] / 85);
                         var b2 = Math.round(data[i+6] / 85);
-                        // Pack: first pixel in high nibble, second in low nibble
                         var byte1 = (r1 << 4) | (g1 << 2) | b1;
                         var byte2 = (r2 << 4) | (g2 << 2) | b2;
                         packed[idx++] = (byte1 << 4) | byte2;
                     }
 
-                    // Store data to send on save
                     customWallpaperData = btoa(String.fromCharCode.apply(null, packed));
                     customWallpaperWidth = targetWidth;
                     customWallpaperHeight = targetHeight;
@@ -664,12 +656,11 @@
                 var sec = document.getElementById('Secondary_Color').value.replace('#', '');
                 if (sec) config.Secondary_Color = sec;
 
-                // If custom wallpaper is loaded, include it and set wallpaper to 8
                 if (customWallpaperData) {
                     config.CustomWallpaperData = customWallpaperData;
                     config.CustomWallpaperWidth = customWallpaperWidth;
                     config.CustomWallpaperHeight = customWallpaperHeight;
-                    config.Wallpaper = 8; // force custom wallpaper selection
+                    config.Wallpaper = 8;
                 }
                 return config;
             }
@@ -677,15 +668,10 @@
             document.getElementById('saveBtn').addEventListener('click', function() {
                 var config = getConfig();
                 var json = JSON.stringify(config);
-                var encoded = encodeURIComponent(json);
                 localStorage.setItem('twm_config', json);
                 console.log('Saved to localStorage:', json);
-                var returnTo = getQueryParam('return_to');
-                if (returnTo) {
-                    window.location = returnTo + encoded;
-                } else {
-                    window.location = 'pebblejs://close#' + encoded;
-                }
+                // Close with minimal fragment – no data in URL
+                window.location = 'pebblejs://close#';
             });
 
             document.getElementById('UI_Color').addEventListener('input', function() {
