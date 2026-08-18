@@ -25,7 +25,7 @@
         .window-header { display:flex; align-items:center; background:#000; color:var(--primary,#aa55ff); min-height:60px; padding-left:18px; padding-right:18px; }
         #customize-window .window-header { padding-top:9px; padding-bottom:9px; }
         #wallpaper-window .window-header { padding-top:12px; padding-bottom:12px; }
-        #themes-window .window-header { padding-top:12px; padding-bottom:12px; }
+        #themes-window .window-header { padding-top:12px; padding-bottom:12px; }  /* now matches Wallpapers */
         .window-header-left { display:flex; align-items:center; gap:15px; min-width:0; }
         .window-header-icon { flex-shrink:0; background-color:var(--primary,#aa55ff); -webkit-mask-size:contain; mask-size:contain; -webkit-mask-repeat:no-repeat; mask-repeat:no-repeat; -webkit-mask-position:center; mask-position:center; }
         #customizeIcon { width:42px; height:42px; -webkit-mask-image:url('https://raw.githubusercontent.com/GuruGitHubTheG/TWM/main/icons/gear.png'); mask-image:url('https://raw.githubusercontent.com/GuruGitHubTheG/TWM/main/icons/gear.png'); }
@@ -36,6 +36,7 @@
         .window-divider { height:12px; background:var(--primary,#aa55ff); }
         .window-content { padding:24px 18px 18px 18px; background:#000; }
 
+        /* ---- SETTING STYLES ---- */
         .setting-row { margin:0; padding:0; }
         .setting-row + .setting-row { margin-top:24px; }
 
@@ -100,6 +101,7 @@
             padding:0 8px;
             white-space:nowrap;
         }
+        /* ---- END SETTING STYLES ---- */
 
         .wallpaper-grid {
             display:flex; flex-wrap:wrap; gap:20px 12px; justify-content:flex-start;
@@ -126,72 +128,14 @@
         .setting + .setting { border-top:1px solid rgba(255,255,255,0.08); padding-top:14px; }
         .setting-label { font-size:14px; font-weight:normal; margin-bottom:6px; color:var(--primary,#aa55ff); letter-spacing:0.5px; }
         .setting-description { font-size:11px; color:var(--primary,#aa55ff); opacity:0.6; margin-bottom:8px; }
-
-        /* Custom wallpaper upload */
-        .custom-upload-area {
-            border: 2px dashed var(--primary,#aa55ff);
-            padding: 16px;
-            text-align: center;
-            margin-bottom: 12px;
-        }
-        .custom-upload-area input[type="file"] {
-            display: block;
-            margin: 8px auto;
-            color: var(--primary,#aa55ff);
-            font-family: 'Volter', sans-serif;
-            font-size: 14px;
-        }
-        .custom-upload-area input[type="text"] {
-            width: 100%;
-            max-width: 300px;
-            padding: 8px;
-            background: #000;
-            border: 1px solid var(--primary,#aa55ff);
-            color: var(--primary,#aa55ff);
-            font-family: 'Volter', sans-serif;
-            font-size: 14px;
-            margin: 8px 0;
-        }
-        .custom-upload-area button {
-            background: var(--primary,#aa55ff);
-            border: none;
-            color: #000;
-            padding: 8px 16px;
-            font-family: 'Volter', sans-serif;
-            font-size: 14px;
-            cursor: pointer;
-            margin: 4px;
-        }
-        .custom-upload-area button:hover {
-            background: rgb(100,66,165);
-        }
-        .custom-upload-area .status {
-            font-size: 14px;
-            color: var(--primary,#aa55ff);
-            margin-top: 8px;
-        }
-        .progress-bar {
-            width: 100%;
-            height: 20px;
-            background: #222;
-            border: 1px solid var(--primary,#aa55ff);
-            margin: 8px 0;
-            position: relative;
-        }
-        .progress-bar .fill {
-            height: 100%;
-            width: 0%;
-            background: var(--primary,#aa55ff);
-            transition: width 0.3s;
-        }
-        .progress-bar .label {
-            position: absolute;
-            top: 0; left: 0; right: 0; bottom: 0;
-            text-align: center;
-            line-height: 20px;
-            color: #000;
-            font-size: 12px;
-        }
+        .toggle-row { display:flex; align-items:center; justify-content:space-between; }
+        .toggle-row .setting-label { margin-bottom:0; }
+        .toggle { position:relative; width:51px; height:31px; flex-shrink:0; }
+        .toggle input { opacity:0; width:0; height:0; }
+        .toggle .slider { position:absolute; cursor:pointer; top:0; left:0; right:0; bottom:0; background:rgba(255,255,255,0.15); border-radius:31px; }
+        .toggle .slider:before { content:""; position:absolute; height:27px; width:27px; left:2px; bottom:2px; background:#fff; border-radius:50%; box-shadow:0 1px 3px rgba(0,0,0,0.3); }
+        .toggle input:checked + .slider { background:var(--primary,#aa55ff); }
+        .toggle input:checked + .slider:before { transform:translateX(20px); }
 
         .color-picker-wrapper { display:flex; align-items:center; gap:14px; }
         .color-picker-wrapper input[type="color"] { width:60px; height:44px; padding:4px; cursor:pointer; border:1px solid var(--primary,#aa55ff); background:transparent; flex-shrink:0; }
@@ -310,29 +254,10 @@
             <div class="window-divider" style="background:var(--primary, #aa55ff);"></div>
             <div class="window-content">
                 <div class="wallpaper-grid" id="wallpaperGrid"></div>
-                <!-- New: Custom Wallpaper Upload -->
-                <div class="setting" style="margin-top:20px; border-top:1px solid var(--primary,#aa55ff); padding-top:20px;">
-                    <div class="setting-label">Custom Wallpaper</div>
-                    <div class="setting-description">Upload your own image (JPG/PNG). It will be cropped and colour‑reduced for your watch.</div>
-                    <div class="custom-upload-area">
-                        <input type="file" id="customImageFile" accept="image/*">
-                        <div style="margin: 8px 0;">or</div>
-                        <input type="text" id="customImageUrl" placeholder="HTTPS image URL">
-                        <div style="margin-top:8px;">
-                            <button id="loadCustomBtn">Load from URL</button>
-                            <button id="uploadCustomBtn" style="background:rgb(74,50,126);">Send to Watch</button>
-                        </div>
-                        <div class="status" id="uploadStatus">Ready</div>
-                        <div class="progress-bar" id="progressBar" style="display:none;">
-                            <div class="fill" id="progressFill"></div>
-                            <div class="label" id="progressLabel">0%</div>
-                        </div>
-                    </div>
-                </div>
             </div>
         </div>
 
-        <!-- Themes Window -->
+        <!-- Themes Window (now with folder icon) -->
         <div class="window" id="themes-window">
             <div class="window-header-wrapper">
                 <div class="window-header">
@@ -374,13 +299,11 @@
 
     <script>
         (function() {
-            // ---------- Helper: get URL param ----------
             function getQueryParam(param) {
                 var urlParams = new URLSearchParams(window.location.search);
                 return urlParams.get(param);
             }
 
-            // ---------- Wallpaper presets ----------
             var wallpapers = [
                 { id: 1, label: 'The World\nMachine', image: 'https://raw.githubusercontent.com/GuruGitHubTheG/TWM/main/wallpapers/The_World_Machine_wallpaper.png' },
                 { id: 2, label: 'Barrens\nCraters', image: 'https://raw.githubusercontent.com/GuruGitHubTheG/TWM/main/wallpapers/Barrens_Craters_wallpaper.png' },
@@ -400,11 +323,6 @@
             var zerosOn = false;
             var ampmOn = true;
 
-            // ---------- Custom wallpaper state ----------
-            var customPbiData = null;        // Uint8Array of PNG data
-            var customWallpaperLoaded = false;
-
-            // ---------- UI helpers ----------
             function applyStyles(color) {
                 primaryColor = color;
                 document.documentElement.style.setProperty('--primary', color);
@@ -424,7 +342,6 @@
                 document.getElementById('ampmDisplay').textContent = ampmOn ? 'ON' : 'OFF';
             }
 
-            // ---------- Time controls ----------
             document.getElementById('timeLeft').addEventListener('click', function() {
                 timeIndex = (timeIndex - 1 + timeOptions.length) % timeOptions.length;
                 updateDisplays();
@@ -452,7 +369,6 @@
                 updateDisplays();
             });
 
-            // ---------- Top bar buttons ----------
             document.getElementById('dismissBtnTop').addEventListener('click', function() {
                 var returnTo = getQueryParam('return_to');
                 if (returnTo) window.location = returnTo;
@@ -473,7 +389,6 @@
                 });
             });
 
-            // ---------- Load config ----------
             function loadConfig(retries) {
                 retries = retries || 3;
                 var stored = localStorage.getItem('twm_config');
@@ -532,7 +447,6 @@
                 }
             }
 
-            // ---------- Build wallpaper grid ----------
             function buildGrid() {
                 var grid = document.getElementById('wallpaperGrid');
                 grid.innerHTML = '';
@@ -568,182 +482,13 @@
                         document.querySelectorAll('.wallpaper-item').forEach(function(el) { el.classList.remove('selected'); });
                         this.classList.add('selected');
                         selectedWallpaperId = wp.id;
-                        customWallpaperLoaded = false;
-                        customPbiData = null;
-                        document.getElementById('uploadStatus').textContent = 'Custom cleared';
+                        console.log('Selected wallpaper:', wp.id);
                     });
 
                     grid.appendChild(item);
                 });
             }
 
-            // ---------- CUSTOM WALLPAPER – PNG VERSION ----------
-
-            function getTargetDimensions() {
-                var platform = 'basalt';
-                try {
-                    if (Pebble.getActiveWatchInfo) {
-                        var info = Pebble.getActiveWatchInfo();
-                        platform = info.platform;
-                    }
-                } catch(e) {}
-                switch(platform) {
-                    case 'basalt': case 'aplite': case 'diorite': case 'flint':
-                        return { width: 144, height: 168 };
-                    case 'chalk':
-                        return { width: 180, height: 180 };
-                    case 'emery':
-                        return { width: 200, height: 228 };
-                    case 'gabbro':
-                        return { width: 260, height: 260 };
-                    default:
-                        return { width: 144, height: 168 };
-                }
-            }
-
-            function checksum16(data) {
-                var sum = 0;
-                for (var i = 0; i < data.length; i++) {
-                    sum = (sum + data[i]) & 0xFFFF;
-                }
-                return sum;
-            }
-
-            function sendCustomWallpaper(pngData) {
-                var CHUNK_SIZE = 700;
-                var total = Math.ceil(pngData.length / CHUNK_SIZE);
-                var checksum = checksum16(pngData);
-                var sent = 0;
-                var progressBar = document.getElementById('progressBar');
-                var progressFill = document.getElementById('progressFill');
-                var progressLabel = document.getElementById('progressLabel');
-                var status = document.getElementById('uploadStatus');
-
-                progressBar.style.display = 'block';
-                progressFill.style.width = '0%';
-                progressLabel.textContent = '0%';
-                status.textContent = 'Sending PNG...';
-
-                function sendNextChunk(index) {
-                    if (index >= total) {
-                        progressFill.style.width = '100%';
-                        progressLabel.textContent = '100%';
-                        status.textContent = 'Custom wallpaper sent successfully!';
-                        customWallpaperLoaded = true;
-                        selectedWallpaperId = -1;
-                        document.querySelectorAll('.wallpaper-item').forEach(function(el) {
-                            el.classList.remove('selected');
-                        });
-                        return;
-                    }
-                    var start = index * CHUNK_SIZE;
-                    var end = Math.min(start + CHUNK_SIZE, pngData.length);
-                    var chunk = pngData.slice(start, end);
-                    var dict = {
-                        10: chunk,          // KEY_IMAGE_CHUNK
-                        11: index,          // KEY_CHUNK_INDEX
-                        12: total,          // KEY_TOTAL_CHUNKS
-                        13: checksum        // KEY_CHECKSUM
-                    };
-                    Pebble.sendAppMessage(dict,
-                        function() {
-                            sent++;
-                            var pct = Math.round((sent / total) * 100);
-                            progressFill.style.width = pct + '%';
-                            progressLabel.textContent = pct + '%';
-                            sendNextChunk(index + 1);
-                        },
-                        function(e) {
-                            status.textContent = 'Error sending chunk ' + index + '. Retrying...';
-                            setTimeout(function() {
-                                sendNextChunk(index);
-                            }, 1000);
-                        }
-                    );
-                }
-
-                sendNextChunk(0);
-            }
-
-            function processAndSendImage(img) {
-                var dims = getTargetDimensions();
-                var tw = dims.width;
-                var th = dims.height;
-
-                var canvas = document.createElement('canvas');
-                canvas.width = tw;
-                canvas.height = th;
-                var ctx = canvas.getContext('2d');
-
-                var imgRatio = img.width / img.height;
-                var targetRatio = tw / th;
-                var sx, sy, sw, sh;
-                if (imgRatio > targetRatio) {
-                    sh = img.height;
-                    sw = img.height * targetRatio;
-                    sx = (img.width - sw) / 2;
-                    sy = 0;
-                } else {
-                    sw = img.width;
-                    sh = img.width / targetRatio;
-                    sx = 0;
-                    sy = (img.height - sh) / 2;
-                }
-                ctx.drawImage(img, sx, sy, sw, sh, 0, 0, tw, th);
-
-                var dataUrl = canvas.toDataURL('image/png');
-                var base64 = dataUrl.split(',')[1];
-                var binary = atob(base64);
-                var array = new Uint8Array(binary.length);
-                for (var i = 0; i < binary.length; i++) {
-                    array[i] = binary.charCodeAt(i);
-                }
-
-                customPbiData = array;
-                sendCustomWallpaper(array);
-            }
-
-            // Attach custom upload event listeners
-            document.getElementById('customImageFile').addEventListener('change', function(e) {
-                if (this.files && this.files[0]) {
-                    var reader = new FileReader();
-                    reader.onload = function(ev) {
-                        var img = new Image();
-                        img.onload = function() {
-                            processAndSendImage(img);
-                        };
-                        img.src = ev.target.result;
-                    };
-                    reader.readAsDataURL(this.files[0]);
-                }
-            });
-
-            document.getElementById('loadCustomBtn').addEventListener('click', function() {
-                var url = document.getElementById('customImageUrl').value.trim();
-                if (!url) {
-                    document.getElementById('uploadStatus').textContent = 'Please enter a URL.';
-                    return;
-                }
-                var img = new Image();
-                img.crossOrigin = 'anonymous';
-                img.onload = function() {
-                    processAndSendImage(img);
-                };
-                img.onerror = function() {
-                    document.getElementById('uploadStatus').textContent = 'Error loading image from URL.';
-                };
-                img.src = url;
-            });
-
-            document.getElementById('uploadCustomBtn').addEventListener('click', function() {
-                if (customPbiData) {
-                    sendCustomWallpaper(customPbiData);
-                } else {
-                    document.getElementById('uploadStatus').textContent = 'Please load an image first.';
-                }
-            });
-
-            // ---------- Save settings ----------
             function getConfig() {
                 var config = {
                     ClockMode: timeIndex,
@@ -758,9 +503,6 @@
             }
 
             document.getElementById('saveBtn').addEventListener('click', function() {
-                if (customWallpaperLoaded) {
-                    selectedWallpaperId = -1;
-                }
                 var config = getConfig();
                 var json = JSON.stringify(config);
                 var encoded = encodeURIComponent(json);
@@ -774,7 +516,6 @@
                 }
             });
 
-            // ---------- Color pickers ----------
             document.getElementById('UI_Color').addEventListener('input', function() {
                 var c = this.value;
                 document.getElementById('colorHex').textContent = c;
@@ -784,7 +525,6 @@
                 document.getElementById('secondaryColorHex').textContent = this.value;
             });
 
-            // ---------- Init ----------
             buildGrid();
             loadConfig(5);
         })();

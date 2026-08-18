@@ -18,9 +18,16 @@
         #topBarTitle { font-size:clamp(12px,4vw,28px); font-weight:normal; letter-spacing:1px; line-height:1; color:#fff; white-space:nowrap; overflow:hidden; text-overflow:clip; flex:0 1 auto; min-width:0; }
         body.inverted #topBarTitle { color:#000; }
         #topBar .header-icons { position:absolute; right:6px; top:6px; bottom:6px; display:flex; align-items:center; gap:6px; }
+        .header-icon-btn img, .window-header-icon img, .topBar-icon img, .btn-left img, .btn-right img {
+            width:48px; height:48px; object-fit:contain; display:block; filter:invert(0);
+        }
+        body.inverted .header-icon-btn img, body.inverted .window-header-icon img, body.inverted .topBar-icon img, body.inverted .btn-left img, body.inverted .btn-right img {
+            filter:invert(1);
+        }
+        .window-header-icon img { width:auto; height:auto; filter:invert(0); }
+        body.inverted .window-header-icon img { filter:invert(1); }
         .header-icon-btn { width:48px; height:48px; padding:0; border:none; background:#fff; cursor:pointer; display:flex; align-items:center; justify-content:center; }
         body.inverted .header-icon-btn { background:#000; }
-        .header-icon-btn img { width:48px; height:48px; object-fit:contain; display:block; }
         .header-icon-btn:hover, .header-icon-btn:active { background:rgb(128,128,128); }
 
         .container { width:100%; max-width:1200px; padding:0 10px; padding-top:82px; padding-bottom:40px; margin:0 auto; }
@@ -32,7 +39,7 @@
         body.inverted .window-header { background:#fff; color:#000; }
         #customize-window .window-header { padding-top:9px; padding-bottom:9px; }
         #wallpaper-window .window-header { padding-top:12px; padding-bottom:12px; }
-        #themes-window .window-header { padding-top:12px; padding-bottom:12px; }
+        #themes-window .window-header { padding-top:12px; padding-bottom:12px; }  /* now matches Wallpapers */
         .window-header-left { display:flex; align-items:center; gap:15px; min-width:0; }
         .window-header-icon { flex-shrink:0; }
         .window-header-icon img { display:block; }
@@ -43,6 +50,7 @@
         .window-content { padding:24px 18px 18px 18px; background:#000; }
         body.inverted .window-content { background:#fff; }
 
+        /* ---- SETTING STYLES ---- */
         .setting-row { margin:0; padding:0; }
         .setting-row + .setting-row { margin-top:24px; }
 
@@ -104,6 +112,7 @@
             white-space:nowrap;
         }
         body.inverted .setting-value { color:#000; }
+        /* ---- END SETTING STYLES ---- */
 
         .wallpaper-grid {
             display:flex; flex-wrap:wrap; gap:20px 12px; justify-content:flex-start;
@@ -137,78 +146,6 @@
         body.inverted .setting-label { color:#000; }
         .setting-description { font-size:11px; color:#fff; opacity:0.6; margin-bottom:8px; }
         body.inverted .setting-description { color:#000; opacity:0.6; }
-
-        /* Custom wallpaper upload (same as color) */
-        .custom-upload-area {
-            border: 2px dashed #fff;
-            padding: 16px;
-            text-align: center;
-            margin-bottom: 12px;
-        }
-        body.inverted .custom-upload-area { border-color:#000; }
-        .custom-upload-area input[type="file"] {
-            display: block;
-            margin: 8px auto;
-            color: #fff;
-            font-family: 'Volter', sans-serif;
-            font-size: 14px;
-        }
-        body.inverted .custom-upload-area input[type="file"] { color:#000; }
-        .custom-upload-area input[type="text"] {
-            width: 100%;
-            max-width: 300px;
-            padding: 8px;
-            background: #000;
-            border: 1px solid #fff;
-            color: #fff;
-            font-family: 'Volter', sans-serif;
-            font-size: 14px;
-            margin: 8px 0;
-        }
-        body.inverted .custom-upload-area input[type="text"] { background:#fff; border-color:#000; color:#000; }
-        .custom-upload-area button {
-            background: #fff;
-            border: none;
-            color: #000;
-            padding: 8px 16px;
-            font-family: 'Volter', sans-serif;
-            font-size: 14px;
-            cursor: pointer;
-            margin: 4px;
-        }
-        body.inverted .custom-upload-area button { background:#000; color:#fff; }
-        .custom-upload-area button:hover { background:rgb(128,128,128); }
-        .custom-upload-area .status {
-            font-size: 14px;
-            color: #fff;
-            margin-top: 8px;
-        }
-        body.inverted .custom-upload-area .status { color:#000; }
-        .progress-bar {
-            width: 100%;
-            height: 20px;
-            background: #222;
-            border: 1px solid #fff;
-            margin: 8px 0;
-            position: relative;
-        }
-        body.inverted .progress-bar { border-color:#000; background:#ddd; }
-        .progress-bar .fill {
-            height: 100%;
-            width: 0%;
-            background: #fff;
-            transition: width 0.3s;
-        }
-        body.inverted .progress-bar .fill { background:#000; }
-        .progress-bar .label {
-            position: absolute;
-            top: 0; left: 0; right: 0; bottom: 0;
-            text-align: center;
-            line-height: 20px;
-            color: #000;
-            font-size: 12px;
-        }
-        body.inverted .progress-bar .label { color:#fff; }
 
         .save-btn {
             font-family:'Volter',sans-serif;
@@ -328,29 +265,10 @@
             <div class="window-divider"></div>
             <div class="window-content">
                 <div class="wallpaper-grid" id="wallpaperGrid"></div>
-                <!-- Custom Wallpaper Upload -->
-                <div class="setting" style="margin-top:20px; border-top:1px solid #fff; padding-top:20px;">
-                    <div class="setting-label">Custom Wallpaper</div>
-                    <div class="setting-description">Upload your own image (JPG/PNG). It will be cropped and colour‑reduced for your watch.</div>
-                    <div class="custom-upload-area">
-                        <input type="file" id="customImageFile" accept="image/*">
-                        <div style="margin: 8px 0;">or</div>
-                        <input type="text" id="customImageUrl" placeholder="HTTPS image URL">
-                        <div style="margin-top:8px;">
-                            <button id="loadCustomBtn">Load from URL</button>
-                            <button id="uploadCustomBtn" style="background:#666;">Send to Watch</button>
-                        </div>
-                        <div class="status" id="uploadStatus">Ready</div>
-                        <div class="progress-bar" id="progressBar" style="display:none;">
-                            <div class="fill" id="progressFill"></div>
-                            <div class="label" id="progressLabel">0%</div>
-                        </div>
-                    </div>
-                </div>
             </div>
         </div>
 
-        <!-- Themes Window -->
+        <!-- Themes Window (now with folder icon) -->
         <div class="window" id="themes-window">
             <div class="window-header-wrapper">
                 <div class="window-header">
@@ -366,6 +284,7 @@
             </div>
             <div class="window-divider"></div>
             <div class="window-content">
+                <!-- Inverted UI – button control -->
                 <div class="setting-row">
                     <div class="setting-label-centered">Inverted UI</div>
                     <div class="setting-rect">
@@ -384,13 +303,11 @@
 
     <script>
         (function() {
-            // ---------- Helper: get URL param ----------
             function getQueryParam(param) {
                 var urlParams = new URLSearchParams(window.location.search);
                 return urlParams.get(param);
             }
 
-            // ---------- Wallpaper presets ----------
             var wallpapers = [
                 { id: 1, label: 'The World\nMachine', image: 'https://raw.githubusercontent.com/GuruGitHubTheG/TWM/main/wallpapers/The_World_Machine_wallpaper.png' },
                 { id: 2, label: 'Barrens\nCraters', image: 'https://raw.githubusercontent.com/GuruGitHubTheG/TWM/main/wallpapers/Barrens_Craters_wallpaper.png' },
@@ -403,17 +320,14 @@
             ];
 
             var selectedWallpaperId = 1;
+
+            // Setting states
             var timeOptions = ['System', '12-Hour', '24-Hour'];
             var timeIndex = 0;
             var zerosOn = false;
             var ampmOn = true;
             var invertedOn = false;
 
-            // ---------- Custom wallpaper state ----------
-            var customPbiData = null;
-            var customWallpaperLoaded = false;
-
-            // ---------- Inversion ----------
             function applyInversion(enabled) {
                 if (enabled) document.body.classList.add('inverted');
                 else document.body.classList.remove('inverted');
@@ -426,7 +340,7 @@
                 document.getElementById('invertDisplay').textContent = invertedOn ? 'ON' : 'OFF';
             }
 
-            // ---------- Time controls ----------
+            // Buttons for Time Format
             document.getElementById('timeLeft').addEventListener('click', function() {
                 timeIndex = (timeIndex - 1 + timeOptions.length) % timeOptions.length;
                 updateDisplays();
@@ -436,6 +350,7 @@
                 updateDisplays();
             });
 
+            // Buttons for Leading Zeros
             document.getElementById('zerosLeft').addEventListener('click', function() {
                 zerosOn = !zerosOn;
                 updateDisplays();
@@ -445,6 +360,7 @@
                 updateDisplays();
             });
 
+            // Buttons for Show AM/PM
             document.getElementById('ampmLeft').addEventListener('click', function() {
                 ampmOn = !ampmOn;
                 updateDisplays();
@@ -454,6 +370,7 @@
                 updateDisplays();
             });
 
+            // Buttons for Inverted UI
             document.getElementById('invertLeft').addEventListener('click', function() {
                 invertedOn = !invertedOn;
                 applyInversion(invertedOn);
@@ -465,7 +382,7 @@
                 updateDisplays();
             });
 
-            // ---------- Top bar buttons ----------
+            // Top bar buttons
             document.getElementById('dismissBtnTop').addEventListener('click', function() {
                 var returnTo = getQueryParam('return_to');
                 if (returnTo) window.location = returnTo;
@@ -486,7 +403,6 @@
                 });
             });
 
-            // ---------- Load config ----------
             function loadConfig(retries) {
                 retries = retries || 3;
                 var stored = localStorage.getItem('twm_config');
@@ -535,7 +451,6 @@
                 }
             }
 
-            // ---------- Build wallpaper grid ----------
             function buildGrid() {
                 var grid = document.getElementById('wallpaperGrid');
                 grid.innerHTML = '';
@@ -571,182 +486,13 @@
                         document.querySelectorAll('.wallpaper-item').forEach(function(el) { el.classList.remove('selected'); });
                         this.classList.add('selected');
                         selectedWallpaperId = wp.id;
-                        customWallpaperLoaded = false;
-                        customPbiData = null;
-                        document.getElementById('uploadStatus').textContent = 'Custom cleared';
+                        console.log('Selected wallpaper:', wp.id);
                     });
 
                     grid.appendChild(item);
                 });
             }
 
-            // ---------- CUSTOM WALLPAPER – PNG VERSION ----------
-            // (Identical to the color version)
-            function getTargetDimensions() {
-                var platform = 'basalt';
-                try {
-                    if (Pebble.getActiveWatchInfo) {
-                        var info = Pebble.getActiveWatchInfo();
-                        platform = info.platform;
-                    }
-                } catch(e) {}
-                switch(platform) {
-                    case 'basalt': case 'aplite': case 'diorite': case 'flint':
-                        return { width: 144, height: 168 };
-                    case 'chalk':
-                        return { width: 180, height: 180 };
-                    case 'emery':
-                        return { width: 200, height: 228 };
-                    case 'gabbro':
-                        return { width: 260, height: 260 };
-                    default:
-                        return { width: 144, height: 168 };
-                }
-            }
-
-            function checksum16(data) {
-                var sum = 0;
-                for (var i = 0; i < data.length; i++) {
-                    sum = (sum + data[i]) & 0xFFFF;
-                }
-                return sum;
-            }
-
-            function sendCustomWallpaper(pngData) {
-                var CHUNK_SIZE = 700;
-                var total = Math.ceil(pngData.length / CHUNK_SIZE);
-                var checksum = checksum16(pngData);
-                var sent = 0;
-                var progressBar = document.getElementById('progressBar');
-                var progressFill = document.getElementById('progressFill');
-                var progressLabel = document.getElementById('progressLabel');
-                var status = document.getElementById('uploadStatus');
-
-                progressBar.style.display = 'block';
-                progressFill.style.width = '0%';
-                progressLabel.textContent = '0%';
-                status.textContent = 'Sending PNG...';
-
-                function sendNextChunk(index) {
-                    if (index >= total) {
-                        progressFill.style.width = '100%';
-                        progressLabel.textContent = '100%';
-                        status.textContent = 'Custom wallpaper sent successfully!';
-                        customWallpaperLoaded = true;
-                        selectedWallpaperId = -1;
-                        document.querySelectorAll('.wallpaper-item').forEach(function(el) {
-                            el.classList.remove('selected');
-                        });
-                        return;
-                    }
-                    var start = index * CHUNK_SIZE;
-                    var end = Math.min(start + CHUNK_SIZE, pngData.length);
-                    var chunk = pngData.slice(start, end);
-                    var dict = {
-                        10: chunk,          // KEY_IMAGE_CHUNK
-                        11: index,          // KEY_CHUNK_INDEX
-                        12: total,          // KEY_TOTAL_CHUNKS
-                        13: checksum        // KEY_CHECKSUM
-                    };
-                    Pebble.sendAppMessage(dict,
-                        function() {
-                            sent++;
-                            var pct = Math.round((sent / total) * 100);
-                            progressFill.style.width = pct + '%';
-                            progressLabel.textContent = pct + '%';
-                            sendNextChunk(index + 1);
-                        },
-                        function(e) {
-                            status.textContent = 'Error sending chunk ' + index + '. Retrying...';
-                            setTimeout(function() {
-                                sendNextChunk(index);
-                            }, 1000);
-                        }
-                    );
-                }
-
-                sendNextChunk(0);
-            }
-
-            function processAndSendImage(img) {
-                var dims = getTargetDimensions();
-                var tw = dims.width;
-                var th = dims.height;
-
-                var canvas = document.createElement('canvas');
-                canvas.width = tw;
-                canvas.height = th;
-                var ctx = canvas.getContext('2d');
-
-                var imgRatio = img.width / img.height;
-                var targetRatio = tw / th;
-                var sx, sy, sw, sh;
-                if (imgRatio > targetRatio) {
-                    sh = img.height;
-                    sw = img.height * targetRatio;
-                    sx = (img.width - sw) / 2;
-                    sy = 0;
-                } else {
-                    sw = img.width;
-                    sh = img.width / targetRatio;
-                    sx = 0;
-                    sy = (img.height - sh) / 2;
-                }
-                ctx.drawImage(img, sx, sy, sw, sh, 0, 0, tw, th);
-
-                var dataUrl = canvas.toDataURL('image/png');
-                var base64 = dataUrl.split(',')[1];
-                var binary = atob(base64);
-                var array = new Uint8Array(binary.length);
-                for (var i = 0; i < binary.length; i++) {
-                    array[i] = binary.charCodeAt(i);
-                }
-
-                customPbiData = array;
-                sendCustomWallpaper(array);
-            }
-
-            // Attach custom upload event listeners
-            document.getElementById('customImageFile').addEventListener('change', function(e) {
-                if (this.files && this.files[0]) {
-                    var reader = new FileReader();
-                    reader.onload = function(ev) {
-                        var img = new Image();
-                        img.onload = function() {
-                            processAndSendImage(img);
-                        };
-                        img.src = ev.target.result;
-                    };
-                    reader.readAsDataURL(this.files[0]);
-                }
-            });
-
-            document.getElementById('loadCustomBtn').addEventListener('click', function() {
-                var url = document.getElementById('customImageUrl').value.trim();
-                if (!url) {
-                    document.getElementById('uploadStatus').textContent = 'Please enter a URL.';
-                    return;
-                }
-                var img = new Image();
-                img.crossOrigin = 'anonymous';
-                img.onload = function() {
-                    processAndSendImage(img);
-                };
-                img.onerror = function() {
-                    document.getElementById('uploadStatus').textContent = 'Error loading image from URL.';
-                };
-                img.src = url;
-            });
-
-            document.getElementById('uploadCustomBtn').addEventListener('click', function() {
-                if (customPbiData) {
-                    sendCustomWallpaper(customPbiData);
-                } else {
-                    document.getElementById('uploadStatus').textContent = 'Please load an image first.';
-                }
-            });
-
-            // ---------- Save settings ----------
             function getConfig() {
                 return {
                     ClockMode: timeIndex,
@@ -758,9 +504,6 @@
             }
 
             document.getElementById('saveBtn').addEventListener('click', function() {
-                if (customWallpaperLoaded) {
-                    selectedWallpaperId = -1;
-                }
                 var config = getConfig();
                 var json = JSON.stringify(config);
                 var encoded = encodeURIComponent(json);
@@ -774,7 +517,6 @@
                 }
             });
 
-            // ---------- Init ----------
             buildGrid();
             loadConfig(5);
         })();
