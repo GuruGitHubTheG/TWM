@@ -9,394 +9,161 @@
         * { margin:0; padding:0; box-sizing:border-box; }
         body { font-family:'Volter',sans-serif; background:#000; color:var(--primary,#aa55ff); padding:0; margin:0; min-height:100vh; }
 
-        #topBar {
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            z-index: 100;
-            background: #000;
-            border-bottom: 6px solid var(--primary, #aa55ff);
-            padding: 6px 18px 6px 6px;
-            min-height: 60px;
-            display: flex;
-            align-items: center;
-        }
-        .topBar-left {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            min-width: 0; /* allows title to shrink */
-        }
-        .topBar-icon {
-            width: 48px;
-            height: 48px;
-            flex-shrink: 0;
-            background-color: var(--primary, #aa55ff);
-            -webkit-mask-image: url('https://raw.githubusercontent.com/GuruGitHubTheG/TWM/main/icons/oneshot.png');
-            mask-image: url('https://raw.githubusercontent.com/GuruGitHubTheG/TWM/main/icons/oneshot.png');
-            -webkit-mask-size: contain;
-            mask-size: contain;
-            -webkit-mask-repeat: no-repeat;
-            mask-repeat: no-repeat;
-            -webkit-mask-position: center;
-            mask-position: center;
-        }
-        #topBarTitle {
-            font-size: clamp(12px, 4vw, 28px);
-            font-weight: normal;
-            letter-spacing: 1px;
-            line-height: 1;
-            color: var(--primary, #aa55ff);
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: clip;
-            flex: 0 1 auto;
-            min-width: 0;
-        }
-        #topBar .header-icons {
-            position: absolute;
-            right: 6px;
-            top: 6px;
-            bottom: 6px;
-            display: flex;
-            align-items: center;
-            gap: 6px;
-        }
-        .header-icon-btn {
-            width: 48px;
-            height: 48px;
-            padding: 0;
-            border: none;
-            background: var(--primary, #aa55ff);
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            flex-shrink: 0;
-        }
-        .header-icon-btn img {
-            width: 48px;
-            height: 48px;
-            object-fit: contain;
-            display: block;
-        }
-        .header-icon-btn:hover { opacity:0.8; }
-        .header-icon-btn:active { opacity:0.6; }
+        #topBar { position: fixed; top:0; left:0; right:0; z-index:100; background:#000; border-bottom:6px solid var(--primary,#aa55ff); padding:6px 18px 6px 6px; min-height:60px; display:flex; align-items:center; }
+        .topBar-left { display:flex; align-items:center; gap:12px; min-width:0; }
+        .topBar-icon { width:48px; height:48px; flex-shrink:0; background-color:var(--primary,#aa55ff); -webkit-mask-image:url('https://raw.githubusercontent.com/GuruGitHubTheG/TWM/main/icons/oneshot.png'); mask-image:url('https://raw.githubusercontent.com/GuruGitHubTheG/TWM/main/icons/oneshot.png'); -webkit-mask-size:contain; mask-size:contain; -webkit-mask-repeat:no-repeat; mask-repeat:no-repeat; -webkit-mask-position:center; mask-position:center; }
+        #topBarTitle { font-size:clamp(12px,4vw,28px); font-weight:normal; letter-spacing:1px; line-height:1; color:var(--primary,#aa55ff); white-space:nowrap; overflow:hidden; text-overflow:clip; flex:0 1 auto; min-width:0; }
+        #topBar .header-icons { position:absolute; right:6px; top:6px; bottom:6px; display:flex; align-items:center; gap:6px; }
+        .header-icon-btn { width:48px; height:48px; padding:0; border:none; background:var(--primary,#aa55ff); cursor:pointer; display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+        .header-icon-btn img { width:48px; height:48px; object-fit:contain; display:block; }
+        .header-icon-btn:hover, .header-icon-btn:active { background:rgb(100,66,165); }
 
-        .container {
-            width: 100%;
-            max-width: 1200px;
-            padding: 0 10px;
-            padding-top: 82px;
-            padding-bottom: 40px;
-            margin: 0 auto;
+        .container { width:100%; max-width:1200px; padding:0 10px; padding-top:82px; padding-bottom:40px; margin:0 auto; }
+
+        .window { background:#000; border:6px solid var(--primary,#aa55ff); border-radius:0; margin-bottom:16px; overflow:hidden; }
+        .window-header-wrapper { padding:0; position:relative; }
+        .window-header { display:flex; align-items:center; background:#000; color:var(--primary,#aa55ff); min-height:60px; padding-left:18px; padding-right:18px; }
+        #customize-window .window-header { padding-top:9px; padding-bottom:9px; }
+        #wallpaper-window .window-header { padding-top:12px; padding-bottom:12px; }
+        #themes-window .window-header { padding-top:20px; padding-bottom:12px; }
+        .window-header-left { display:flex; align-items:center; gap:15px; min-width:0; }
+        .window-header-icon { flex-shrink:0; background-color:var(--primary,#aa55ff); -webkit-mask-size:contain; mask-size:contain; -webkit-mask-repeat:no-repeat; mask-repeat:no-repeat; -webkit-mask-position:center; mask-position:center; }
+        #customizeIcon { width:42px; height:42px; -webkit-mask-image:url('https://raw.githubusercontent.com/GuruGitHubTheG/TWM/main/icons/gear.png'); mask-image:url('https://raw.githubusercontent.com/GuruGitHubTheG/TWM/main/icons/gear.png'); }
+        #wallpaperIcon { width:42px; height:36px; -webkit-mask-image:url('https://raw.githubusercontent.com/GuruGitHubTheG/TWM/main/icons/folder.png'); mask-image:url('https://raw.githubusercontent.com/GuruGitHubTheG/TWM/main/icons/folder.png'); }
+        .window-header-title { font-size:clamp(12px,4vw,28px); font-weight:normal; letter-spacing:1px; line-height:1; white-space:nowrap; overflow:hidden; text-overflow:clip; flex:0 1 auto; min-width:0; }
+        .window-header-wrapper .header-icons { position:absolute; right:6px; top:6px; bottom:6px; display:flex; align-items:center; gap:6px; }
+        .window-divider { height:12px; background:var(--primary,#aa55ff); }
+        .window-content { padding:24px 18px 18px 18px; background:#000; }
+
+        /* ---- SETTING STYLES ---- */
+        .setting-row { margin:0; padding:0; }
+        .setting-row + .setting-row { margin-top:24px; }
+
+        .setting-label-centered {
+            font-size:21px;
+            font-weight:normal;
+            color:var(--primary,#aa55ff);
+            letter-spacing:0.5px;
+            text-align:center;
+            margin-bottom:21px;
         }
 
-        .window {
-            background: #000;
-            border: 6px solid var(--primary, #aa55ff);
-            border-radius: 0;
-            margin-bottom: 16px;
-            overflow: hidden;
+        .setting-rect {
+            display:flex;
+            align-items:center;
+            height:48px;
+            margin:0 -6px;
         }
-        .window-header-wrapper {
-            padding: 0;
-            position: relative;
+
+        .btn-left, .btn-right {
+            width:48px;
+            height:48px;
+            padding:0;
+            border:none;
+            background:var(--primary,#aa55ff);
+            cursor:pointer;
+            display:flex;
+            align-items:center;
+            justify-content:center;
+            flex-shrink:0;
         }
-        .window-header {
-            display: flex;
-            align-items: center;
-            background: #000;
-            color: var(--primary, #aa55ff);
-            min-height: 60px;
-            padding-left: 18px;
-            padding-right: 18px;
+        .btn-left img, .btn-right img {
+            width:48px;
+            height:48px;
+            object-fit:contain;
+            display:block;
         }
-        #customize-window .window-header {
-            padding-top: 9px;
-            padding-bottom: 9px;
+        .btn-left:hover, .btn-left:active,
+        .btn-right:hover, .btn-right:active {
+            background:rgb(100,66,165);
         }
-        #wallpaper-window .window-header {
-            padding-top: 12px;
-            padding-bottom: 12px;
+
+        .setting-middle {
+            flex:1;
+            height:48px;
+            display:flex;
+            align-items:center;
+            justify-content:center;
+            border-top:3px solid var(--primary,#aa55ff);
+            border-bottom:3px solid var(--primary,#aa55ff);
+            margin:0;
         }
-        #themes-window .window-header {
-            padding-top: 20px;
-            padding-bottom: 12px;
+
+        .setting-value {
+            font-size:21px;
+            line-height:21px;
+            height:21px;
+            font-weight:normal;
+            color:var(--primary,#aa55ff);
+            letter-spacing:1px;
+            text-align:center;
+            padding:0 8px;
+            white-space:nowrap;
         }
-        .window-header-left {
-            display: flex;
-            align-items: center;
-            gap: 15px;
-            min-width: 0;
-        }
-        .window-header-icon {
-            flex-shrink: 0;
-            background-color: var(--primary, #aa55ff);
-            -webkit-mask-size: contain;
-            mask-size: contain;
-            -webkit-mask-repeat: no-repeat;
-            mask-repeat: no-repeat;
-            -webkit-mask-position: center;
-            mask-position: center;
-        }
-        #customizeIcon {
-            width: 42px;
-            height: 42px;
-            -webkit-mask-image: url('https://raw.githubusercontent.com/GuruGitHubTheG/TWM/main/icons/gear.png');
-            mask-image: url('https://raw.githubusercontent.com/GuruGitHubTheG/TWM/main/icons/gear.png');
-        }
-        #wallpaperIcon {
-            width: 42px;
-            height: 36px;
-            -webkit-mask-image: url('https://raw.githubusercontent.com/GuruGitHubTheG/TWM/main/icons/folder.png');
-            mask-image: url('https://raw.githubusercontent.com/GuruGitHubTheG/TWM/main/icons/folder.png');
-        }
-        .window-header-title {
-            font-size: clamp(12px, 4vw, 28px);
-            font-weight: normal;
-            letter-spacing: 1px;
-            line-height: 1;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: clip;
-            flex: 0 1 auto;
-            min-width: 0;
-        }
-        .window-header-wrapper .header-icons {
-            position: absolute;
-            right: 6px;
-            top: 6px;
-            bottom: 6px;
-            display: flex;
-            align-items: center;
-            gap: 6px;
-        }
-        .window-divider {
-            height: 12px;
-            background: var(--primary, #aa55ff);
-        }
-        .window-content {
-            padding: 18px;
-            background: #000;
-        }
+        /* ---- END SETTING STYLES ---- */
 
         .wallpaper-grid {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 20px 12px;
-            justify-content: flex-start;
+            display:flex; flex-wrap:wrap; gap:20px 12px; justify-content:flex-start;
         }
         .wallpaper-item {
-            width: 240px;
-            cursor: pointer;
-            border: 6px solid transparent;
-            background: transparent;
-            padding: 0;
-            position: relative;
-            display: flex;
-            flex-direction: column;
-            align-items: flex-start;
-            justify-content: flex-start;
-            overflow: hidden;
-            flex-shrink: 0;
+            width:240px; cursor:pointer; border:6px solid transparent; background:transparent; padding:0; position:relative; display:flex; flex-direction:column; align-items:flex-start; justify-content:flex-start; overflow:hidden; flex-shrink:0;
         }
         .wallpaper-item.two-liner { height:217px; }
         .wallpaper-item.one-liner { height:170px; }
-        .wallpaper-item.selected {
-            border-color: rgb(74,50,126);
-            background: rgb(38,24,64);
-        }
+        .wallpaper-item.selected { border-color:rgb(74,50,126); background:rgb(38,24,64); }
         .wallpaper-screenshot-wrapper {
-            position: relative;
-            width: 126px;
-            height: 72px;
-            margin-top: 18px;
-            margin-left: 51px;
-            flex-shrink: 0;
-            z-index: 2;
+            position:relative; width:126px; height:72px; margin-top:18px; margin-left:51px; flex-shrink:0; z-index:2;
         }
-        .wallpaper-shadow {
-            position: absolute;
-            top: 3px;
-            left: 3px;
-            width: 100%;
-            height: 100%;
-            background: #000;
-            z-index: 1;
-        }
-        .wallpaper-screenshot {
-            position: relative;
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-            z-index: 2;
-            display: block;
-            background: #1a1a1a;
-        }
+        .wallpaper-shadow { position:absolute; top:3px; left:3px; width:100%; height:100%; background:#000; z-index:1; }
+        .wallpaper-screenshot { position:relative; width:100%; height:100%; object-fit:cover; z-index:2; display:block; background:#1a1a1a; }
         .wallpaper-text-wrapper {
-            position: absolute;
-            top: 111px;
-            left: 51px;
-            width: 126px;
-            height: auto;
-            min-height: 33px;
-            z-index: 3;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: flex-start;
-            pointer-events: none;
-            gap: 0;
+            position:absolute; top:111px; left:51px; width:126px; height:auto; min-height:33px; z-index:3; display:flex; flex-direction:column; align-items:center; justify-content:flex-start; pointer-events:none; gap:0;
         }
         .wallpaper-label {
-            font-size: 29px;
-            line-height: 1;
-            color: var(--primary, #aa55ff);
-            text-align: center;
-            letter-spacing: 0.3px;
-            display: inline-block;
-            background: #000;
-            padding: 6px 6px 9px 3px;
-            border-radius: 0;
-            white-space: pre;
-            word-wrap: break-word;
+            font-size:29px; line-height:1; color:var(--primary,#aa55ff); text-align:center; letter-spacing:0.3px; display:inline-block; background:#000; padding:6px 6px 9px 3px; border-radius:0; white-space:pre; word-wrap:break-word;
         }
 
         .setting { padding:10px 0; }
-        .setting + .setting {
-            border-top: 1px solid rgba(255,255,255,0.08);
-            padding-top:14px;
-        }
-        .setting-label {
-            font-size:14px;
-            font-weight:normal;
-            margin-bottom:6px;
-            color:var(--primary, #aa55ff);
-            letter-spacing:0.5px;
-        }
-        .setting-description {
-            font-size:11px;
-            color:var(--primary, #aa55ff);
-            opacity:0.6;
-            margin-bottom:8px;
-        }
-        .toggle-row {
-            display:flex;
-            align-items:center;
-            justify-content:space-between;
-        }
+        .setting + .setting { border-top:1px solid rgba(255,255,255,0.08); padding-top:14px; }
+        .setting-label { font-size:14px; font-weight:normal; margin-bottom:6px; color:var(--primary,#aa55ff); letter-spacing:0.5px; }
+        .setting-description { font-size:11px; color:var(--primary,#aa55ff); opacity:0.6; margin-bottom:8px; }
+        .toggle-row { display:flex; align-items:center; justify-content:space-between; }
         .toggle-row .setting-label { margin-bottom:0; }
-        .toggle {
-            position:relative;
-            width:51px;
-            height:31px;
-            flex-shrink:0;
-        }
+        .toggle { position:relative; width:51px; height:31px; flex-shrink:0; }
         .toggle input { opacity:0; width:0; height:0; }
-        .toggle .slider {
-            position:absolute;
-            cursor:pointer;
-            top:0; left:0; right:0; bottom:0;
-            background:rgba(255,255,255,0.15);
-            border-radius:31px;
-        }
-        .toggle .slider:before {
-            content:"";
-            position:absolute;
-            height:27px;
-            width:27px;
-            left:2px;
-            bottom:2px;
-            background:#fff;
-            border-radius:50%;
-            box-shadow:0 1px 3px rgba(0,0,0,0.3);
-        }
-        .toggle input:checked + .slider { background:var(--primary, #aa55ff); }
+        .toggle .slider { position:absolute; cursor:pointer; top:0; left:0; right:0; bottom:0; background:rgba(255,255,255,0.15); border-radius:31px; }
+        .toggle .slider:before { content:""; position:absolute; height:27px; width:27px; left:2px; bottom:2px; background:#fff; border-radius:50%; box-shadow:0 1px 3px rgba(0,0,0,0.3); }
+        .toggle input:checked + .slider { background:var(--primary,#aa55ff); }
         .toggle input:checked + .slider:before { transform:translateX(20px); }
 
-        .color-picker-wrapper {
-            display:flex;
-            align-items:center;
-            gap:14px;
-        }
-        .color-picker-wrapper input[type="color"] {
-            width:60px;
-            height:44px;
-            padding:4px;
-            cursor:pointer;
-            border:1px solid var(--primary, #aa55ff);
-            background:transparent;
-            flex-shrink:0;
-        }
-        .color-hex {
-            font-size:14px;
-            font-weight:normal;
-            color:var(--primary, #aa55ff);
-            font-family:'Volter',monospace;
-            letter-spacing:0.5px;
-        }
+        .color-picker-wrapper { display:flex; align-items:center; gap:14px; }
+        .color-picker-wrapper input[type="color"] { width:60px; height:44px; padding:4px; cursor:pointer; border:1px solid var(--primary,#aa55ff); background:transparent; flex-shrink:0; }
+        .color-hex { font-size:14px; font-weight:normal; color:var(--primary,#aa55ff); font-family:'Volter',monospace; letter-spacing:0.5px; }
 
         .save-btn {
             font-family:'Volter',sans-serif;
-            width:100%;
-            padding:16px;
-            font-size:16px;
-            font-weight:normal;
-            letter-spacing:2px;
-            text-transform:uppercase;
-            color:#000;
-            background:var(--primary, #aa55ff);
-            border:6px solid var(--primary, #aa55ff);
-            border-radius:0;
-            cursor:pointer;
-            margin-top:8px;
+            width:100%; padding:16px; font-size:16px; font-weight:normal; letter-spacing:2px; text-transform:uppercase;
+            color:#000; background:var(--primary,#aa55ff); border:6px solid var(--primary,#aa55ff); border-radius:0; cursor:pointer; margin-top:8px;
         }
-        .save-btn:hover { opacity:0.85; }
-        .save-btn:active { opacity:0.7; }
+        .save-btn:hover, .save-btn:active { background:rgb(100,66,165); }
 
-        .capability-note {
-            font-size:10px;
-            color:var(--primary, #aa55ff);
-            opacity:0.4;
-            margin-top:6px;
-            letter-spacing:0.3px;
-        }
+        .capability-note { font-size:10px; color:var(--primary,#aa55ff); opacity:0.4; margin-top:6px; letter-spacing:0.3px; }
 
         select {
             font-family:'Volter',sans-serif;
-            font-size:14px;
-            padding:8px 35px 8px 12px;
-            border:1px solid var(--primary, #aa55ff);
-            border-radius:0;
-            background:#000;
-            color:var(--primary, #aa55ff);
-            width:100%;
-            max-width:300px;
-            appearance:none;
-            -webkit-appearance:none;
+            font-size:14px; padding:8px 35px 8px 12px; border:1px solid var(--primary,#aa55ff); border-radius:0; background:#000; color:var(--primary,#aa55ff);
+            width:100%; max-width:300px; appearance:none; -webkit-appearance:none;
             background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%23aa55ff' stroke-width='1.5' fill='none'/%3E%3C/svg%3E");
-            background-repeat:no-repeat;
-            background-position:right 12px center;
-            background-size:12px 8px;
-            cursor:pointer;
-            outline:none;
+            background-repeat:no-repeat; background-position:right 12px center; background-size:12px 8px; cursor:pointer; outline:none;
         }
-        select:focus {
-            border-color:var(--primary, #aa55ff);
-            box-shadow:0 0 0 2px rgba(170,85,255,0.2);
-        }
-        select option { background:#1a1a1a; color:var(--primary, #aa55ff); }
+        select:focus { border-color:var(--primary,#aa55ff); box-shadow:0 0 0 2px rgba(170,85,255,0.2); }
+        select option { background:#1a1a1a; color:var(--primary,#aa55ff); }
 
         @media (max-width: 400px) {
-            .container {
-                padding: 0 5px;
-                padding-top: 76px;
-            }
-            .window-content { padding: 12px; }
-            .window { border-width: 4px; }
-            .window-divider { height: 10px; }
+            .container { padding:0 5px; padding-top:76px; }
+            .window-content { padding:20px 12px 12px 12px; }
+            .window { border-width:4px; }
+            .window-divider { height:10px; }
         }
         ::-webkit-scrollbar { width:0; background:transparent; }
     </style>
@@ -431,24 +198,39 @@
             </div>
             <div class="window-divider" style="background:var(--primary, #aa55ff);"></div>
             <div class="window-content">
-                <div class="setting">
-                    <div class="setting-label">Time Format</div>
-                    <select id="ClockMode">
-                        <option value="0">System</option>
-                        <option value="1">12-Hour</option>
-                        <option value="2">24-Hour</option>
-                    </select>
-                </div>
-                <div class="setting">
-                    <div class="toggle-row">
-                        <div><div class="setting-label">Show Leading Zeros</div><div class="setting-description">08:00 instead of 8:00</div></div>
-                        <label class="toggle"><input type="checkbox" id="LeadingZeros"><span class="slider"></span></label>
+                <!-- Time Format -->
+                <div class="setting-row">
+                    <div class="setting-label-centered">Time Format</div>
+                    <div class="setting-rect">
+                        <button class="btn-left" id="timeLeft"><img src="https://raw.githubusercontent.com/GuruGitHubTheG/TWM/main/icons/left.png" alt="<"></button>
+                        <div class="setting-middle">
+                            <span class="setting-value" id="timeDisplay">System</span>
+                        </div>
+                        <button class="btn-right" id="timeRight"><img src="https://raw.githubusercontent.com/GuruGitHubTheG/TWM/main/icons/right.png" alt=">"></button>
                     </div>
                 </div>
-                <div class="setting">
-                    <div class="toggle-row">
-                        <div><div class="setting-label">Show AM/PM</div><div class="setting-description">Display AM/PM indicator</div></div>
-                        <label class="toggle"><input type="checkbox" id="ShowAMPM" checked><span class="slider"></span></label>
+
+                <!-- Leading Zeros -->
+                <div class="setting-row">
+                    <div class="setting-label-centered">Leading Zeros</div>
+                    <div class="setting-rect">
+                        <button class="btn-left" id="zerosLeft"><img src="https://raw.githubusercontent.com/GuruGitHubTheG/TWM/main/icons/left.png" alt="<"></button>
+                        <div class="setting-middle">
+                            <span class="setting-value" id="zerosDisplay">OFF</span>
+                        </div>
+                        <button class="btn-right" id="zerosRight"><img src="https://raw.githubusercontent.com/GuruGitHubTheG/TWM/main/icons/right.png" alt=">"></button>
+                    </div>
+                </div>
+
+                <!-- Show AM/PM -->
+                <div class="setting-row">
+                    <div class="setting-label-centered">Show AM/PM</div>
+                    <div class="setting-rect">
+                        <button class="btn-left" id="ampmLeft"><img src="https://raw.githubusercontent.com/GuruGitHubTheG/TWM/main/icons/left.png" alt="<"></button>
+                        <div class="setting-middle">
+                            <span class="setting-value" id="ampmDisplay">ON</span>
+                        </div>
+                        <button class="btn-right" id="ampmRight"><img src="https://raw.githubusercontent.com/GuruGitHubTheG/TWM/main/icons/right.png" alt=">"></button>
                     </div>
                 </div>
             </div>
@@ -532,23 +314,60 @@
             var selectedWallpaperId = 1;
             var primaryColor = '#aa55ff';
 
+            var timeOptions = ['System', '12-Hour', '24-Hour'];
+            var timeIndex = 0;
+            var zerosOn = false;
+            var ampmOn = true;
+
             function applyStyles(color) {
                 primaryColor = color;
                 document.documentElement.style.setProperty('--primary', color);
+                // Only set border, text, and non-interactive backgrounds via CSS variable
+                // Do NOT set inline background on interactive elements (buttons, header icons, save button)
+                // because that would override :hover.
                 document.querySelectorAll('.window, .save-btn, #topBar').forEach(function(el) { el.style.borderColor = color; });
-                document.querySelectorAll('.window-header, .window-header-title, .setting-label, .color-hex, .capability-note, .wallpaper-label, #topBarTitle').forEach(function(el) { el.style.color = color; });
-                document.querySelectorAll('.window-divider, .save-btn, .header-icon-btn').forEach(function(el) { el.style.background = color; });
+                document.querySelectorAll('.window-header, .window-header-title, .setting-label-centered, .setting-value, .setting-label, .color-hex, .capability-note, .wallpaper-label, #topBarTitle').forEach(function(el) { el.style.color = color; });
+                document.querySelectorAll('.window-divider').forEach(function(el) { el.style.background = color; });
                 document.querySelectorAll('.setting-description').forEach(function(el) { el.style.color = color; el.style.opacity = '0.6'; });
-                document.querySelectorAll('select').forEach(function(el) {
-                    el.style.color = color;
-                    el.style.borderColor = color;
-                    var enc = color.replace('#','%23');
-                    el.style.backgroundImage = "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='" + enc + "' stroke-width='1.5' fill='none'/%3E%3C/svg%3E\")";
-                });
+                document.querySelectorAll('.setting-middle').forEach(function(el) { el.style.borderTopColor = color; el.style.borderBottomColor = color; });
                 document.querySelectorAll('.color-picker-wrapper input[type="color"]').forEach(function(el) { el.style.borderColor = color; });
+                // For toggle slider checked state, update the style rule
                 var style = document.getElementById('dynamicToggleStyle') || (function() { var s=document.createElement('style'); s.id='dynamicToggleStyle'; document.head.appendChild(s); return s; })();
                 style.textContent = '.toggle input:checked + .slider { background: ' + color + ' !important; }';
             }
+
+            function updateDisplays() {
+                document.getElementById('timeDisplay').textContent = timeOptions[timeIndex];
+                document.getElementById('zerosDisplay').textContent = zerosOn ? 'ON' : 'OFF';
+                document.getElementById('ampmDisplay').textContent = ampmOn ? 'ON' : 'OFF';
+            }
+
+            document.getElementById('timeLeft').addEventListener('click', function() {
+                timeIndex = (timeIndex - 1 + timeOptions.length) % timeOptions.length;
+                updateDisplays();
+            });
+            document.getElementById('timeRight').addEventListener('click', function() {
+                timeIndex = (timeIndex + 1) % timeOptions.length;
+                updateDisplays();
+            });
+
+            document.getElementById('zerosLeft').addEventListener('click', function() {
+                zerosOn = !zerosOn;
+                updateDisplays();
+            });
+            document.getElementById('zerosRight').addEventListener('click', function() {
+                zerosOn = !zerosOn;
+                updateDisplays();
+            });
+
+            document.getElementById('ampmLeft').addEventListener('click', function() {
+                ampmOn = !ampmOn;
+                updateDisplays();
+            });
+            document.getElementById('ampmRight').addEventListener('click', function() {
+                ampmOn = !ampmOn;
+                updateDisplays();
+            });
 
             document.getElementById('dismissBtnTop').addEventListener('click', function() {
                 var returnTo = getQueryParam('return_to');
@@ -576,9 +395,14 @@
                 if (stored) {
                     try {
                         var config = JSON.parse(stored);
-                        if (config.ClockMode !== undefined) document.getElementById('ClockMode').value = config.ClockMode;
-                        if (config.LeadingZeros !== undefined) document.getElementById('LeadingZeros').checked = config.LeadingZeros === true;
-                        if (config.ShowAMPM !== undefined) document.getElementById('ShowAMPM').checked = config.ShowAMPM !== false;
+                        if (config.ClockMode !== undefined) {
+                            var val = parseInt(config.ClockMode, 10);
+                            if (val === 0) timeIndex = 0;
+                            else if (val === 1) timeIndex = 1;
+                            else if (val === 2) timeIndex = 2;
+                        }
+                        if (config.LeadingZeros !== undefined) zerosOn = config.LeadingZeros === true;
+                        if (config.ShowAMPM !== undefined) ampmOn = config.ShowAMPM !== false;
                         if (config.Wallpaper !== undefined) {
                             var wp = parseInt(config.Wallpaper, 10);
                             if (!isNaN(wp)) {
@@ -603,6 +427,7 @@
                         }
                         console.log('Loaded config:', config);
                         document.getElementById('topBarTitle').textContent = 'The World Machine';
+                        updateDisplays();
                         return true;
                     } catch(e) {
                         console.warn('Error loading config', e);
@@ -617,6 +442,7 @@
                     console.log('No config – using defaults');
                     applyStyles('#aa55ff');
                     document.getElementById('topBarTitle').textContent = 'The World Machine';
+                    updateDisplays();
                     return false;
                 }
             }
@@ -665,9 +491,9 @@
 
             function getConfig() {
                 var config = {
-                    ClockMode: document.getElementById('ClockMode').value,
-                    LeadingZeros: document.getElementById('LeadingZeros').checked,
-                    ShowAMPM: document.getElementById('ShowAMPM').checked,
+                    ClockMode: timeIndex,
+                    LeadingZeros: zerosOn,
+                    ShowAMPM: ampmOn,
                     Wallpaper: selectedWallpaperId,
                     UI_Color: document.getElementById('UI_Color').value.replace('#', '')
                 };
