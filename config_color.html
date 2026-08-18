@@ -338,7 +338,7 @@
             var timeIndex = 0;
             var zerosOn = false;
             var ampmOn = true;
-            var customPhotoReady = false; // tracks whether a processed image is stored
+            var customPhotoReady = false;
 
             var photoLoadGeneration = 0;
             var photoLoadTimer = null;
@@ -346,38 +346,404 @@
             canvas.width = watchWidth;
             canvas.height = watchHeight;
 
-            function applyStyles(color) { /* unchanged */ }
-            function updateDisplays() { /* unchanged */ }
-            function updateCustomPhotoSection() { /* unchanged */ }
+            function applyStyles(color) {
+                primaryColor = color;
+                document.documentElement.style.setProperty('--primary', color);
+                document.querySelectorAll('.window, .save-btn, #topBar').forEach(function(el) { el.style.borderColor = color; });
+                document.querySelectorAll('.window-header, .window-header-title, .setting-label-centered, .setting-value, .setting-label, .color-hex, .capability-note, .wallpaper-label, #topBarTitle').forEach(function(el) { el.style.color = color; });
+                document.querySelectorAll('.window-divider').forEach(function(el) { el.style.background = color; });
+                document.querySelectorAll('.setting-description').forEach(function(el) { el.style.color = color; el.style.opacity = '0.6'; });
+                document.querySelectorAll('.setting-middle').forEach(function(el) { el.style.borderTopColor = color; el.style.borderBottomColor = color; });
+                document.querySelectorAll('.color-picker-wrapper input[type="color"]').forEach(function(el) { el.style.borderColor = color; });
+                var style = document.getElementById('dynamicToggleStyle') || (function() { var s = document.createElement('style'); s.id = 'dynamicToggleStyle'; document.head.appendChild(s); return s; })();
+                style.textContent = '.toggle input:checked + .slider { background: ' + color + ' !important; }';
+            }
 
-            // ... event listeners for time, zeros, ampm, dismiss/close ...
+            function updateDisplays() {
+                document.getElementById('timeDisplay').textContent = timeOptions[timeIndex];
+                document.getElementById('zerosDisplay').textContent = zerosOn ? 'ON' : 'OFF';
+                document.getElementById('ampmDisplay').textContent = ampmOn ? 'ON' : 'OFF';
+            }
 
-            function loadConfig(retries) { /* ... existing code, but also check for stored photo */ }
+            function updateCustomPhotoSection() {
+                var section = document.getElementById('custom-photo-section');
+                section.style.display = (selectedWallpaperId === 8) ? 'block' : 'none';
+            }
 
-            function buildGrid() { /* ... existing code */ }
+            // Event listeners for time/zeros/ampm
+            document.getElementById('timeLeft').addEventListener('click', function() {
+                timeIndex = (timeIndex - 1 + timeOptions.length) % timeOptions.length;
+                updateDisplays();
+            });
+            document.getElementById('timeRight').addEventListener('click', function() {
+                timeIndex = (timeIndex + 1) % timeOptions.length;
+                updateDisplays();
+            });
+
+            document.getElementById('zerosLeft').addEventListener('click', function() {
+                zerosOn = !zerosOn;
+                updateDisplays();
+            });
+            document.getElementById('zerosRight').addEventListener('click', function() {
+                zerosOn = !zerosOn;
+                updateDisplays();
+            });
+
+            document.getElementById('ampmLeft').addEventListener('click', function() {
+                ampmOn = !ampmOn;
+                updateDisplays();
+            });
+            document.getElementById('ampmRight').addEventListener('click', function() {
+                ampmOn = !ampmOn;
+                updateDisplays();
+            });
+
+            // Top bar & window buttons
+            document.getElementById('dismissBtnTop').addEventListener('click', function() {
+                var returnTo = getQueryParam('return_to');
+                if (returnTo) window.location = returnTo;
+                else window.location = 'pebblejs://close';
+            });
+            document.getElementById('closeBtnTop').addEventListener('click', function() {
+                document.getElementById('saveBtn').click();
+            });
+
+            document.querySelectorAll('#dismissBtnColor2, #dismissBtnColor3, #dismissBtnColor4').forEach(function(btn) {
+                btn.addEventListener('click', function() { document.getElementById('dismissBtnTop').click(); });
+            });
+            document.querySelectorAll('#closeBtnColor2, #closeBtnColor3, #closeBtnColor4').forEach(function(btn) {
+                btn.addEventListener('click', function() { document.getElementById('closeBtnTop').click(); });
+            });
+
+            // Load configuration
+            function loadConfig(retries) {
+                retries = retries || 3;
+                var stored = localStorage.getItem('twm_config');
+                if (stored) {
+                    try {
+                        var config = JSON.parse(stored);
+                        if (config.ClockMode !== undefined) {
+                            var val = parseInt(config.ClockMode, 10);
+                            if (val === 0) timeIndex = 0;
+                            else if (val === 1) timeIndex = 1;
+                            else if (val === 2) timeIndex = 2;
+                        }
+                        if (config.LeadingZeros !== undefined) zerosOn = config.LeadingZeros === true;
+                        if (config.ShowAMPM !== undefined) ampmOn = config.ShowAMPM !== false;
+                        if (config.Wallpaper !== undefined) {
+                            var wp = parseInt(config.Wallpaper, 10);
+                            if (!isNaN(wp)) {
+                                selectedWallpaperId = wp;
+                                document.querySelectorAll('.wallpaper-item').forEach(function(el) {
+                                    el.classList.toggle('selected', parseInt(el.dataset.id) === selectedWallpaperId);
+                                });
+                                updateCustomPhotoSection();
+                            }
+                        }
+                        if (config.UI_Color) {
+                            var c = config.UI_Color;
+                            if (!c.startsWith('#')) c = '#' + c;
+                            document.getElementById('UI_Color').value = c;
+                            document.getElementById('colorHex').textContent = c;
+                            applyStyles(c);
+                        }
+                        if (config.Secondary_Color) {
+                            var sc = config.Secondary_Color;
+                            if (!sc.startsWith('#')) sc = '#' + sc;
+                            document.getElementById('Secondary_Color').value = sc;
+                            document.getElementById('secondaryColorHex').textContent = sc;
+                        }
+                        console.log('Loaded config:', config);
+                        document.getElementById('topBarTitle').textContent = 'The World Machine';
+                        updateDisplays();
+                        return true;
+                    } catch(e) {
+                        console.warn('Error loading config', e);
+                    }
+                }
+                if (retries > 0) {
+                    setTimeout(function() { loadConfig(retries - 1); }, 500);
+                    return false;
+                } else {
+                    console.log('No config – using defaults');
+                    applyStyles('#aa55ff');
+                    document.getElementById('topBarTitle').textContent = 'The World Machine';
+                    updateDisplays();
+                    updateCustomPhotoSection();
+                    return false;
+                }
+            }
+
+            // Build wallpaper grid
+            function buildGrid() {
+                var grid = document.getElementById('wallpaperGrid');
+                grid.innerHTML = '';
+                wallpapers.forEach(function(wp) {
+                    var lines = wp.label.split('\n');
+                    var item = document.createElement('div');
+                    item.className = 'wallpaper-item' + (selectedWallpaperId === wp.id ? ' selected' : '') + (lines.length === 1 ? ' one-liner' : ' two-liner');
+                    item.dataset.id = wp.id;
+
+                    var wrapper = document.createElement('div');
+                    wrapper.className = 'wallpaper-screenshot-wrapper';
+                    var shadow = document.createElement('div');
+                    shadow.className = 'wallpaper-shadow';
+                    var img = document.createElement('img');
+                    img.className = 'wallpaper-screenshot';
+                    img.src = wp.image || 'data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7';
+                    img.alt = wp.label.replace('\n', ' ');
+                    wrapper.appendChild(shadow);
+                    wrapper.appendChild(img);
+                    item.appendChild(wrapper);
+
+                    var textWrapper = document.createElement('div');
+                    textWrapper.className = 'wallpaper-text-wrapper';
+                    lines.forEach(function(line) {
+                        var span = document.createElement('span');
+                        span.className = 'wallpaper-label';
+                        span.textContent = line;
+                        textWrapper.appendChild(span);
+                    });
+                    item.appendChild(textWrapper);
+
+                    item.addEventListener('click', function() {
+                        document.querySelectorAll('.wallpaper-item').forEach(function(el) { el.classList.remove('selected'); });
+                        this.classList.add('selected');
+                        selectedWallpaperId = wp.id;
+                        updateCustomPhotoSection();
+                        console.log('Selected wallpaper:', wp.id);
+                    });
+
+                    grid.appendChild(item);
+                });
+            }
 
             // ---- Custom Photo Processing ----
-            function setPhotoStatus(msg, isError) { /* unchanged */ }
-            function setSubmitDisabled(disabled) { /* unchanged */ }
-            function hideCompatibilityRetry() { /* unchanged */ }
-            function resetPhotoLoad(message, isError) { /* unchanged */ }
-            function beginPhotoLoad(message, timeoutCallback) { /* unchanged */ }
-            function failPhotoLoad(generation, message) { /* unchanged */ }
-            function offerCompatibilityRetry(generation, message) { /* unchanged */ }
+            function setPhotoStatus(msg, isError) {
+                var status = document.getElementById('photoStatus');
+                status.textContent = msg;
+                status.style.color = isError ? '#ff7777' : '#aaa';
+            }
 
-            // Quantization functions (color 4-bit) as before
+            function setSubmitDisabled(disabled) {
+                var buttons = document.querySelectorAll('button[type="submit"], input[type="submit"], .save-btn');
+                for (var i = 0; i < buttons.length; i++) {
+                    buttons[i].disabled = disabled;
+                    buttons[i].style.opacity = disabled ? '0.5' : '1';
+                }
+            }
+
+            function hideCompatibilityRetry() {
+                document.getElementById('photoProxyBtn').style.display = 'none';
+            }
+
+            function resetPhotoLoad(message, isError) {
+                if (photoLoadTimer) { clearTimeout(photoLoadTimer); photoLoadTimer = null; }
+                photoLoadGeneration++;
+                customPhotoReady = false;
+                canvas.style.display = 'none';
+                hideCompatibilityRetry();
+                setSubmitDisabled(false);
+                setPhotoStatus(message, isError);
+            }
+
+            function beginPhotoLoad(message, timeoutCallback) {
+                if (photoLoadTimer) { clearTimeout(photoLoadTimer); photoLoadTimer = null; }
+                photoLoadGeneration++;
+                setSubmitDisabled(true);
+                setPhotoStatus(message, false);
+                customPhotoReady = false;
+                canvas.style.display = 'none';
+                hideCompatibilityRetry();
+                var generation = photoLoadGeneration;
+                photoLoadTimer = setTimeout(function() {
+                    if (timeoutCallback) {
+                        timeoutCallback(generation);
+                    } else {
+                        failPhotoLoad(generation, 'Photo loading timed out. Check the URL or try a smaller image.');
+                    }
+                }, 30000);
+                return generation;
+            }
+
+            function failPhotoLoad(generation, message) {
+                if (generation !== photoLoadGeneration) return;
+                if (photoLoadTimer) { clearTimeout(photoLoadTimer); photoLoadTimer = null; }
+                photoLoadGeneration++;
+                customPhotoReady = false;
+                setPhotoStatus(message, true);
+                setSubmitDisabled(false);
+            }
+
+            function offerCompatibilityRetry(generation, message) {
+                if (generation !== photoLoadGeneration) return;
+                failPhotoLoad(generation, message ||
+                    'The browser could not load this image directly. The host may block access; retry through wsrv.nl below.');
+                document.getElementById('photoProxyBtn').style.display = 'block';
+            }
+
+            // Color quantization functions (4-bit palette)
             function colorId(r,g,b) { return (r<<4)|(g<<2)|b; }
             function colorFromId(id) { return { r:(id>>4)&3, g:(id>>2)&3, b:id&3 }; }
             function clamp(v,l,h) { return Math.max(l, Math.min(h, v)); }
-            function makeHistogram(pixelData) { /* ... */ }
-            function boxStats(box) { /* ... */ }
-            function splitBox(box) { /* ... */ }
-            function representative(box) { /* ... */ }
-            function buildPalette(pixelData) { /* ... */ }
-            function nearestPaletteIndex(r,g,b,palette) { /* ... */ }
+
+            function makeHistogram(pixelData) {
+                var hist = new Array(64).fill(0);
+                for (var i = 0; i < pixelData.length; i += 4) {
+                    var r = clamp(Math.round(pixelData[i]/85), 0, 3);
+                    var g = clamp(Math.round(pixelData[i+1]/85), 0, 3);
+                    var b = clamp(Math.round(pixelData[i+2]/85), 0, 3);
+                    hist[colorId(r,g,b)]++;
+                }
+                var entries = [];
+                for (var i = 0; i < hist.length; i++) {
+                    if (hist[i] === 0) continue;
+                    var c = colorFromId(i);
+                    entries.push({id:i, red:c.r, green:c.g, blue:c.b, count:hist[i]});
+                }
+                return entries;
+            }
+
+            function boxStats(box) {
+                var minR=3,minG=3,minB=3,maxR=0,maxG=0,maxB=0,total=0;
+                for (var i=0;i<box.length;i++) {
+                    var e=box[i];
+                    minR=Math.min(minR,e.red); minG=Math.min(minG,e.green); minB=Math.min(minB,e.blue);
+                    maxR=Math.max(maxR,e.red); maxG=Math.max(maxG,e.green); maxB=Math.max(maxB,e.blue);
+                    total += e.count;
+                }
+                return { ranges:[maxR-minR, maxG-minG, maxB-minB], total:total };
+            }
+
+            function splitBox(box) {
+                var stats = boxStats(box);
+                var ch = 0;
+                if (stats.ranges[1] > stats.ranges[ch]) ch = 1;
+                if (stats.ranges[2] > stats.ranges[ch]) ch = 2;
+                var name = ['red','green','blue'][ch];
+                var sorted = box.slice().sort(function(a,b) {
+                    if (a[name] !== b[name]) return a[name]-b[name];
+                    return b.count-a.count;
+                });
+                var half = stats.total/2;
+                var acc = 0, splitAt = 1;
+                for (var i=0;i<sorted.length-1;i++) {
+                    acc += sorted[i].count;
+                    splitAt = i+1;
+                    if (acc >= half) break;
+                }
+                splitAt = clamp(splitAt, 1, sorted.length-1);
+                return [sorted.slice(0,splitAt), sorted.slice(splitAt)];
+            }
+
+            function representative(box) {
+                var total=0, r=0,g=0,b=0;
+                for (var i=0;i<box.length;i++) {
+                    total += box[i].count;
+                    r += box[i].red * box[i].count;
+                    g += box[i].green * box[i].count;
+                    b += box[i].blue * box[i].count;
+                }
+                r/=total; g/=total; b/=total;
+                var best=box[0], bestDist=Number.MAX_VALUE;
+                for (var i=0;i<box.length;i++) {
+                    var dr=box[i].red-r, dg=box[i].green-g, db=box[i].blue-b;
+                    var dist=dr*dr+dg*dg+db*db;
+                    if (dist<bestDist || (dist===bestDist && box[i].count>best.count)) {
+                        best=box[i]; bestDist=dist;
+                    }
+                }
+                return best.id;
+            }
+
+            function buildPalette(pixelData) {
+                var entries = makeHistogram(pixelData);
+                if (entries.length <= 16) {
+                    entries.sort(function(a,b){ return b.count-a.count; });
+                    return entries.map(function(e){ return e.id; });
+                }
+                var boxes = [entries];
+                while (boxes.length < 16) {
+                    var bestIndex=-1, bestScore=-1;
+                    for (var i=0;i<boxes.length;i++) {
+                        if (boxes[i].length < 2) continue;
+                        var stats = boxStats(boxes[i]);
+                        var range = Math.max(stats.ranges[0], stats.ranges[1], stats.ranges[2]);
+                        var score = range * stats.total;
+                        if (score > bestScore) { bestScore=score; bestIndex=i; }
+                    }
+                    if (bestIndex < 0) break;
+                    var halves = splitBox(boxes[bestIndex]);
+                    boxes.splice(bestIndex, 1, halves[0], halves[1]);
+                }
+                return boxes.map(representative);
+            }
+
+            function nearestPaletteIndex(r,g,b,palette) {
+                var bestIdx=0, bestDist=Number.MAX_VALUE;
+                for (var i=0;i<palette.length;i++) {
+                    var dr=r-palette[i].r, dg=g-palette[i].g, db=b-palette[i].b;
+                    var dist=dr*dr+dg*dg+db*db;
+                    if (dist<bestDist) { bestDist=dist; bestIdx=i; }
+                }
+                return bestIdx;
+            }
 
             function quantizeColorAndPack(imageData, width, height) {
-                // ... same as before, returns { pixelData, palette, color: true }
+                var paletteIds = buildPalette(imageData.data);
+                var palette = paletteIds.map(function(id) {
+                    var c = colorFromId(id);
+                    return { id:id, r:c.r*85, g:c.g*85, b:c.b*85 };
+                });
+
+                var rowBytes = Math.floor((width+1)/2);
+                var pixelData = new Uint8Array(rowBytes * height);
+                var data = imageData.data;
+
+                var curR = new Float32Array(width+2), curG = new Float32Array(width+2), curB = new Float32Array(width+2);
+                var nextR = new Float32Array(width+2), nextG = new Float32Array(width+2), nextB = new Float32Array(width+2);
+
+                for (var y=0; y<height; y++) {
+                    for (var x=0; x<width; x++) {
+                        var idx = (y*width+x)*4;
+                        var r = clamp(data[idx] + curR[x+1], 0, 255);
+                        var g = clamp(data[idx+1] + curG[x+1], 0, 255);
+                        var b = clamp(data[idx+2] + curB[x+1], 0, 255);
+                        var pi = nearestPaletteIndex(r,g,b,palette);
+                        var chosen = palette[pi];
+
+                        data[idx] = chosen.r;
+                        data[idx+1] = chosen.g;
+                        data[idx+2] = chosen.b;
+                        data[idx+3] = 255;
+
+                        var byteIdx = y*rowBytes + Math.floor(x/2);
+                        if ((x & 1) === 0) {
+                            pixelData[byteIdx] = pi << 4;
+                        } else {
+                            pixelData[byteIdx] |= pi;
+                        }
+
+                        var er = r - chosen.r, eg = g - chosen.g, eb = b - chosen.b;
+                        curR[x+2] += er * 7/16; curG[x+2] += eg * 7/16; curB[x+2] += eb * 7/16;
+                        nextR[x] += er * 3/16; nextG[x] += eg * 3/16; nextB[x] += eb * 3/16;
+                        nextR[x+1] += er * 5/16; nextG[x+1] += eg * 5/16; nextB[x+1] += eb * 5/16;
+                        nextR[x+2] += er / 16; nextG[x+2] += eg / 16; nextB[x+2] += eb / 16;
+                    }
+                    var tr=curR,tg=curG,tb=curB;
+                    curR=nextR; curG=nextG; curB=nextB;
+                    nextR=tr; nextG=tg; nextB=tb;
+                    for (var c=0;c<width+2;c++) { nextR[c]=0; nextG[c]=0; nextB[c]=0; }
+                }
+
+                var paletteBytes = new Uint8Array(16);
+                var fallback = paletteIds.length ? paletteIds[0] : 0;
+                for (var p=0; p<16; p++) {
+                    var id = p < paletteIds.length ? paletteIds[p] : fallback;
+                    paletteBytes[p] = 0xC0 | id;
+                }
+
+                return { pixelData: pixelData, palette: Array.from(paletteBytes), color: true };
             }
 
             function prepareImage(image, generation, sourceLabel, blockedRetry) {
@@ -401,7 +767,6 @@
                     ctx.putImageData(imageData,0,0);
                     canvas.style.display = 'block';
 
-                    // Store processed data in localStorage
                     var storageKey = 'twm.customphoto.v1.' + watchWidth + 'x' + watchHeight;
                     var photoRecord = {
                         version: 1,
@@ -420,7 +785,12 @@
                     setPhotoStatus('Ready: ' + watchWidth + '×' + watchHeight + ' custom photo.', false);
                     if (photoLoadTimer) { clearTimeout(photoLoadTimer); photoLoadTimer = null; }
                 } catch(e) {
-                    // ... error handling
+                    var detail = e && e.message ? e.message : String(e);
+                    var blocked = e && e.name === 'SecurityError';
+                    blocked = blocked || /cross-origin|cross origin|taint|insecure/i.test(detail);
+                    if (blocked && blockedRetry) blockedRetry();
+                    else if (blocked) failPhotoLoad(generation, 'The image service returned data that the browser could not read.');
+                    else failPhotoLoad(generation, 'Photo processing failed: ' + detail);
                 }
             }
 
@@ -432,8 +802,58 @@
                 return sum;
             }
 
-            // File/URL handlers as before...
+            // File input
+            document.getElementById('photoFile').addEventListener('change', function() {
+                var file = this.files && this.files[0];
+                if (!file) return;
+                var generation = beginPhotoLoad('Loading photo file…');
+                var reader = new FileReader();
+                reader.onerror = function() { failPhotoLoad(generation, 'The photo could not be read.'); };
+                reader.onload = function(e) {
+                    var img = new Image();
+                    img.onerror = function() { failPhotoLoad(generation, 'The selected image could not be decoded.'); };
+                    img.onload = function() { prepareImage(img, generation, 'file'); };
+                    img.src = e.target.result;
+                };
+                reader.readAsDataURL(file);
+            });
 
+            // URL input
+            document.getElementById('loadUrlBtn').addEventListener('click', function() { loadImageUrl(false); });
+            document.getElementById('photoProxyBtn').addEventListener('click', function() { loadImageUrl(true); });
+
+            function loadImageUrl(useProxy) {
+                var url = document.getElementById('photoUrl').value.trim();
+                if (!url) { resetPhotoLoad('Enter a direct HTTPS image URL.', true); return; }
+                var viaProxy = useProxy === true;
+                var generation = beginPhotoLoad(viaProxy ? 'Loading via wsrv.nl…' : 'Loading image URL…',
+                    viaProxy ? null : function(timedOutGen) { offerCompatibilityRetry(timedOutGen); });
+                var img = new Image();
+                img.crossOrigin = 'anonymous';
+                if (typeof img.referrerPolicy !== 'undefined') img.referrerPolicy = 'no-referrer';
+                img.onerror = function() {
+                    if (viaProxy) failPhotoLoad(generation, 'wsrv.nl could not fetch that image.');
+                    else offerCompatibilityRetry(generation);
+                };
+                img.onload = function() {
+                    prepareImage(img, generation, viaProxy ? 'URL via wsrv.nl' : 'URL',
+                        viaProxy ? null : function() { offerCompatibilityRetry(generation); });
+                };
+                var finalUrl = viaProxy ? 'https://wsrv.nl/?url=' + encodeURIComponent(url) + '&w=' + watchWidth + '&h=' + watchHeight + '&fit=cover&a=center&output=png' : url;
+                img.src = finalUrl;
+            }
+
+            document.getElementById('photoUrl').addEventListener('input', function() {
+                resetPhotoLoad('URL changed. Tap Load URL to prepare it.', false);
+            });
+            document.getElementById('photoUrl').addEventListener('keydown', function(e) {
+                if (e.key === 'Enter' || e.keyCode === 13) {
+                    e.preventDefault();
+                    loadImageUrl(false);
+                }
+            });
+
+            // Save button
             function getConfig() {
                 var config = {
                     ClockMode: timeIndex,
@@ -450,9 +870,31 @@
                 return config;
             }
 
-            // Save button handler unchanged, but now URL is small
+            document.getElementById('saveBtn').addEventListener('click', function() {
+                var config = getConfig();
+                var json = JSON.stringify(config);
+                var encoded = encodeURIComponent(json);
+                localStorage.setItem('twm_config', json);
+                console.log('Saved to localStorage:', json);
+                var returnTo = getQueryParam('return_to');
+                if (returnTo) {
+                    window.location = returnTo + encoded;
+                } else {
+                    window.location = 'pebblejs://close#' + encoded;
+                }
+            });
 
-            // Initialization
+            // UI Color listeners
+            document.getElementById('UI_Color').addEventListener('input', function() {
+                var c = this.value;
+                document.getElementById('colorHex').textContent = c;
+                applyStyles(c);
+            });
+            document.getElementById('Secondary_Color').addEventListener('input', function() {
+                document.getElementById('secondaryColorHex').textContent = this.value;
+            });
+
+            // Initialize
             buildGrid();
             loadConfig(5);
             updateCustomPhotoSection();
