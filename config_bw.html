@@ -688,34 +688,50 @@
 
             function loadImageUrl(useProxy) {
                 var url = document.getElementById('photoUrl').value.trim();
-                if (!url) { resetPhotoLoad('Enter a direct HTTPS image URL.', true); return; }
+                if (!url) {
+                    resetPhotoLoad('Enter a direct HTTPS image URL.', true);
+                    return;
+                }
                 var viaProxy = useProxy === true;
-                var generation = beginPhotoLoad(viaProxy ? 'Loading via wsrv.nl…' : 'Loading image URL…',
-                    viaProxy ? null : function(timedOutGen) { offerCompatibilityRetry(timedOutGen); });
+                var generation = beginPhotoLoad(
+                    viaProxy ? 'Loading via wsrv.nl…' : 'Loading image URL…',
+                    viaProxy ? null : function(timedOutGen) {
+                        // Direct load timed out. Automatically fallback to proxy.
+                        loadImageUrl(true);
+                    }
+                );
+
                 var img = new Image();
                 img.crossOrigin = 'anonymous';
-                if (typeof img.referrerPolicy !== 'undefined') img.referrerPolicy = 'no-referrer';
+                if (typeof img.referrerPolicy !== 'undefined') {
+                    img.referrerPolicy = 'no-referrer';
+                }
+
                 img.onerror = function() {
-                    if (viaProxy) failPhotoLoad(generation, 'wsrv.nl could not fetch that image.');
-                    else offerCompatibilityRetry(generation);
+                    if (viaProxy) {
+                        failPhotoLoad(generation, 'wsrv.nl could not fetch that image. Check that it is a public, direct image URL.');
+                    } else {
+                        // Direct load failed. Automatically fallback to proxy.
+                        loadImageUrl(true);
+                    }
                 };
+
                 img.onload = function() {
                     prepareImage(img, generation, viaProxy ? 'URL via wsrv.nl' : 'URL',
-                        viaProxy ? null : function() { offerCompatibilityRetry(generation); });
+                        viaProxy ? null : function() {
+                            // This callback is no longer needed because we auto‑fallback,
+                            // but keep it for safety.
+                            loadImageUrl(true);
+                        });
                 };
-                var finalUrl = viaProxy ? 'https://wsrv.nl/?url=' + encodeURIComponent(url) + '&w=' + watchWidth + '&h=' + watchHeight + '&fit=cover&a=center&output=png' : url;
+
+                var finalUrl = viaProxy
+                    ? 'https://wsrv.nl/?url=' + encodeURIComponent(url) +
+                      '&w=' + watchWidth + '&h=' + watchHeight +
+                      '&fit=cover&a=center&output=png'
+                    : url;
                 img.src = finalUrl;
             }
-
-            document.getElementById('photoUrl').addEventListener('input', function() {
-                resetPhotoLoad('URL changed. Tap Load URL to prepare it.', false);
-            });
-            document.getElementById('photoUrl').addEventListener('keydown', function(e) {
-                if (e.key === 'Enter' || e.keyCode === 13) {
-                    e.preventDefault();
-                    loadImageUrl(false);
-                }
-            });
 
             function getConfig() {
                 var config = {
