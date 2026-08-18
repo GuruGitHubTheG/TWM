@@ -308,7 +308,7 @@
             <div class="window-content">
                 <div class="wallpaper-grid" id="wallpaperGrid"></div>
 
-                <!-- ---- Custom Wallpaper ---- -->
+                <!-- Custom Wallpaper -->
                 <div class="setting-row" id="custom-wallpaper-section" style="margin-top:24px;">
                     <div class="setting-label-centered">Custom Wallpaper</div>
                     <div class="custom-wallpaper-rect">
@@ -444,27 +444,6 @@
                 updateDisplays();
             });
 
-            // ---------- Top bar buttons ----------
-            document.getElementById('dismissBtnTop').addEventListener('click', function() {
-                var returnTo = getQueryParam('return_to');
-                if (returnTo) window.location = returnTo;
-                else window.location = 'pebblejs://close';
-            });
-            document.getElementById('closeBtnTop').addEventListener('click', function() {
-                document.getElementById('saveBtn').click();
-            });
-
-            document.querySelectorAll('#dismissBtnColor2, #dismissBtnColor3, #dismissBtnColor4').forEach(function(btn) {
-                btn.addEventListener('click', function() {
-                    document.getElementById('dismissBtnTop').click();
-                });
-            });
-            document.querySelectorAll('#closeBtnColor2, #closeBtnColor3, #closeBtnColor4').forEach(function(btn) {
-                btn.addEventListener('click', function() {
-                    document.getElementById('closeBtnTop').click();
-                });
-            });
-
             // ---------- Load config ----------
             function loadConfig(retries) {
                 retries = retries || 3;
@@ -574,6 +553,8 @@
             var customImagePreview = document.getElementById('customImagePreview');
             var ctx = customImagePreview.getContext('2d');
 
+            // Target dimensions for color watches (Basalt/Chalk = 144x168, Emery = 200x228)
+            // Use 144x168 as default
             var targetWidth = 144;
             var targetHeight = 168;
 
@@ -581,6 +562,7 @@
                 var img = new Image();
                 img.crossOrigin = 'Anonymous';
                 img.onload = function() {
+                    // Crop to square (center)
                     var size = Math.min(img.width, img.height);
                     var sx = (img.width - size) / 2;
                     var sy = (img.height - size) / 2;
@@ -591,6 +573,7 @@
                     ctx.drawImage(img, sx, sy, size, size, 0, 0, targetWidth, targetHeight);
                     customImagePreview.style.display = 'block';
 
+                    // Get image data
                     var imageData = ctx.getImageData(0, 0, targetWidth, targetHeight);
                     var data = imageData.data;
 
@@ -606,9 +589,11 @@
                     var packed = new Uint8Array(Math.ceil(targetWidth * targetHeight / 2));
                     var idx = 0;
                     for (var i = 0; i < data.length; i += 8) {
+                        // Pixel 1
                         var r1 = Math.round(data[i] / 85);
                         var g1 = Math.round(data[i+1] / 85);
                         var b1 = Math.round(data[i+2] / 85);
+                        // Pixel 2
                         var r2 = Math.round(data[i+4] / 85);
                         var g2 = Math.round(data[i+5] / 85);
                         var b2 = Math.round(data[i+6] / 85);
@@ -617,6 +602,7 @@
                         packed[idx++] = (byte1 << 4) | byte2;
                     }
 
+                    // Store data to send on save
                     customWallpaperData = btoa(String.fromCharCode.apply(null, packed));
                     customWallpaperWidth = targetWidth;
                     customWallpaperHeight = targetHeight;
@@ -665,15 +651,23 @@
                 return config;
             }
 
-            document.getElementById('saveBtn').addEventListener('click', function() {
+            function saveAndClose() {
                 var config = getConfig();
                 var json = JSON.stringify(config);
                 localStorage.setItem('twm_config', json);
                 console.log('Saved to localStorage:', json);
-                // Close with minimal fragment – no data in URL
-                window.location = 'pebblejs://close#';
+                window.location = 'pebblejs://close';
+            }
+
+            // Save button
+            document.getElementById('saveBtn').addEventListener('click', saveAndClose);
+
+            // All dismiss and close buttons – save and close
+            document.querySelectorAll('#dismissBtnTop, #dismissBtnColor2, #dismissBtnColor3, #dismissBtnColor4, #closeBtnTop, #closeBtnColor2, #closeBtnColor3, #closeBtnColor4').forEach(function(btn) {
+                btn.addEventListener('click', saveAndClose);
             });
 
+            // UI Color live preview
             document.getElementById('UI_Color').addEventListener('input', function() {
                 var c = this.value;
                 document.getElementById('colorHex').textContent = c;
@@ -683,7 +677,7 @@
                 document.getElementById('secondaryColorHex').textContent = this.value;
             });
 
-            // ---------- Init ----------
+            // Init
             buildGrid();
             loadConfig(5);
         })();

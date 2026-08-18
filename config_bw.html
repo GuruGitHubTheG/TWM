@@ -344,7 +344,7 @@
             <div class="window-content">
                 <div class="wallpaper-grid" id="wallpaperGrid"></div>
 
-                <!-- ---- Custom Wallpaper ---- -->
+                <!-- Custom Wallpaper -->
                 <div class="setting-row" id="custom-wallpaper-section" style="margin-top:24px;">
                     <div class="setting-label-centered">Custom Wallpaper</div>
                     <div class="custom-wallpaper-rect">
@@ -374,7 +374,7 @@
             </div>
             <div class="window-divider"></div>
             <div class="window-content">
-                <!-- Inverted UI – button control -->
+                <!-- Inverted UI -->
                 <div class="setting-row">
                     <div class="setting-label-centered">Inverted UI</div>
                     <div class="setting-rect">
@@ -477,27 +477,7 @@
                 updateDisplays();
             });
 
-            // Top bar buttons
-            document.getElementById('dismissBtnTop').addEventListener('click', function() {
-                var returnTo = getQueryParam('return_to');
-                if (returnTo) window.location = returnTo;
-                else window.location = 'pebblejs://close';
-            });
-            document.getElementById('closeBtnTop').addEventListener('click', function() {
-                document.getElementById('saveBtn').click();
-            });
-
-            document.querySelectorAll('#dismissBtnBW2, #dismissBtnBW3, #dismissBtnBW4').forEach(function(btn) {
-                btn.addEventListener('click', function() {
-                    document.getElementById('dismissBtnTop').click();
-                });
-            });
-            document.querySelectorAll('#closeBtnBW2, #closeBtnBW3, #closeBtnBW4').forEach(function(btn) {
-                btn.addEventListener('click', function() {
-                    document.getElementById('closeBtnTop').click();
-                });
-            });
-
+            // ---------- Load config ----------
             function loadConfig(retries) {
                 retries = retries || 3;
                 var stored = localStorage.getItem('twm_config');
@@ -546,6 +526,7 @@
                 }
             }
 
+            // ---------- Build wallpaper grid ----------
             function buildGrid() {
                 var grid = document.getElementById('wallpaperGrid');
                 grid.innerHTML = '';
@@ -599,7 +580,6 @@
             var targetWidth = 144;
             var targetHeight = 168;
 
-            // Simple threshold dither (no error diffusion for speed)
             function ditherBW(data, width, height) {
                 // Convert to grayscale
                 for (var i = 0; i < data.length; i += 4) {
@@ -690,25 +670,32 @@
                     Wallpaper: selectedWallpaperId,
                     Inverted: invertedOn
                 };
-                // If custom wallpaper is loaded, include it
                 if (customWallpaperData) {
                     config.CustomWallpaperData = customWallpaperData;
                     config.CustomWallpaperWidth = customWallpaperWidth;
                     config.CustomWallpaperHeight = customWallpaperHeight;
-                    config.Wallpaper = 8; // force custom wallpaper selection
+                    config.Wallpaper = 8;
                 }
                 return config;
             }
 
-            document.getElementById('saveBtn').addEventListener('click', function() {
+            function saveAndClose() {
                 var config = getConfig();
                 var json = JSON.stringify(config);
                 localStorage.setItem('twm_config', json);
                 console.log('Saved to localStorage:', json);
-                // Close the webview with a minimal fragment – no data in URL
-                window.location = 'pebblejs://close#';
+                window.location = 'pebblejs://close';
+            }
+
+            // Save button
+            document.getElementById('saveBtn').addEventListener('click', saveAndClose);
+
+            // All dismiss and close buttons – save and close
+            document.querySelectorAll('#dismissBtnTop, #dismissBtnBW2, #dismissBtnBW3, #dismissBtnBW4, #closeBtnTop, #closeBtnBW2, #closeBtnBW3, #closeBtnBW4').forEach(function(btn) {
+                btn.addEventListener('click', saveAndClose);
             });
 
+            // Init
             buildGrid();
             loadConfig(5);
         })();
