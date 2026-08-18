@@ -610,7 +610,7 @@
             }
 
             function sendCustomWallpaper(pngData) {
-                var CHUNK_SIZE = 900;
+                var CHUNK_SIZE = 700;
                 var total = Math.ceil(pngData.length / CHUNK_SIZE);
                 var checksum = checksum16(pngData);
                 var sent = 0;
