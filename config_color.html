@@ -254,6 +254,18 @@
             <div class="window-divider" style="background:var(--primary, #aa55ff);"></div>
             <div class="window-content">
                 <div class="wallpaper-grid" id="wallpaperGrid"></div>
+
+                <!-- Custom Photo Section -->
+                <div class="setting" id="custom-photo-section" style="display:none; margin-top:24px;">
+                    <div class="setting-label">Custom Photo</div>
+                    <div class="setting-description">Upload or load a photo for your watch</div>
+                    <input type="file" id="photoFile" accept="image/*" style="display:block; width:100%; margin-bottom:10px;">
+                    <input type="url" id="photoUrl" placeholder="https://example.com/photo.jpg" style="display:block; width:100%; box-sizing:border-box; margin-bottom:10px;">
+                    <button id="loadUrlBtn" style="display:block; width:100%; padding:10px; margin-bottom:10px;">Load URL</button>
+                    <button id="photoProxyBtn" style="display:none; width:100%; padding:10px; margin-bottom:10px;">Retry via wsrv.nl</button>
+                    <canvas id="photoCanvas" style="display:none; max-width:100%; height:auto; margin:0 auto; border:1px solid #555; background:#000;"></canvas>
+                    <div id="photoStatus" style="color:#aaa; margin-top:8px;">Choose a photo to prepare it for your watch.</div>
+                </div>
             </div>
         </div>
 
@@ -304,6 +316,10 @@
                 return urlParams.get(param);
             }
 
+            // Get watch dimensions from URL
+            var watchWidth = parseInt(getQueryParam('width'), 10) || 144;
+            var watchHeight = parseInt(getQueryParam('height'), 10) || 168;
+
             var wallpapers = [
                 { id: 1, label: 'The World\nMachine', image: 'https://raw.githubusercontent.com/GuruGitHubTheG/TWM/main/wallpapers/The_World_Machine_wallpaper.png' },
                 { id: 2, label: 'Barrens\nCraters', image: 'https://raw.githubusercontent.com/GuruGitHubTheG/TWM/main/wallpapers/Barrens_Craters_wallpaper.png' },
@@ -312,7 +328,8 @@
                 { id: 5, label: 'Messiah', image: 'https://raw.githubusercontent.com/GuruGitHubTheG/TWM/main/wallpapers/Messiah_wallpaper.png' },
                 { id: 6, label: 'My Burden\nis Light', image: 'https://raw.githubusercontent.com/GuruGitHubTheG/TWM/main/wallpapers/My_Burden_is_Light_wallpaper.png' },
                 { id: 7, label: 'Asteroid', image: 'https://raw.githubusercontent.com/GuruGitHubTheG/TWM/main/wallpapers/Asteroid_wallpaper.png' },
-                { id: 0, label: 'Blank', image: '' }
+                { id: 0, label: 'Blank', image: '' },
+                { id: 8, label: 'Custom\nPhoto', image: '' }
             ];
 
             var selectedWallpaperId = 1;
@@ -322,6 +339,13 @@
             var timeIndex = 0;
             var zerosOn = false;
             var ampmOn = true;
+
+            var customPhotoData = null; // { pixelData: Array, palette: Array, color: true }
+            var photoLoadGeneration = 0;
+            var photoLoadTimer = null;
+            var canvas = document.getElementById('photoCanvas');
+            canvas.width = watchWidth;
+            canvas.height = watchHeight;
 
             function applyStyles(color) {
                 primaryColor = color;
@@ -340,6 +364,11 @@
                 document.getElementById('timeDisplay').textContent = timeOptions[timeIndex];
                 document.getElementById('zerosDisplay').textContent = zerosOn ? 'ON' : 'OFF';
                 document.getElementById('ampmDisplay').textContent = ampmOn ? 'ON' : 'OFF';
+            }
+
+            function updateCustomPhotoSection() {
+                var section = document.getElementById('custom-photo-section');
+                section.style.display = (selectedWallpaperId === 8) ? 'block' : 'none';
             }
 
             document.getElementById('timeLeft').addEventListener('click', function() {
@@ -410,6 +439,7 @@
                                 document.querySelectorAll('.wallpaper-item').forEach(function(el) {
                                     el.classList.toggle('selected', parseInt(el.dataset.id) === selectedWallpaperId);
                                 });
+                                updateCustomPhotoSection();
                             }
                         }
                         if (config.UI_Color) {
@@ -443,6 +473,7 @@
                     applyStyles('#aa55ff');
                     document.getElementById('topBarTitle').textContent = 'The World Machine';
                     updateDisplays();
+                    updateCustomPhotoSection();
                     return false;
                 }
             }
@@ -482,12 +513,325 @@
                         document.querySelectorAll('.wallpaper-item').forEach(function(el) { el.classList.remove('selected'); });
                         this.classList.add('selected');
                         selectedWallpaperId = wp.id;
+                        updateCustomPhotoSection();
                         console.log('Selected wallpaper:', wp.id);
                     });
 
                     grid.appendChild(item);
                 });
             }
+
+            // ---- Custom Photo Processing ----
+            function setPhotoStatus(msg, isError) {
+                var status = document.getElementById('photoStatus');
+                status.textContent = msg;
+                status.style.color = isError ? '#ff7777' : '#aaa';
+            }
+
+            function setSubmitDisabled(disabled) {
+                var buttons = document.querySelectorAll('button[type="submit"], input[type="submit"], .save-btn');
+                for (var i = 0; i < buttons.length; i++) {
+                    buttons[i].disabled = disabled;
+                    buttons[i].style.opacity = disabled ? '0.5' : '1';
+                }
+            }
+
+            function hideCompatibilityRetry() {
+                document.getElementById('photoProxyBtn').style.display = 'none';
+            }
+
+            function resetPhotoLoad(message, isError) {
+                if (photoLoadTimer) { clearTimeout(photoLoadTimer); photoLoadTimer = null; }
+                photoLoadGeneration++;
+                customPhotoData = null;
+                canvas.style.display = 'none';
+                hideCompatibilityRetry();
+                setSubmitDisabled(false);
+                setPhotoStatus(message, isError);
+            }
+
+            function beginPhotoLoad(message, timeoutCallback) {
+                if (photoLoadTimer) { clearTimeout(photoLoadTimer); photoLoadTimer = null; }
+                photoLoadGeneration++;
+                setSubmitDisabled(true);
+                setPhotoStatus(message, false);
+                customPhotoData = null;
+                canvas.style.display = 'none';
+                hideCompatibilityRetry();
+                var generation = photoLoadGeneration;
+                photoLoadTimer = setTimeout(function() {
+                    if (timeoutCallback) {
+                        timeoutCallback(generation);
+                    } else {
+                        failPhotoLoad(generation, 'Photo loading timed out. Check the URL or try a smaller image.');
+                    }
+                }, 30000);
+                return generation;
+            }
+
+            function failPhotoLoad(generation, message) {
+                if (generation !== photoLoadGeneration) return;
+                if (photoLoadTimer) { clearTimeout(photoLoadTimer); photoLoadTimer = null; }
+                photoLoadGeneration++;
+                customPhotoData = null;
+                setPhotoStatus(message, true);
+                setSubmitDisabled(false);
+            }
+
+            function offerCompatibilityRetry(generation, message) {
+                if (generation !== photoLoadGeneration) return;
+                failPhotoLoad(generation, message ||
+                    'The browser could not load this image directly. The host may block access; retry through wsrv.nl below.');
+                document.getElementById('photoProxyBtn').style.display = 'block';
+            }
+
+            function colorId(r,g,b) { return (r<<4)|(g<<2)|b; }
+            function colorFromId(id) { return { r:(id>>4)&3, g:(id>>2)&3, b:id&3 }; }
+            function clamp(v,l,h) { return Math.max(l, Math.min(h, v)); }
+
+            function makeHistogram(pixelData) {
+                var hist = new Array(64).fill(0);
+                for (var i = 0; i < pixelData.length; i += 4) {
+                    var r = clamp(Math.round(pixelData[i]/85), 0, 3);
+                    var g = clamp(Math.round(pixelData[i+1]/85), 0, 3);
+                    var b = clamp(Math.round(pixelData[i+2]/85), 0, 3);
+                    hist[colorId(r,g,b)]++;
+                }
+                var entries = [];
+                for (var i = 0; i < hist.length; i++) {
+                    if (hist[i] === 0) continue;
+                    var c = colorFromId(i);
+                    entries.push({id:i, red:c.r, green:c.g, blue:c.b, count:hist[i]});
+                }
+                return entries;
+            }
+
+            function boxStats(box) {
+                var minR=3,minG=3,minB=3,maxR=0,maxG=0,maxB=0,total=0;
+                for (var i=0;i<box.length;i++) {
+                    var e=box[i];
+                    minR=Math.min(minR,e.red); minG=Math.min(minG,e.green); minB=Math.min(minB,e.blue);
+                    maxR=Math.max(maxR,e.red); maxG=Math.max(maxG,e.green); maxB=Math.max(maxB,e.blue);
+                    total += e.count;
+                }
+                return { ranges:[maxR-minR, maxG-minG, maxB-minB], total:total };
+            }
+
+            function splitBox(box) {
+                var stats = boxStats(box);
+                var ch = 0;
+                if (stats.ranges[1] > stats.ranges[ch]) ch = 1;
+                if (stats.ranges[2] > stats.ranges[ch]) ch = 2;
+                var name = ['red','green','blue'][ch];
+                var sorted = box.slice().sort(function(a,b) {
+                    if (a[name] !== b[name]) return a[name]-b[name];
+                    return b.count-a.count;
+                });
+                var half = stats.total/2;
+                var acc = 0, splitAt = 1;
+                for (var i=0;i<sorted.length-1;i++) {
+                    acc += sorted[i].count;
+                    splitAt = i+1;
+                    if (acc >= half) break;
+                }
+                splitAt = clamp(splitAt, 1, sorted.length-1);
+                return [sorted.slice(0,splitAt), sorted.slice(splitAt)];
+            }
+
+            function representative(box) {
+                var total=0, r=0,g=0,b=0;
+                for (var i=0;i<box.length;i++) {
+                    total += box[i].count;
+                    r += box[i].red * box[i].count;
+                    g += box[i].green * box[i].count;
+                    b += box[i].blue * box[i].count;
+                }
+                r/=total; g/=total; b/=total;
+                var best=box[0], bestDist=Number.MAX_VALUE;
+                for (var i=0;i<box.length;i++) {
+                    var dr=box[i].red-r, dg=box[i].green-g, db=box[i].blue-b;
+                    var dist=dr*dr+dg*dg+db*db;
+                    if (dist<bestDist || (dist===bestDist && box[i].count>best.count)) {
+                        best=box[i]; bestDist=dist;
+                    }
+                }
+                return best.id;
+            }
+
+            function buildPalette(pixelData) {
+                var entries = makeHistogram(pixelData);
+                if (entries.length <= 16) {
+                    entries.sort(function(a,b){ return b.count-a.count; });
+                    return entries.map(function(e){ return e.id; });
+                }
+                var boxes = [entries];
+                while (boxes.length < 16) {
+                    var bestIndex=-1, bestScore=-1;
+                    for (var i=0;i<boxes.length;i++) {
+                        if (boxes[i].length < 2) continue;
+                        var stats = boxStats(boxes[i]);
+                        var range = Math.max(stats.ranges[0], stats.ranges[1], stats.ranges[2]);
+                        var score = range * stats.total;
+                        if (score > bestScore) { bestScore=score; bestIndex=i; }
+                    }
+                    if (bestIndex < 0) break;
+                    var halves = splitBox(boxes[bestIndex]);
+                    boxes.splice(bestIndex, 1, halves[0], halves[1]);
+                }
+                return boxes.map(representative);
+            }
+
+            function nearestPaletteIndex(r,g,b,palette) {
+                var bestIdx=0, bestDist=Number.MAX_VALUE;
+                for (var i=0;i<palette.length;i++) {
+                    var dr=r-palette[i].r, dg=g-palette[i].g, db=b-palette[i].b;
+                    var dist=dr*dr+dg*dg+db*db;
+                    if (dist<bestDist) { bestDist=dist; bestIdx=i; }
+                }
+                return bestIdx;
+            }
+
+            function quantizeColorAndPack(imageData, width, height) {
+                var paletteIds = buildPalette(imageData.data);
+                var palette = paletteIds.map(function(id) {
+                    var c = colorFromId(id);
+                    return { id:id, r:c.r*85, g:c.g*85, b:c.b*85 };
+                });
+
+                var rowBytes = Math.floor((width+1)/2);
+                var pixelData = new Uint8Array(rowBytes * height);
+                var data = imageData.data;
+
+                var curR = new Float32Array(width+2), curG = new Float32Array(width+2), curB = new Float32Array(width+2);
+                var nextR = new Float32Array(width+2), nextG = new Float32Array(width+2), nextB = new Float32Array(width+2);
+
+                for (var y=0; y<height; y++) {
+                    for (var x=0; x<width; x++) {
+                        var idx = (y*width+x)*4;
+                        var r = clamp(data[idx] + curR[x+1], 0, 255);
+                        var g = clamp(data[idx+1] + curG[x+1], 0, 255);
+                        var b = clamp(data[idx+2] + curB[x+1], 0, 255);
+                        var pi = nearestPaletteIndex(r,g,b,palette);
+                        var chosen = palette[pi];
+
+                        data[idx] = chosen.r;
+                        data[idx+1] = chosen.g;
+                        data[idx+2] = chosen.b;
+                        data[idx+3] = 255;
+
+                        var byteIdx = y*rowBytes + Math.floor(x/2);
+                        if ((x & 1) === 0) {
+                            pixelData[byteIdx] = pi << 4;
+                        } else {
+                            pixelData[byteIdx] |= pi;
+                        }
+
+                        var er = r - chosen.r, eg = g - chosen.g, eb = b - chosen.b;
+                        curR[x+2] += er * 7/16; curG[x+2] += eg * 7/16; curB[x+2] += eb * 7/16;
+                        nextR[x] += er * 3/16; nextG[x] += eg * 3/16; nextB[x] += eb * 3/16;
+                        nextR[x+1] += er * 5/16; nextG[x+1] += eg * 5/16; nextB[x+1] += eb * 5/16;
+                        nextR[x+2] += er / 16; nextG[x+2] += eg / 16; nextB[x+2] += eb / 16;
+                    }
+                    var tr=curR,tg=curG,tb=curB;
+                    curR=nextR; curG=nextG; curB=nextB;
+                    nextR=tr; nextG=tg; nextB=tb;
+                    for (var c=0;c<width+2;c++) { nextR[c]=0; nextG[c]=0; nextB[c]=0; }
+                }
+
+                var paletteBytes = new Uint8Array(16);
+                var fallback = paletteIds.length ? paletteIds[0] : 0;
+                for (var p=0; p<16; p++) {
+                    var id = p < paletteIds.length ? paletteIds[p] : fallback;
+                    paletteBytes[p] = 0xC0 | id;
+                }
+
+                return { pixelData: Array.from(pixelData), palette: Array.from(paletteBytes), color: true };
+            }
+
+            function prepareImage(image, generation, sourceLabel, blockedRetry) {
+                if (generation !== photoLoadGeneration) return;
+                try {
+                    var srcW = image.naturalWidth || image.width;
+                    var srcH = image.naturalHeight || image.height;
+                    var ctx = canvas.getContext('2d');
+                    ctx.fillStyle = '#000';
+                    ctx.fillRect(0,0,watchWidth,watchHeight);
+                    ctx.imageSmoothingEnabled = true;
+                    if (typeof ctx.imageSmoothingQuality !== 'undefined') ctx.imageSmoothingQuality = 'high';
+
+                    var scale = Math.max(watchWidth/srcW, watchHeight/srcH);
+                    var cropW = watchWidth/scale, cropH = watchHeight/scale;
+                    var sx = (srcW-cropW)/2, sy = (srcH-cropH)/2;
+                    ctx.drawImage(image, sx, sy, cropW, cropH, 0,0,watchWidth,watchHeight);
+
+                    var imageData = ctx.getImageData(0,0,watchWidth,watchHeight);
+                    var result = quantizeColorAndPack(imageData, watchWidth, watchHeight);
+                    ctx.putImageData(imageData,0,0);
+                    canvas.style.display = 'block';
+                    customPhotoData = result;
+                    setSubmitDisabled(false);
+                    setPhotoStatus('Ready: ' + watchWidth + '×' + watchHeight + ' custom photo.', false);
+                    if (photoLoadTimer) { clearTimeout(photoLoadTimer); photoLoadTimer = null; }
+                } catch(e) {
+                    var detail = e && e.message ? e.message : String(e);
+                    var blocked = e && e.name === 'SecurityError';
+                    blocked = blocked || /cross-origin|cross origin|taint|insecure/i.test(detail);
+                    if (blocked && blockedRetry) blockedRetry();
+                    else if (blocked) failPhotoLoad(generation, 'The image service returned data that the browser could not read.');
+                    else failPhotoLoad(generation, 'Photo processing failed: ' + detail);
+                }
+            }
+
+            document.getElementById('photoFile').addEventListener('change', function() {
+                var file = this.files && this.files[0];
+                if (!file) return;
+                var generation = beginPhotoLoad('Loading photo file…');
+                var reader = new FileReader();
+                reader.onerror = function() { failPhotoLoad(generation, 'The photo could not be read.'); };
+                reader.onload = function(e) {
+                    var img = new Image();
+                    img.onerror = function() { failPhotoLoad(generation, 'The selected image could not be decoded.'); };
+                    img.onload = function() { prepareImage(img, generation, 'file'); };
+                    img.src = e.target.result;
+                };
+                reader.readAsDataURL(file);
+            });
+
+            document.getElementById('loadUrlBtn').addEventListener('click', function() { loadImageUrl(false); });
+            document.getElementById('photoProxyBtn').addEventListener('click', function() { loadImageUrl(true); });
+
+            function loadImageUrl(useProxy) {
+                var url = document.getElementById('photoUrl').value.trim();
+                if (!url) { resetPhotoLoad('Enter a direct HTTPS image URL.', true); return; }
+                var viaProxy = useProxy === true;
+                var generation = beginPhotoLoad(viaProxy ? 'Loading via wsrv.nl…' : 'Loading image URL…',
+                    viaProxy ? null : function(timedOutGen) { offerCompatibilityRetry(timedOutGen); });
+                var img = new Image();
+                img.crossOrigin = 'anonymous';
+                if (typeof img.referrerPolicy !== 'undefined') img.referrerPolicy = 'no-referrer';
+                img.onerror = function() {
+                    if (viaProxy) failPhotoLoad(generation, 'wsrv.nl could not fetch that image.');
+                    else offerCompatibilityRetry(generation);
+                };
+                img.onload = function() {
+                    prepareImage(img, generation, viaProxy ? 'URL via wsrv.nl' : 'URL',
+                        viaProxy ? null : function() { offerCompatibilityRetry(generation); });
+                };
+                var finalUrl = viaProxy ? 'https://wsrv.nl/?url=' + encodeURIComponent(url) + '&w=' + watchWidth + '&h=' + watchHeight + '&fit=cover&a=center&output=png' : url;
+                img.src = finalUrl;
+            }
+
+            document.getElementById('photoUrl').addEventListener('input', function() {
+                resetPhotoLoad('URL changed. Tap Load URL to prepare it.', false);
+            });
+            document.getElementById('photoUrl').addEventListener('keydown', function(e) {
+                if (e.key === 'Enter' || e.keyCode === 13) {
+                    e.preventDefault();
+                    loadImageUrl(false);
+                }
+            });
+
+            // ---- End Custom Photo Processing ----
 
             function getConfig() {
                 var config = {
@@ -497,6 +841,9 @@
                     Wallpaper: selectedWallpaperId,
                     UI_Color: document.getElementById('UI_Color').value.replace('#', '')
                 };
+                if (selectedWallpaperId === 8 && customPhotoData) {
+                    config.CustomPhoto = customPhotoData;
+                }
                 var sec = document.getElementById('Secondary_Color').value.replace('#', '');
                 if (sec) config.Secondary_Color = sec;
                 return config;
@@ -527,6 +874,7 @@
 
             buildGrid();
             loadConfig(5);
+            updateCustomPhotoSection();
         })();
     </script>
 </body>
