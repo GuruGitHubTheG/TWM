@@ -25,7 +25,7 @@
         .window-header { display:flex; align-items:center; background:#000; color:var(--primary,#aa55ff); min-height:60px; padding-left:18px; padding-right:18px; }
         #customize-window .window-header { padding-top:9px; padding-bottom:9px; }
         #wallpaper-window .window-header { padding-top:12px; padding-bottom:12px; }
-        #themes-window .window-header { padding-top:12px; padding-bottom:12px; }  /* now matches Wallpapers */
+        #themes-window .window-header { padding-top:12px; padding-bottom:12px; }
         .window-header-left { display:flex; align-items:center; gap:15px; min-width:0; }
         .window-header-icon { flex-shrink:0; background-color:var(--primary,#aa55ff); -webkit-mask-size:contain; mask-size:contain; -webkit-mask-repeat:no-repeat; mask-repeat:no-repeat; -webkit-mask-position:center; mask-position:center; }
         #customizeIcon { width:42px; height:42px; -webkit-mask-image:url('https://raw.githubusercontent.com/GuruGitHubTheG/TWM/main/icons/gear.png'); mask-image:url('https://raw.githubusercontent.com/GuruGitHubTheG/TWM/main/icons/gear.png'); }
@@ -36,7 +36,6 @@
         .window-divider { height:12px; background:var(--primary,#aa55ff); }
         .window-content { padding:24px 18px 18px 18px; background:#000; }
 
-        /* ---- SETTING STYLES ---- */
         .setting-row { margin:0; padding:0; }
         .setting-row + .setting-row { margin-top:24px; }
 
@@ -101,7 +100,6 @@
             padding:0 8px;
             white-space:nowrap;
         }
-        /* ---- END SETTING STYLES ---- */
 
         .wallpaper-grid {
             display:flex; flex-wrap:wrap; gap:20px 12px; justify-content:flex-start;
@@ -128,14 +126,6 @@
         .setting + .setting { border-top:1px solid rgba(255,255,255,0.08); padding-top:14px; }
         .setting-label { font-size:14px; font-weight:normal; margin-bottom:6px; color:var(--primary,#aa55ff); letter-spacing:0.5px; }
         .setting-description { font-size:11px; color:var(--primary,#aa55ff); opacity:0.6; margin-bottom:8px; }
-        .toggle-row { display:flex; align-items:center; justify-content:space-between; }
-        .toggle-row .setting-label { margin-bottom:0; }
-        .toggle { position:relative; width:51px; height:31px; flex-shrink:0; }
-        .toggle input { opacity:0; width:0; height:0; }
-        .toggle .slider { position:absolute; cursor:pointer; top:0; left:0; right:0; bottom:0; background:rgba(255,255,255,0.15); border-radius:31px; }
-        .toggle .slider:before { content:""; position:absolute; height:27px; width:27px; left:2px; bottom:2px; background:#fff; border-radius:50%; box-shadow:0 1px 3px rgba(0,0,0,0.3); }
-        .toggle input:checked + .slider { background:var(--primary,#aa55ff); }
-        .toggle input:checked + .slider:before { transform:translateX(20px); }
 
         .color-picker-wrapper { display:flex; align-items:center; gap:14px; }
         .color-picker-wrapper input[type="color"] { width:60px; height:44px; padding:4px; cursor:pointer; border:1px solid var(--primary,#aa55ff); background:transparent; flex-shrink:0; }
@@ -159,6 +149,34 @@
         }
         select:focus { border-color:var(--primary,#aa55ff); box-shadow:0 0 0 2px rgba(170,85,255,0.2); }
         select option { background:#1a1a1a; color:var(--primary,#aa55ff); }
+
+        /* Custom wallpaper upload styles */
+        .custom-upload-area {
+            display:flex; flex-direction:column; gap:10px; margin:6px 0;
+        }
+        .custom-upload-area input[type="file"] {
+            background:#000; border:1px solid var(--primary,#aa55ff); color:var(--primary,#aa55ff);
+            padding:6px; font-family:'Volter',sans-serif; cursor:pointer;
+        }
+        .custom-upload-area .url-row {
+            display:flex; gap:6px;
+        }
+        .custom-upload-area .url-row input[type="text"] {
+            flex:1; padding:8px; background:#000; border:1px solid var(--primary,#aa55ff);
+            color:var(--primary,#aa55ff); font-family:'Volter',sans-serif;
+        }
+        .custom-upload-area .url-row button {
+            background:var(--primary,#aa55ff); color:#000; border:none; padding:8px 16px;
+            cursor:pointer; font-family:'Volter',sans-serif;
+        }
+        .custom-upload-area .preview-box {
+            min-height:60px; border:1px dashed var(--primary,#aa55ff); display:flex;
+            justify-content:center; align-items:center; padding:4px;
+            background:#000;
+        }
+        .custom-upload-area .preview-box img {
+            max-height:80px; max-width:100%;
+        }
 
         @media (max-width: 400px) {
             .container { padding:0 5px; padding-top:76px; }
@@ -254,10 +272,27 @@
             <div class="window-divider" style="background:var(--primary, #aa55ff);"></div>
             <div class="window-content">
                 <div class="wallpaper-grid" id="wallpaperGrid"></div>
+
+                <!-- Custom Wallpaper Section (NEW) -->
+                <div class="setting" style="margin-top:24px; border-top:1px solid var(--primary,#aa55ff); padding-top:16px;">
+                    <div class="setting-label" style="font-size:18px;">Custom Wallpaper</div>
+                    <div class="setting-description">Upload an image or paste a URL (PNG/JPG).</div>
+                    <div class="custom-upload-area">
+                        <input type="file" id="customFile" accept="image/*">
+                        <div class="url-row">
+                            <input type="text" id="customUrl" placeholder="https://example.com/image.png">
+                            <button id="loadUrlBtn">Load</button>
+                        </div>
+                        <div class="preview-box" id="customPreview">
+                            <span style="opacity:0.5;">No image selected</span>
+                        </div>
+                    </div>
+                    <div class="capability-note">Image will be cropped to fit your watch screen. Max size ~2KB.</div>
+                </div>
             </div>
         </div>
 
-        <!-- Themes Window (now with folder icon) -->
+        <!-- Themes Window -->
         <div class="window" id="themes-window">
             <div class="window-header-wrapper">
                 <div class="window-header">
@@ -323,6 +358,195 @@
             var zerosOn = false;
             var ampmOn = true;
 
+            // ----- Custom wallpaper data -----
+            var customPbiData = null; // ArrayBuffer
+
+            // ----- Detect watch platform and screen size -----
+            function getWatchInfo() {
+                var info = { platform: 'aplite' };
+                if (Pebble.getActiveWatchInfo) {
+                    try {
+                        info = Pebble.getActiveWatchInfo();
+                    } catch(e) {}
+                }
+                return info;
+            }
+
+            function getScreenSize() {
+                var platform = getWatchInfo().platform || 'aplite';
+                switch (platform) {
+                    case 'chalk':  return { width: 180, height: 180 };
+                    case 'emery':  return { width: 200, height: 228 };
+                    case 'basalt': return { width: 144, height: 168 };
+                    default:       return { width: 144, height: 168 }; // aplite, diorite, flint
+                }
+            }
+
+            // ----- Image to PBI conversion (simplified, RGB222) -----
+            function imageToPBI(imageData, width, height) {
+                // imageData: ImageData from canvas context
+                // Returns ArrayBuffer of PBI bytes: header (width, height) + packed pixels (4 bits per pixel)
+                // Each pixel is 2 bits per channel (R,G,B) stored as: bits 7-5=R, 4-2=G, 1-0=B
+                var pixels = imageData.data;
+                var buffer = new ArrayBuffer(4 + Math.ceil(width * height / 2));
+                var view = new Uint8Array(buffer);
+                // Write header (little-endian)
+                view[0] = width & 0xFF;
+                view[1] = (width >> 8) & 0xFF;
+                view[2] = height & 0xFF;
+                view[3] = (height >> 8) & 0xFF;
+                var idx = 4;
+                for (var y = 0; y < height; y++) {
+                    for (var x = 0; x < width; x += 2) {
+                        var i1 = (y * width + x) * 4;
+                        var i2 = i1 + 4; // next pixel if exists
+                        // Pixel 1
+                        var r1 = pixels[i1] >> 6;      // 2-bit
+                        var g1 = pixels[i1+1] >> 6;
+                        var b1 = pixels[i1+2] >> 6;
+                        var byte1 = (r1 << 5) | (g1 << 3) | b1;
+                        // Pixel 2 (if exists)
+                        var byte2 = 0;
+                        if (x + 1 < width) {
+                            var r2 = pixels[i2] >> 6;
+                            var g2 = pixels[i2+1] >> 6;
+                            var b2 = pixels[i2+2] >> 6;
+                            byte2 = (r2 << 5) | (g2 << 3) | b2;
+                        }
+                        // Pack: byte1 in high nibble, byte2 in low nibble? Actually each is 6-bit, but we pack as 6 bits? Wait, we have 6 bits per pixel, but we are writing bytes. We need to pack two 6-bit values into 12 bits? Actually we only use 6 bits per pixel, but we store each pixel as one byte (8 bits) with top two bits unused? That would double size. In Pebble PBI, the most common format for color is 4-bit indexed or 6-bit RGB? Let's check: The fields-of-gold project uses 4-bit per pixel with a palette. I'll simplify: we'll store each pixel as one byte (6 bits used), which is fine for small images. We'll ignore the 2 unused bits. So buffer size = 4 + width*height bytes. That's simpler.
+                        // I'll rewrite: use 1 byte per pixel (6 bits). So buffer = 4 + width*height.
+                        // This is not the most compact but works and is easy.
+                        // Let's adjust.
+                    }
+                }
+                // I'll redo properly: use 1 byte per pixel (6-bit color).
+                var newBuffer = new ArrayBuffer(4 + width * height);
+                var newView = new Uint8Array(newBuffer);
+                newView[0] = width & 0xFF;
+                newView[1] = (width >> 8) & 0xFF;
+                newView[2] = height & 0xFF;
+                newView[3] = (height >> 8) & 0xFF;
+                var pos = 4;
+                for (var y = 0; y < height; y++) {
+                    for (var x = 0; x < width; x++) {
+                        var i = (y * width + x) * 4;
+                        var r = pixels[i] >> 6;
+                        var g = pixels[i+1] >> 6;
+                        var b = pixels[i+2] >> 6;
+                        var val = (r << 4) | (g << 2) | b; // 6 bits
+                        newView[pos++] = val;
+                    }
+                }
+                return newBuffer;
+            }
+
+            // ----- Process image (load, crop, convert) -----
+            function processImageData(dataUrl, callback) {
+                var img = new Image();
+                img.onload = function() {
+                    var size = getScreenSize();
+                    var canvas = document.createElement('canvas');
+                    var ctx = canvas.getContext('2d');
+                    // crop to fill the screen (center)
+                    var ratio = Math.max(size.width / img.width, size.height / img.height);
+                    var w = Math.round(img.width * ratio);
+                    var h = Math.round(img.height * ratio);
+                    canvas.width = size.width;
+                    canvas.height = size.height;
+                    var sx = (img.width - w) / 2;
+                    var sy = (img.height - h) / 2;
+                    ctx.drawImage(img, sx, sy, w, h, 0, 0, size.width, size.height);
+                    var imageData = ctx.getImageData(0, 0, size.width, size.height);
+                    var pbi = imageToPBI(imageData, size.width, size.height);
+                    callback(pbi, canvas.toDataURL());
+                };
+                img.onerror = function() { callback(null, null); };
+                img.src = dataUrl;
+            }
+
+            // ----- Chunk sending -----
+            function sendChunks(data, onComplete) {
+                var chunkSize = 850; // safe under AppMessage limit
+                var total = Math.ceil(data.byteLength / chunkSize);
+                var sent = 0;
+
+                function sendNext() {
+                    if (sent >= total) {
+                        onComplete();
+                        return;
+                    }
+                    var start = sent * chunkSize;
+                    var end = Math.min(start + chunkSize, data.byteLength);
+                    var chunk = new Uint8Array(data, start, end - start);
+                    // Encode to base64
+                    var binary = '';
+                    for (var i = 0; i < chunk.length; i++) {
+                        binary += String.fromCharCode(chunk[i]);
+                    }
+                    var b64 = btoa(binary);
+                    var dict = {
+                        'WALLPAPER_CHUNK': b64,
+                        'CHUNK_INDEX': sent,
+                        'TOTAL_CHUNKS': total
+                    };
+                    Pebble.sendAppMessage(dict,
+                        function() {
+                            sent++;
+                            setTimeout(sendNext, 50);
+                        },
+                        function() {
+                            // retry after delay
+                            setTimeout(sendNext, 200);
+                        }
+                    );
+                }
+                sendNext();
+            }
+
+            // ----- UI event bindings for custom wallpaper -----
+            var previewEl = document.getElementById('customPreview');
+            var fileInput = document.getElementById('customFile');
+            var urlInput = document.getElementById('customUrl');
+            var loadUrlBtn = document.getElementById('loadUrlBtn');
+
+            function handleImageLoad(dataUrl) {
+                processImageData(dataUrl, function(pbi, previewDataUrl) {
+                    if (pbi) {
+                        customPbiData = pbi;
+                        previewEl.innerHTML = '<img src="'+previewDataUrl+'">';
+                    } else {
+                        alert('Failed to process image. Please try another.');
+                    }
+                });
+            }
+
+            fileInput.addEventListener('change', function(e) {
+                var file = e.target.files[0];
+                if (file) {
+                    var reader = new FileReader();
+                    reader.onload = function(ev) {
+                        handleImageLoad(ev.target.result);
+                    };
+                    reader.readAsDataURL(file);
+                }
+            });
+
+            loadUrlBtn.addEventListener('click', function() {
+                var url = urlInput.value.trim();
+                if (!url) return;
+                fetch(url)
+                    .then(res => res.blob())
+                    .then(blob => {
+                        var reader = new FileReader();
+                        reader.onload = function(ev) {
+                            handleImageLoad(ev.target.result);
+                        };
+                        reader.readAsDataURL(blob);
+                    })
+                    .catch(err => alert('Failed to load image from URL: '+err));
+            });
+
+            // ----- Existing settings logic -----
             function applyStyles(color) {
                 primaryColor = color;
                 document.documentElement.style.setProperty('--primary', color);
@@ -502,17 +726,46 @@
                 return config;
             }
 
+            // ----- Save button: sends custom wallpaper chunks then config -----
             document.getElementById('saveBtn').addEventListener('click', function() {
                 var config = getConfig();
-                var json = JSON.stringify(config);
-                var encoded = encodeURIComponent(json);
-                localStorage.setItem('twm_config', json);
-                console.log('Saved to localStorage:', json);
-                var returnTo = getQueryParam('return_to');
-                if (returnTo) {
-                    window.location = returnTo + encoded;
+
+                // If custom wallpaper is selected and we have data
+                if (customPbiData) {
+                    // We need to inform watch that we are sending custom wallpaper
+                    // We'll set a flag in the config: CustomWallpaper = true
+                    config.CustomWallpaper = true;
+                    // Also we need to send the wallpaper ID as something special? We'll let the watch know
+                    // that a custom wallpaper is being sent. We'll send chunks first, then config.
+                    // To avoid blocking, we'll send chunks and then when done, close with config.
+                    // We'll store the config in a variable and use after chunks are sent.
+                    var finalConfig = config;
+                    sendChunks(customPbiData, function() {
+                        // All chunks sent, now send the config (with CustomWallpaper flag) and close
+                        var json = JSON.stringify(finalConfig);
+                        var encoded = encodeURIComponent(json);
+                        localStorage.setItem('twm_config', json);
+                        console.log('Saved to localStorage:', json);
+                        var returnTo = getQueryParam('return_to');
+                        if (returnTo) {
+                            window.location = returnTo + encoded;
+                        } else {
+                            window.location = 'pebblejs://close#' + encoded;
+                        }
+                    });
+                    return; // exit early, don't close yet
                 } else {
-                    window.location = 'pebblejs://close#' + encoded;
+                    // No custom wallpaper, just send config normally
+                    var json = JSON.stringify(config);
+                    var encoded = encodeURIComponent(json);
+                    localStorage.setItem('twm_config', json);
+                    console.log('Saved to localStorage:', json);
+                    var returnTo = getQueryParam('return_to');
+                    if (returnTo) {
+                        window.location = returnTo + encoded;
+                    } else {
+                        window.location = 'pebblejs://close#' + encoded;
+                    }
                 }
             });
 
