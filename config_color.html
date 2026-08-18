@@ -25,11 +25,12 @@
         .window-header { display:flex; align-items:center; background:#000; color:var(--primary,#aa55ff); min-height:60px; padding-left:18px; padding-right:18px; }
         #customize-window .window-header { padding-top:9px; padding-bottom:9px; }
         #wallpaper-window .window-header { padding-top:12px; padding-bottom:12px; }
-        #themes-window .window-header { padding-top:20px; padding-bottom:12px; }
+        #themes-window .window-header { padding-top:12px; padding-bottom:12px; }  /* now matches Wallpapers */
         .window-header-left { display:flex; align-items:center; gap:15px; min-width:0; }
         .window-header-icon { flex-shrink:0; background-color:var(--primary,#aa55ff); -webkit-mask-size:contain; mask-size:contain; -webkit-mask-repeat:no-repeat; mask-repeat:no-repeat; -webkit-mask-position:center; mask-position:center; }
         #customizeIcon { width:42px; height:42px; -webkit-mask-image:url('https://raw.githubusercontent.com/GuruGitHubTheG/TWM/main/icons/gear.png'); mask-image:url('https://raw.githubusercontent.com/GuruGitHubTheG/TWM/main/icons/gear.png'); }
         #wallpaperIcon { width:42px; height:36px; -webkit-mask-image:url('https://raw.githubusercontent.com/GuruGitHubTheG/TWM/main/icons/folder.png'); mask-image:url('https://raw.githubusercontent.com/GuruGitHubTheG/TWM/main/icons/folder.png'); }
+        #themesIcon { width:42px; height:36px; -webkit-mask-image:url('https://raw.githubusercontent.com/GuruGitHubTheG/TWM/main/icons/folder.png'); mask-image:url('https://raw.githubusercontent.com/GuruGitHubTheG/TWM/main/icons/folder.png'); }
         .window-header-title { font-size:clamp(12px,4vw,28px); font-weight:normal; letter-spacing:1px; line-height:1; white-space:nowrap; overflow:hidden; text-overflow:clip; flex:0 1 auto; min-width:0; }
         .window-header-wrapper .header-icons { position:absolute; right:6px; top:6px; bottom:6px; display:flex; align-items:center; gap:6px; }
         .window-divider { height:12px; background:var(--primary,#aa55ff); }
@@ -256,11 +257,14 @@
             </div>
         </div>
 
-        <!-- Themes Window -->
+        <!-- Themes Window (now with folder icon) -->
         <div class="window" id="themes-window">
             <div class="window-header-wrapper">
                 <div class="window-header">
-                    <span class="window-header-title">Themes</span>
+                    <div class="window-header-left">
+                        <div class="window-header-icon" id="themesIcon"></div>
+                        <span class="window-header-title">Themes</span>
+                    </div>
                     <div class="header-icons">
                         <button class="header-icon-btn" id="dismissBtnColor4"><img src="https://raw.githubusercontent.com/GuruGitHubTheG/TWM/main/icons/dismiss.png" alt="dismiss"></button>
                         <button class="header-icon-btn" id="closeBtnColor4"><img src="https://raw.githubusercontent.com/GuruGitHubTheG/TWM/main/icons/close.png" alt="close"></button>
@@ -322,16 +326,12 @@
             function applyStyles(color) {
                 primaryColor = color;
                 document.documentElement.style.setProperty('--primary', color);
-                // Only set border, text, and non-interactive backgrounds via CSS variable
-                // Do NOT set inline background on interactive elements (buttons, header icons, save button)
-                // because that would override :hover.
                 document.querySelectorAll('.window, .save-btn, #topBar').forEach(function(el) { el.style.borderColor = color; });
                 document.querySelectorAll('.window-header, .window-header-title, .setting-label-centered, .setting-value, .setting-label, .color-hex, .capability-note, .wallpaper-label, #topBarTitle').forEach(function(el) { el.style.color = color; });
                 document.querySelectorAll('.window-divider').forEach(function(el) { el.style.background = color; });
                 document.querySelectorAll('.setting-description').forEach(function(el) { el.style.color = color; el.style.opacity = '0.6'; });
                 document.querySelectorAll('.setting-middle').forEach(function(el) { el.style.borderTopColor = color; el.style.borderBottomColor = color; });
                 document.querySelectorAll('.color-picker-wrapper input[type="color"]').forEach(function(el) { el.style.borderColor = color; });
-                // For toggle slider checked state, update the style rule
                 var style = document.getElementById('dynamicToggleStyle') || (function() { var s=document.createElement('style'); s.id='dynamicToggleStyle'; document.head.appendChild(s); return s; })();
                 style.textContent = '.toggle input:checked + .slider { background: ' + color + ' !important; }';
             }

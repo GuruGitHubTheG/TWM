@@ -39,7 +39,7 @@
         body.inverted .window-header { background:#fff; color:#000; }
         #customize-window .window-header { padding-top:9px; padding-bottom:9px; }
         #wallpaper-window .window-header { padding-top:12px; padding-bottom:12px; }
-        #themes-window .window-header { padding-top:20px; padding-bottom:12px; }
+        #themes-window .window-header { padding-top:12px; padding-bottom:12px; }  /* now matches Wallpapers */
         .window-header-left { display:flex; align-items:center; gap:15px; min-width:0; }
         .window-header-icon { flex-shrink:0; }
         .window-header-icon img { display:block; }
@@ -139,7 +139,6 @@
         }
         body.inverted .wallpaper-label { color:#000; background:#fff; }
 
-        /* Old toggle style kept for fallback, but we're now using new controls for all */
         .setting { padding:10px 0; }
         .setting + .setting { border-top:1px solid rgba(255,255,255,0.08); padding-top:14px; }
         body.inverted .setting + .setting { border-top:1px solid rgba(0,0,0,0.08); }
@@ -269,11 +268,14 @@
             </div>
         </div>
 
-        <!-- Themes Window (now uses same control style) -->
+        <!-- Themes Window (now with folder icon) -->
         <div class="window" id="themes-window">
             <div class="window-header-wrapper">
                 <div class="window-header">
-                    <span class="window-header-title">Themes</span>
+                    <div class="window-header-left">
+                        <div class="window-header-icon"><img src="https://raw.githubusercontent.com/GuruGitHubTheG/TWM/main/icons/folder.png" width="42" height="36" alt="folder"></div>
+                        <span class="window-header-title">Themes</span>
+                    </div>
                     <div class="header-icons">
                         <button class="header-icon-btn" id="dismissBtnBW4"><img src="https://raw.githubusercontent.com/GuruGitHubTheG/TWM/main/icons/dismiss.png" alt="dismiss"></button>
                         <button class="header-icon-btn" id="closeBtnBW4"><img src="https://raw.githubusercontent.com/GuruGitHubTheG/TWM/main/icons/close.png" alt="close"></button>
@@ -282,7 +284,7 @@
             </div>
             <div class="window-divider"></div>
             <div class="window-content">
-                <!-- Inverted UI – now using button control -->
+                <!-- Inverted UI – button control -->
                 <div class="setting-row">
                     <div class="setting-label-centered">Inverted UI</div>
                     <div class="setting-rect">
