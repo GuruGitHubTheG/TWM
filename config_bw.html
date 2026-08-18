@@ -39,7 +39,7 @@
         body.inverted .window-header { background:#fff; color:#000; }
         #customize-window .window-header { padding-top:9px; padding-bottom:9px; }
         #wallpaper-window .window-header { padding-top:12px; padding-bottom:12px; }
-        #themes-window .window-header { padding-top:12px; padding-bottom:12px; }
+        #themes-window .window-header { padding-top:12px; padding-bottom:12px; }  /* now matches Wallpapers */
         .window-header-left { display:flex; align-items:center; gap:15px; min-width:0; }
         .window-header-icon { flex-shrink:0; }
         .window-header-icon img { display:block; }
@@ -138,84 +138,6 @@
             font-size:29px; line-height:1; color:#fff; text-align:center; letter-spacing:0.3px; display:inline-block; background:#000; padding:6px 6px 9px 3px; border-radius:0; white-space:pre; word-wrap:break-word;
         }
         body.inverted .wallpaper-label { color:#000; background:#fff; }
-
-        /* ---- Custom Wallpaper Section ---- */
-        .custom-wallpaper-rect {
-            display:flex;
-            flex-direction:column;
-            align-items:center;
-            height:auto;
-            padding:12px 0;
-            margin:0 -6px;
-            border-top:3px solid #fff;
-            border-bottom:3px solid #fff;
-        }
-        body.inverted .custom-wallpaper-rect {
-            border-top-color:#000;
-            border-bottom-color:#000;
-        }
-        .custom-wallpaper-rect input[type="file"],
-        .custom-wallpaper-rect input[type="text"] {
-            width:100%;
-            padding:8px;
-            background:#000;
-            color:#fff;
-            border:1px solid #fff;
-            font-family:'Volter',sans-serif;
-            font-size:14px;
-            margin-bottom:8px;
-        }
-        body.inverted .custom-wallpaper-rect input[type="file"],
-        body.inverted .custom-wallpaper-rect input[type="text"] {
-            background:#fff;
-            color:#000;
-            border-color:#000;
-        }
-        .custom-wallpaper-rect button {
-            width:100%;
-            padding:8px;
-            background:#fff;
-            color:#000;
-            border:none;
-            font-family:'Volter',sans-serif;
-            font-size:14px;
-            cursor:pointer;
-        }
-        body.inverted .custom-wallpaper-rect button {
-            background:#000;
-            color:#fff;
-        }
-        .custom-wallpaper-rect button:hover {
-            background:rgb(128,128,128);
-            color:#fff;
-        }
-        body.inverted .custom-wallpaper-rect button:hover {
-            background:rgb(128,128,128);
-            color:#000;
-        }
-        .custom-wallpaper-rect canvas {
-            width:100%;
-            max-width:200px;
-            height:auto;
-            margin:12px auto 0;
-            display:none;
-            border:1px solid #fff;
-        }
-        body.inverted .custom-wallpaper-rect canvas {
-            border-color:#000;
-        }
-        .custom-wallpaper-rect .capability-note {
-            font-size:10px;
-            color:#fff;
-            opacity:0.4;
-            margin-top:12px;
-            text-align:center;
-            letter-spacing:0.3px;
-        }
-        body.inverted .custom-wallpaper-rect .capability-note {
-            color:#000;
-        }
-        /* ---- End Custom Wallpaper ---- */
 
         .setting { padding:10px 0; }
         .setting + .setting { border-top:1px solid rgba(255,255,255,0.08); padding-top:14px; }
@@ -343,22 +265,10 @@
             <div class="window-divider"></div>
             <div class="window-content">
                 <div class="wallpaper-grid" id="wallpaperGrid"></div>
-
-                <!-- Custom Wallpaper -->
-                <div class="setting-row" id="custom-wallpaper-section" style="margin-top:24px;">
-                    <div class="setting-label-centered">Custom Wallpaper</div>
-                    <div class="custom-wallpaper-rect">
-                        <input type="file" id="customImageFile" accept="image/*">
-                        <input type="text" id="customImageUrl" placeholder="Or enter image URL">
-                        <button id="loadCustomImageBtn">Load &amp; Preview</button>
-                        <canvas id="customImagePreview"></canvas>
-                        <div class="capability-note">Image will be cropped and resized for your watch.</div>
-                    </div>
-                </div>
             </div>
         </div>
 
-        <!-- Themes Window -->
+        <!-- Themes Window (now with folder icon) -->
         <div class="window" id="themes-window">
             <div class="window-header-wrapper">
                 <div class="window-header">
@@ -374,7 +284,7 @@
             </div>
             <div class="window-divider"></div>
             <div class="window-content">
-                <!-- Inverted UI -->
+                <!-- Inverted UI – button control -->
                 <div class="setting-row">
                     <div class="setting-label-centered">Inverted UI</div>
                     <div class="setting-rect">
@@ -417,11 +327,6 @@
             var zerosOn = false;
             var ampmOn = true;
             var invertedOn = false;
-
-            // Custom wallpaper data
-            var customWallpaperData = null;
-            var customWallpaperWidth = 0;
-            var customWallpaperHeight = 0;
 
             function applyInversion(enabled) {
                 if (enabled) document.body.classList.add('inverted');
@@ -477,7 +382,27 @@
                 updateDisplays();
             });
 
-            // ---------- Load config ----------
+            // Top bar buttons
+            document.getElementById('dismissBtnTop').addEventListener('click', function() {
+                var returnTo = getQueryParam('return_to');
+                if (returnTo) window.location = returnTo;
+                else window.location = 'pebblejs://close';
+            });
+            document.getElementById('closeBtnTop').addEventListener('click', function() {
+                document.getElementById('saveBtn').click();
+            });
+
+            document.querySelectorAll('#dismissBtnBW2, #dismissBtnBW3, #dismissBtnBW4').forEach(function(btn) {
+                btn.addEventListener('click', function() {
+                    document.getElementById('dismissBtnTop').click();
+                });
+            });
+            document.querySelectorAll('#closeBtnBW2, #closeBtnBW3, #closeBtnBW4').forEach(function(btn) {
+                btn.addEventListener('click', function() {
+                    document.getElementById('closeBtnTop').click();
+                });
+            });
+
             function loadConfig(retries) {
                 retries = retries || 3;
                 var stored = localStorage.getItem('twm_config');
@@ -526,7 +451,6 @@
                 }
             }
 
-            // ---------- Build wallpaper grid ----------
             function buildGrid() {
                 var grid = document.getElementById('wallpaperGrid');
                 grid.innerHTML = '';
@@ -569,133 +493,30 @@
                 });
             }
 
-            // ---------- Custom Wallpaper Logic ----------
-            var customImageFile = document.getElementById('customImageFile');
-            var customImageUrl = document.getElementById('customImageUrl');
-            var loadCustomImageBtn = document.getElementById('loadCustomImageBtn');
-            var customImagePreview = document.getElementById('customImagePreview');
-            var ctx = customImagePreview.getContext('2d');
-
-            // Target dimensions for BW watches (Aplite/Diorite/Flint = 144x168)
-            var targetWidth = 144;
-            var targetHeight = 168;
-
-            function ditherBW(data, width, height) {
-                // Convert to grayscale
-                for (var i = 0; i < data.length; i += 4) {
-                    var gray = 0.299 * data[i] + 0.587 * data[i+1] + 0.114 * data[i+2];
-                    data[i] = data[i+1] = data[i+2] = gray;
-                }
-                // Simple threshold
-                for (var i = 0; i < data.length; i += 4) {
-                    data[i] = data[i] > 127 ? 255 : 0;
-                    data[i+1] = data[i+2] = data[i];
-                }
-                return data;
-            }
-
-            function loadAndPreviewImage(source) {
-                var img = new Image();
-                img.crossOrigin = 'Anonymous';
-                img.onload = function() {
-                    // Crop to square (center)
-                    var size = Math.min(img.width, img.height);
-                    var sx = (img.width - size) / 2;
-                    var sy = (img.height - size) / 2;
-
-                    customImagePreview.width = targetWidth;
-                    customImagePreview.height = targetHeight;
-                    ctx.clearRect(0, 0, targetWidth, targetHeight);
-                    ctx.drawImage(img, sx, sy, size, size, 0, 0, targetWidth, targetHeight);
-                    customImagePreview.style.display = 'block';
-
-                    // Get image data and dither to 1-bit
-                    var imageData = ctx.getImageData(0, 0, targetWidth, targetHeight);
-                    var data = ditherBW(imageData.data, targetWidth, targetHeight);
-                    ctx.putImageData(imageData, 0, 0);
-
-                    // Pack into 1 bit per pixel (8 pixels per byte)
-                    var packed = new Uint8Array(Math.ceil(targetWidth * targetHeight / 8));
-                    var idx = 0;
-                    var bit = 0;
-                    var byte = 0;
-                    for (var i = 0; i < data.length; i += 4) {
-                        var val = data[i] > 127 ? 1 : 0;
-                        byte = (byte << 1) | val;
-                        bit++;
-                        if (bit === 8) {
-                            packed[idx++] = byte;
-                            byte = 0;
-                            bit = 0;
-                        }
-                    }
-                    if (bit > 0) {
-                        packed[idx] = byte << (8 - bit);
-                    }
-
-                    // Store data to send on save
-                    customWallpaperData = btoa(String.fromCharCode.apply(null, packed));
-                    customWallpaperWidth = targetWidth;
-                    customWallpaperHeight = targetHeight;
-
-                    console.log('Custom wallpaper packed size: ' + packed.length);
-                };
-                img.onerror = function() {
-                    alert('Failed to load image. Please check the URL or file.');
-                };
-                img.src = source;
-            }
-
-            loadCustomImageBtn.addEventListener('click', function() {
-                var file = customImageFile.files[0];
-                if (file) {
-                    var reader = new FileReader();
-                    reader.onload = function(e) {
-                        loadAndPreviewImage(e.target.result);
-                    };
-                    reader.readAsDataURL(file);
-                } else if (customImageUrl.value) {
-                    loadAndPreviewImage(customImageUrl.value);
-                } else {
-                    alert('Please select a file or enter a URL.');
-                }
-            });
-
-            // ---------- Save ----------
             function getConfig() {
-                var config = {
+                return {
                     ClockMode: timeIndex,
                     LeadingZeros: zerosOn,
                     ShowAMPM: ampmOn,
                     Wallpaper: selectedWallpaperId,
                     Inverted: invertedOn
                 };
-                if (customWallpaperData) {
-                    config.CustomWallpaperData = customWallpaperData;
-                    config.CustomWallpaperWidth = customWallpaperWidth;
-                    config.CustomWallpaperHeight = customWallpaperHeight;
-                    config.Wallpaper = 8;
-                }
-                return config;
             }
 
-            function saveAndClose() {
+            document.getElementById('saveBtn').addEventListener('click', function() {
                 var config = getConfig();
                 var json = JSON.stringify(config);
+                var encoded = encodeURIComponent(json);
                 localStorage.setItem('twm_config', json);
                 console.log('Saved to localStorage:', json);
-                window.location = 'pebblejs://close';
-            }
-
-            // Save button
-            document.getElementById('saveBtn').addEventListener('click', saveAndClose);
-
-            // All dismiss and close buttons – save and close
-            document.querySelectorAll('#dismissBtnTop, #dismissBtnBW2, #dismissBtnBW3, #dismissBtnBW4, #closeBtnTop, #closeBtnBW2, #closeBtnBW3, #closeBtnBW4').forEach(function(btn) {
-                btn.addEventListener('click', saveAndClose);
+                var returnTo = getQueryParam('return_to');
+                if (returnTo) {
+                    window.location = returnTo + encoded;
+                } else {
+                    window.location = 'pebblejs://close#' + encoded;
+                }
             });
 
-            // Init
             buildGrid();
             loadConfig(5);
         })();

@@ -25,7 +25,7 @@
         .window-header { display:flex; align-items:center; background:#000; color:var(--primary,#aa55ff); min-height:60px; padding-left:18px; padding-right:18px; }
         #customize-window .window-header { padding-top:9px; padding-bottom:9px; }
         #wallpaper-window .window-header { padding-top:12px; padding-bottom:12px; }
-        #themes-window .window-header { padding-top:12px; padding-bottom:12px; }
+        #themes-window .window-header { padding-top:12px; padding-bottom:12px; }  /* now matches Wallpapers */
         .window-header-left { display:flex; align-items:center; gap:15px; min-width:0; }
         .window-header-icon { flex-shrink:0; background-color:var(--primary,#aa55ff); -webkit-mask-size:contain; mask-size:contain; -webkit-mask-repeat:no-repeat; mask-repeat:no-repeat; -webkit-mask-position:center; mask-position:center; }
         #customizeIcon { width:42px; height:42px; -webkit-mask-image:url('https://raw.githubusercontent.com/GuruGitHubTheG/TWM/main/icons/gear.png'); mask-image:url('https://raw.githubusercontent.com/GuruGitHubTheG/TWM/main/icons/gear.png'); }
@@ -123,59 +123,6 @@
         .wallpaper-label {
             font-size:29px; line-height:1; color:var(--primary,#aa55ff); text-align:center; letter-spacing:0.3px; display:inline-block; background:#000; padding:6px 6px 9px 3px; border-radius:0; white-space:pre; word-wrap:break-word;
         }
-
-        /* ---- Custom Wallpaper Section ---- */
-        .custom-wallpaper-rect {
-            display:flex;
-            flex-direction:column;
-            align-items:center;
-            height:auto;
-            padding:12px 0;
-            margin:0 -6px;
-            border-top:3px solid var(--primary,#aa55ff);
-            border-bottom:3px solid var(--primary,#aa55ff);
-        }
-        .custom-wallpaper-rect input[type="file"],
-        .custom-wallpaper-rect input[type="text"] {
-            width:100%;
-            padding:8px;
-            background:#000;
-            color:var(--primary,#aa55ff);
-            border:1px solid var(--primary,#aa55ff);
-            font-family:'Volter',sans-serif;
-            font-size:14px;
-            margin-bottom:8px;
-        }
-        .custom-wallpaper-rect button {
-            width:100%;
-            padding:8px;
-            background:var(--primary,#aa55ff);
-            color:#000;
-            border:none;
-            font-family:'Volter',sans-serif;
-            font-size:14px;
-            cursor:pointer;
-        }
-        .custom-wallpaper-rect button:hover {
-            background:rgb(100,66,165);
-        }
-        .custom-wallpaper-rect canvas {
-            width:100%;
-            max-width:200px;
-            height:auto;
-            margin:12px auto 0;
-            display:none;
-            border:1px solid var(--primary,#aa55ff);
-        }
-        .custom-wallpaper-rect .capability-note {
-            font-size:10px;
-            color:var(--primary,#aa55ff);
-            opacity:0.4;
-            margin-top:12px;
-            text-align:center;
-            letter-spacing:0.3px;
-        }
-        /* ---- End Custom Wallpaper ---- */
 
         .setting { padding:10px 0; }
         .setting + .setting { border-top:1px solid rgba(255,255,255,0.08); padding-top:14px; }
@@ -307,22 +254,10 @@
             <div class="window-divider" style="background:var(--primary, #aa55ff);"></div>
             <div class="window-content">
                 <div class="wallpaper-grid" id="wallpaperGrid"></div>
-
-                <!-- Custom Wallpaper -->
-                <div class="setting-row" id="custom-wallpaper-section" style="margin-top:24px;">
-                    <div class="setting-label-centered">Custom Wallpaper</div>
-                    <div class="custom-wallpaper-rect">
-                        <input type="file" id="customImageFile" accept="image/*">
-                        <input type="text" id="customImageUrl" placeholder="Or enter image URL">
-                        <button id="loadCustomImageBtn">Load &amp; Preview</button>
-                        <canvas id="customImagePreview"></canvas>
-                        <div class="capability-note">Image will be cropped and resized for your watch.</div>
-                    </div>
-                </div>
             </div>
         </div>
 
-        <!-- Themes Window -->
+        <!-- Themes Window (now with folder icon) -->
         <div class="window" id="themes-window">
             <div class="window-header-wrapper">
                 <div class="window-header">
@@ -369,7 +304,6 @@
                 return urlParams.get(param);
             }
 
-            // ---------- Wallpaper data ----------
             var wallpapers = [
                 { id: 1, label: 'The World\nMachine', image: 'https://raw.githubusercontent.com/GuruGitHubTheG/TWM/main/wallpapers/The_World_Machine_wallpaper.png' },
                 { id: 2, label: 'Barrens\nCraters', image: 'https://raw.githubusercontent.com/GuruGitHubTheG/TWM/main/wallpapers/Barrens_Craters_wallpaper.png' },
@@ -389,11 +323,6 @@
             var zerosOn = false;
             var ampmOn = true;
 
-            // Custom wallpaper data
-            var customWallpaperData = null;
-            var customWallpaperWidth = 0;
-            var customWallpaperHeight = 0;
-
             function applyStyles(color) {
                 primaryColor = color;
                 document.documentElement.style.setProperty('--primary', color);
@@ -402,9 +331,6 @@
                 document.querySelectorAll('.window-divider').forEach(function(el) { el.style.background = color; });
                 document.querySelectorAll('.setting-description').forEach(function(el) { el.style.color = color; el.style.opacity = '0.6'; });
                 document.querySelectorAll('.setting-middle').forEach(function(el) { el.style.borderTopColor = color; el.style.borderBottomColor = color; });
-                document.querySelectorAll('.custom-wallpaper-rect').forEach(function(el) { el.style.borderTopColor = color; el.style.borderBottomColor = color; });
-                document.querySelectorAll('.custom-wallpaper-rect input, .custom-wallpaper-rect canvas').forEach(function(el) { el.style.borderColor = color; });
-                document.querySelectorAll('.custom-wallpaper-rect button').forEach(function(el) { el.style.background = color; });
                 document.querySelectorAll('.color-picker-wrapper input[type="color"]').forEach(function(el) { el.style.borderColor = color; });
                 var style = document.getElementById('dynamicToggleStyle') || (function() { var s=document.createElement('style'); s.id='dynamicToggleStyle'; document.head.appendChild(s); return s; })();
                 style.textContent = '.toggle input:checked + .slider { background: ' + color + ' !important; }';
@@ -416,7 +342,6 @@
                 document.getElementById('ampmDisplay').textContent = ampmOn ? 'ON' : 'OFF';
             }
 
-            // ---------- Button handlers ----------
             document.getElementById('timeLeft').addEventListener('click', function() {
                 timeIndex = (timeIndex - 1 + timeOptions.length) % timeOptions.length;
                 updateDisplays();
@@ -444,7 +369,26 @@
                 updateDisplays();
             });
 
-            // ---------- Load config ----------
+            document.getElementById('dismissBtnTop').addEventListener('click', function() {
+                var returnTo = getQueryParam('return_to');
+                if (returnTo) window.location = returnTo;
+                else window.location = 'pebblejs://close';
+            });
+            document.getElementById('closeBtnTop').addEventListener('click', function() {
+                document.getElementById('saveBtn').click();
+            });
+
+            document.querySelectorAll('#dismissBtnColor2, #dismissBtnColor3, #dismissBtnColor4').forEach(function(btn) {
+                btn.addEventListener('click', function() {
+                    document.getElementById('dismissBtnTop').click();
+                });
+            });
+            document.querySelectorAll('#closeBtnColor2, #closeBtnColor3, #closeBtnColor4').forEach(function(btn) {
+                btn.addEventListener('click', function() {
+                    document.getElementById('closeBtnTop').click();
+                });
+            });
+
             function loadConfig(retries) {
                 retries = retries || 3;
                 var stored = localStorage.getItem('twm_config');
@@ -503,7 +447,6 @@
                 }
             }
 
-            // ---------- Build wallpaper grid ----------
             function buildGrid() {
                 var grid = document.getElementById('wallpaperGrid');
                 grid.innerHTML = '';
@@ -546,91 +489,6 @@
                 });
             }
 
-            // ---------- Custom Wallpaper Logic ----------
-            var customImageFile = document.getElementById('customImageFile');
-            var customImageUrl = document.getElementById('customImageUrl');
-            var loadCustomImageBtn = document.getElementById('loadCustomImageBtn');
-            var customImagePreview = document.getElementById('customImagePreview');
-            var ctx = customImagePreview.getContext('2d');
-
-            // Target dimensions for color watches (Basalt/Chalk = 144x168, Emery = 200x228)
-            // Use 144x168 as default
-            var targetWidth = 144;
-            var targetHeight = 168;
-
-            function loadAndPreviewImage(source) {
-                var img = new Image();
-                img.crossOrigin = 'Anonymous';
-                img.onload = function() {
-                    // Crop to square (center)
-                    var size = Math.min(img.width, img.height);
-                    var sx = (img.width - size) / 2;
-                    var sy = (img.height - size) / 2;
-
-                    customImagePreview.width = targetWidth;
-                    customImagePreview.height = targetHeight;
-                    ctx.clearRect(0, 0, targetWidth, targetHeight);
-                    ctx.drawImage(img, sx, sy, size, size, 0, 0, targetWidth, targetHeight);
-                    customImagePreview.style.display = 'block';
-
-                    // Get image data
-                    var imageData = ctx.getImageData(0, 0, targetWidth, targetHeight);
-                    var data = imageData.data;
-
-                    // Quantize to RGB222 (2 bits per channel)
-                    for (var i = 0; i < data.length; i += 4) {
-                        data[i] = Math.round(data[i] / 85) * 85;
-                        data[i+1] = Math.round(data[i+1] / 85) * 85;
-                        data[i+2] = Math.round(data[i+2] / 85) * 85;
-                    }
-                    ctx.putImageData(imageData, 0, 0);
-
-                    // Pack into 4-bit per pixel (2 pixels per byte)
-                    var packed = new Uint8Array(Math.ceil(targetWidth * targetHeight / 2));
-                    var idx = 0;
-                    for (var i = 0; i < data.length; i += 8) {
-                        // Pixel 1
-                        var r1 = Math.round(data[i] / 85);
-                        var g1 = Math.round(data[i+1] / 85);
-                        var b1 = Math.round(data[i+2] / 85);
-                        // Pixel 2
-                        var r2 = Math.round(data[i+4] / 85);
-                        var g2 = Math.round(data[i+5] / 85);
-                        var b2 = Math.round(data[i+6] / 85);
-                        var byte1 = (r1 << 4) | (g1 << 2) | b1;
-                        var byte2 = (r2 << 4) | (g2 << 2) | b2;
-                        packed[idx++] = (byte1 << 4) | byte2;
-                    }
-
-                    // Store data to send on save
-                    customWallpaperData = btoa(String.fromCharCode.apply(null, packed));
-                    customWallpaperWidth = targetWidth;
-                    customWallpaperHeight = targetHeight;
-
-                    console.log('Custom wallpaper packed size: ' + packed.length);
-                };
-                img.onerror = function() {
-                    alert('Failed to load image. Please check the URL or file.');
-                };
-                img.src = source;
-            }
-
-            loadCustomImageBtn.addEventListener('click', function() {
-                var file = customImageFile.files[0];
-                if (file) {
-                    var reader = new FileReader();
-                    reader.onload = function(e) {
-                        loadAndPreviewImage(e.target.result);
-                    };
-                    reader.readAsDataURL(file);
-                } else if (customImageUrl.value) {
-                    loadAndPreviewImage(customImageUrl.value);
-                } else {
-                    alert('Please select a file or enter a URL.');
-                }
-            });
-
-            // ---------- Save ----------
             function getConfig() {
                 var config = {
                     ClockMode: timeIndex,
@@ -641,33 +499,23 @@
                 };
                 var sec = document.getElementById('Secondary_Color').value.replace('#', '');
                 if (sec) config.Secondary_Color = sec;
-
-                if (customWallpaperData) {
-                    config.CustomWallpaperData = customWallpaperData;
-                    config.CustomWallpaperWidth = customWallpaperWidth;
-                    config.CustomWallpaperHeight = customWallpaperHeight;
-                    config.Wallpaper = 8;
-                }
                 return config;
             }
 
-            function saveAndClose() {
+            document.getElementById('saveBtn').addEventListener('click', function() {
                 var config = getConfig();
                 var json = JSON.stringify(config);
+                var encoded = encodeURIComponent(json);
                 localStorage.setItem('twm_config', json);
                 console.log('Saved to localStorage:', json);
-                window.location = 'pebblejs://close';
-            }
-
-            // Save button
-            document.getElementById('saveBtn').addEventListener('click', saveAndClose);
-
-            // All dismiss and close buttons – save and close
-            document.querySelectorAll('#dismissBtnTop, #dismissBtnColor2, #dismissBtnColor3, #dismissBtnColor4, #closeBtnTop, #closeBtnColor2, #closeBtnColor3, #closeBtnColor4').forEach(function(btn) {
-                btn.addEventListener('click', saveAndClose);
+                var returnTo = getQueryParam('return_to');
+                if (returnTo) {
+                    window.location = returnTo + encoded;
+                } else {
+                    window.location = 'pebblejs://close#' + encoded;
+                }
             });
 
-            // UI Color live preview
             document.getElementById('UI_Color').addEventListener('input', function() {
                 var c = this.value;
                 document.getElementById('colorHex').textContent = c;
@@ -677,7 +525,6 @@
                 document.getElementById('secondaryColorHex').textContent = this.value;
             });
 
-            // Init
             buildGrid();
             loadConfig(5);
         })();
