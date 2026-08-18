@@ -338,7 +338,7 @@
             var timeIndex = 0;
             var zerosOn = false;
             var ampmOn = true;
-            var customPhotoReady = false;
+            var customPhotoData = null;
 
             var photoLoadGeneration = 0;
             var photoLoadTimer = null;
@@ -370,7 +370,6 @@
                 section.style.display = (selectedWallpaperId === 8) ? 'block' : 'none';
             }
 
-            // Event listeners for time/zeros/ampm
             document.getElementById('timeLeft').addEventListener('click', function() {
                 timeIndex = (timeIndex - 1 + timeOptions.length) % timeOptions.length;
                 updateDisplays();
@@ -398,7 +397,6 @@
                 updateDisplays();
             });
 
-            // Top bar & window buttons
             document.getElementById('dismissBtnTop').addEventListener('click', function() {
                 var returnTo = getQueryParam('return_to');
                 if (returnTo) window.location = returnTo;
@@ -415,7 +413,6 @@
                 btn.addEventListener('click', function() { document.getElementById('closeBtnTop').click(); });
             });
 
-            // Load configuration
             function loadConfig(retries) {
                 retries = retries || 3;
                 var stored = localStorage.getItem('twm_config');
@@ -474,7 +471,6 @@
                 }
             }
 
-            // Build wallpaper grid
             function buildGrid() {
                 var grid = document.getElementById('wallpaperGrid');
                 grid.innerHTML = '';
@@ -540,7 +536,7 @@
             function resetPhotoLoad(message, isError) {
                 if (photoLoadTimer) { clearTimeout(photoLoadTimer); photoLoadTimer = null; }
                 photoLoadGeneration++;
-                customPhotoReady = false;
+                customPhotoData = null;
                 canvas.style.display = 'none';
                 hideCompatibilityRetry();
                 setSubmitDisabled(false);
@@ -552,7 +548,7 @@
                 photoLoadGeneration++;
                 setSubmitDisabled(true);
                 setPhotoStatus(message, false);
-                customPhotoReady = false;
+                customPhotoData = null;
                 canvas.style.display = 'none';
                 hideCompatibilityRetry();
                 var generation = photoLoadGeneration;
@@ -570,7 +566,7 @@
                 if (generation !== photoLoadGeneration) return;
                 if (photoLoadTimer) { clearTimeout(photoLoadTimer); photoLoadTimer = null; }
                 photoLoadGeneration++;
-                customPhotoReady = false;
+                customPhotoData = null;
                 setPhotoStatus(message, true);
                 setSubmitDisabled(false);
             }
@@ -582,7 +578,6 @@
                 document.getElementById('photoProxyBtn').style.display = 'block';
             }
 
-            // Color quantization functions (4-bit palette)
             function colorId(r,g,b) { return (r<<4)|(g<<2)|b; }
             function colorFromId(id) { return { r:(id>>4)&3, g:(id>>2)&3, b:id&3 }; }
             function clamp(v,l,h) { return Math.max(l, Math.min(h, v)); }
@@ -767,20 +762,19 @@
                     ctx.putImageData(imageData,0,0);
                     canvas.style.display = 'block';
 
-                    var storageKey = 'twm.customphoto.v1.' + watchWidth + 'x' + watchHeight;
-                    var photoRecord = {
-                        version: 1,
-                        width: watchWidth,
-                        height: watchHeight,
-                        length: result.pixelData.length,
-                        checksum: checksum16(result.pixelData),
-                        pixelData: Array.from(result.pixelData),
+                    // Convert Uint8Array to binary string, then base64, then compress
+                    var binary = '';
+                    for (var i = 0; i < result.pixelData.length; i++) {
+                        binary += String.fromCharCode(result.pixelData[i]);
+                    }
+                    var base64 = btoa(binary);
+                    var compressed = LZString.compressToEncodedURIComponent(base64);
+
+                    customPhotoData = {
+                        compressed: compressed,
                         palette: result.palette,
-                        color: true,
-                        dirty: true
+                        color: true
                     };
-                    localStorage.setItem(storageKey, JSON.stringify(photoRecord));
-                    customPhotoReady = true;
                     setSubmitDisabled(false);
                     setPhotoStatus('Ready: ' + watchWidth + '×' + watchHeight + ' custom photo.', false);
                     if (photoLoadTimer) { clearTimeout(photoLoadTimer); photoLoadTimer = null; }
@@ -794,15 +788,6 @@
                 }
             }
 
-            function checksum16(bytes) {
-                var sum = 0;
-                for (var i = 0; i < bytes.length; i++) {
-                    sum = (sum + bytes[i]) & 0xFFFF;
-                }
-                return sum;
-            }
-
-            // File input
             document.getElementById('photoFile').addEventListener('change', function() {
                 var file = this.files && this.files[0];
                 if (!file) return;
@@ -818,7 +803,6 @@
                 reader.readAsDataURL(file);
             });
 
-            // URL input
             document.getElementById('loadUrlBtn').addEventListener('click', function() { loadImageUrl(false); });
             document.getElementById('photoProxyBtn').addEventListener('click', function() { loadImageUrl(true); });
 
@@ -853,7 +837,6 @@
                 }
             });
 
-            // Save button
             function getConfig() {
                 var config = {
                     ClockMode: timeIndex,
@@ -862,8 +845,8 @@
                     Wallpaper: selectedWallpaperId,
                     UI_Color: document.getElementById('UI_Color').value.replace('#', '')
                 };
-                if (selectedWallpaperId === 8 && customPhotoReady) {
-                    config.CustomPhoto = true;
+                if (selectedWallpaperId === 8 && customPhotoData) {
+                    config.CustomPhoto = customPhotoData;
                 }
                 var sec = document.getElementById('Secondary_Color').value.replace('#', '');
                 if (sec) config.Secondary_Color = sec;
@@ -884,7 +867,6 @@
                 }
             });
 
-            // UI Color listeners
             document.getElementById('UI_Color').addEventListener('input', function() {
                 var c = this.value;
                 document.getElementById('colorHex').textContent = c;
@@ -894,7 +876,6 @@
                 document.getElementById('secondaryColorHex').textContent = this.value;
             });
 
-            // Initialize
             buildGrid();
             loadConfig(5);
             updateCustomPhotoSection();
