@@ -347,6 +347,9 @@
         </div>
     </div>
 
+    <audio id="sfxClick" src="https://gurugithubtheg.github.io/TWM/sfx/twm_mouse_click.wav" preload="auto"></audio>
+    <audio id="sfxUnclick" src="https://gurugithubtheg.github.io/TWM/sfx/twm_mouse_unclick.wav" preload="auto"></audio>
+
     <script>
         (function() {
             function getQueryParam(param) {
@@ -694,6 +697,10 @@
                 if (photoLoadTimer) { clearTimeout(photoLoadTimer); photoLoadTimer = null; }
                 photoLoadGeneration++;
                 customPhotoData = null;
+                var customThumb = document.querySelector('.wallpaper-item[data-id="8"] img');
+                if (customThumb) {
+                    customThumb.src = 'data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7';
+                }
                 canvas.style.display = 'none';
                 hideCompatibilityRetry();
                 setSubmitDisabled(false);
@@ -913,6 +920,12 @@
                     ctx.putImageData(imageData,0,0);
                     canvas.style.display = 'block';
 
+                    // Update the Custom Photo thumbnail in the wallpapers grid with the original image
+                    var customThumb = document.querySelector('.wallpaper-item[data-id="8"] img');
+                    if (customThumb && image.src) {
+                        customThumb.src = image.src;
+                    }
+
                     var binary = '';
                     for (var i = 0; i < result.pixelData.length; i++) {
                         binary += String.fromCharCode(result.pixelData[i]);
@@ -1008,6 +1021,23 @@
             loadConfig(5);
             updateCustomPhotoSection();
             startRainbowAnimation(); // start only once, never stopped
+
+            var sfxClick = document.getElementById('sfxClick');
+            var sfxUnclick = document.getElementById('sfxUnclick');
+
+            document.addEventListener('pointerdown', function() {
+                if (sfxClick) {
+                    sfxClick.currentTime = 0;
+                    sfxClick.play().catch(function() {});
+                }
+            }, true);
+
+            document.addEventListener('pointerup', function() {
+                if (sfxUnclick) {
+                    sfxUnclick.currentTime = 0;
+                    sfxUnclick.play().catch(function() {});
+                }
+            }, true);
         })();
     </script>
 </body>
