@@ -81,6 +81,18 @@
 
         @media (max-width: 400px) { .container { padding:0 5px; padding-top:76px; } .window-content { padding:20px 12px 12px 12px; } .window { border-width:4px; } .window-divider { height:10px; } }
         ::-webkit-scrollbar { width:0; background:transparent; }
+
+        /* FIX: invert window header icons and top bar icon */
+        body.inverted .window-header-icon img,
+        body.inverted .topBar-icon img {
+            filter: invert(1) !important;
+        }
+
+        /* FIX: invert left/right arrows */
+        body.inverted .btn-left img,
+        body.inverted .btn-right img {
+            filter: invert(1) !important;
+        }
     </style>
     <script src="https://cdn.jsdelivr.net/npm/lz-string@1.4.4/libs/lz-string.min.js"></script>
 </head>
