@@ -16,7 +16,7 @@
         #topBar .header-icons { position:absolute; right:6px; top:6px; bottom:6px; display:flex; align-items:center; gap:6px; }
         .header-icon-btn { width:48px; height:48px; padding:0; border:none; background:var(--primary,#aa55ff); cursor:pointer; display:flex; align-items:center; justify-content:center; flex-shrink:0; }
         .header-icon-btn img { width:48px; height:48px; object-fit:contain; display:block; }
-        .header-icon-btn:hover, .header-icon-btn:active { background:rgb(100,66,165); }
+        .header-icon-btn:hover, .header-icon-btn:active { background:var(--primary-variant, rgb(100,66,165)); }
 
         .container { width:100%; max-width:1200px; padding:0 10px; padding-top:82px; padding-bottom:40px; margin:0 auto; }
 
@@ -25,7 +25,7 @@
         .window-header { display:flex; align-items:center; background:#000; color:var(--primary,#aa55ff); min-height:60px; padding-left:18px; padding-right:18px; }
         #customize-window .window-header { padding-top:9px; padding-bottom:9px; }
         #wallpaper-window .window-header { padding-top:12px; padding-bottom:12px; }
-        #themes-window .window-header { padding-top:12px; padding-bottom:12px; }  /* now matches Wallpapers */
+        #themes-window .window-header { padding-top:12px; padding-bottom:12px; }
         .window-header-left { display:flex; align-items:center; gap:15px; min-width:0; }
         .window-header-icon { flex-shrink:0; background-color:var(--primary,#aa55ff); -webkit-mask-size:contain; mask-size:contain; -webkit-mask-repeat:no-repeat; mask-repeat:no-repeat; -webkit-mask-position:center; mask-position:center; }
         #customizeIcon { width:42px; height:42px; -webkit-mask-image:url('https://raw.githubusercontent.com/GuruGitHubTheG/TWM/main/icons/gear.png'); mask-image:url('https://raw.githubusercontent.com/GuruGitHubTheG/TWM/main/icons/gear.png'); }
@@ -76,7 +76,7 @@
         }
         .btn-left:hover, .btn-left:active,
         .btn-right:hover, .btn-right:active {
-            background:rgb(100,66,165);
+            background:var(--primary-variant, rgb(100,66,165));
         }
 
         .setting-middle {
@@ -101,7 +101,6 @@
             padding:0 8px;
             white-space:nowrap;
         }
-        /* ---- END SETTING STYLES ---- */
 
         .wallpaper-grid {
             display:flex; flex-wrap:wrap; gap:20px 12px; justify-content:flex-start;
@@ -111,7 +110,14 @@
         }
         .wallpaper-item.two-liner { height:217px; }
         .wallpaper-item.one-liner { height:170px; }
-        .wallpaper-item.selected { border-color:rgb(74,50,126); background:rgb(38,24,64); }
+        .wallpaper-item.selected {
+            border-color: var(--selected-border, rgba(100,66,165,0.5));
+            background: var(--selected-bg, rgba(100,66,165,0.25));
+        }
+        .wallpaper-item:hover:not(.selected) {
+            border-color: var(--hover-border, rgba(100,66,165,0.33));
+            background: var(--hover-bg, rgba(100,66,165,0.17));
+        }
         .wallpaper-screenshot-wrapper {
             position:relative; width:126px; height:72px; margin-top:18px; margin-left:51px; flex-shrink:0; z-index:2;
         }
@@ -128,14 +134,6 @@
         .setting + .setting { border-top:1px solid rgba(255,255,255,0.08); padding-top:14px; }
         .setting-label { font-size:14px; font-weight:normal; margin-bottom:6px; color:var(--primary,#aa55ff); letter-spacing:0.5px; }
         .setting-description { font-size:11px; color:var(--primary,#aa55ff); opacity:0.6; margin-bottom:8px; }
-        .toggle-row { display:flex; align-items:center; justify-content:space-between; }
-        .toggle-row .setting-label { margin-bottom:0; }
-        .toggle { position:relative; width:51px; height:31px; flex-shrink:0; }
-        .toggle input { opacity:0; width:0; height:0; }
-        .toggle .slider { position:absolute; cursor:pointer; top:0; left:0; right:0; bottom:0; background:rgba(255,255,255,0.15); border-radius:31px; }
-        .toggle .slider:before { content:""; position:absolute; height:27px; width:27px; left:2px; bottom:2px; background:#fff; border-radius:50%; box-shadow:0 1px 3px rgba(0,0,0,0.3); }
-        .toggle input:checked + .slider { background:var(--primary,#aa55ff); }
-        .toggle input:checked + .slider:before { transform:translateX(20px); }
 
         .color-picker-wrapper { display:flex; align-items:center; gap:14px; }
         .color-picker-wrapper input[type="color"] { width:60px; height:44px; padding:4px; cursor:pointer; border:1px solid var(--primary,#aa55ff); background:transparent; flex-shrink:0; }
@@ -146,7 +144,7 @@
             width:100%; padding:16px; font-size:16px; font-weight:normal; letter-spacing:2px; text-transform:uppercase;
             color:#000; background:var(--primary,#aa55ff); border:6px solid var(--primary,#aa55ff); border-radius:0; cursor:pointer; margin-top:8px;
         }
-        .save-btn:hover, .save-btn:active { background:rgb(100,66,165); }
+        .save-btn:hover, .save-btn:active { background:var(--primary-variant, rgb(100,66,165)); }
 
         .capability-note { font-size:10px; color:var(--primary,#aa55ff); opacity:0.4; margin-top:6px; letter-spacing:0.3px; }
 
@@ -159,6 +157,11 @@
         }
         select:focus { border-color:var(--primary,#aa55ff); box-shadow:0 0 0 2px rgba(170,85,255,0.2); }
         select option { background:#1a1a1a; color:var(--primary,#aa55ff); }
+
+        .theme-swatches { display:flex; flex-wrap:wrap; gap:8px; margin-bottom:16px; }
+        .theme-swatch { width:36px; height:36px; border-radius:50%; cursor:pointer; border:3px solid transparent; padding:0; background:var(--swatch-color); }
+        .theme-swatch.selected { border-color:#fff; box-shadow:0 0 0 2px var(--primary); }
+        .theme-swatch.white { border:1px solid #555; } /* subtle border for white swatch */
 
         @media (max-width: 400px) {
             .container { padding:0 5px; padding-top:76px; }
@@ -270,7 +273,7 @@
             </div>
         </div>
 
-        <!-- Themes Window (now with folder icon) -->
+        <!-- Themes Window -->
         <div class="window" id="themes-window">
             <div class="window-header-wrapper">
                 <div class="window-header">
@@ -287,22 +290,21 @@
             <div class="window-divider" style="background:var(--primary, #aa55ff);"></div>
             <div class="window-content">
                 <div class="setting">
-                    <div class="setting-label">UI Color</div>
-                    <div class="setting-description">Accent color for UI elements</div>
+                    <div class="setting-label">Theme Color</div>
+                    <div class="setting-description">Choose a theme or pick a custom color</div>
+                    <div class="theme-swatches" id="themeSwatches"></div>
+                    <div class="setting-label" style="margin-top:14px;">Custom Color</div>
                     <div class="color-picker-wrapper">
-                        <input type="color" id="UI_Color" value="#aa55ff">
-                        <span class="color-hex" id="colorHex">#aa55ff</span>
+                        <input type="color" id="UI_Color" value="#9664ff">
+                        <span class="color-hex" id="colorHex">#9664ff</span>
                     </div>
-                    <div class="capability-note">Applies to color Pebble watches only</div>
-                </div>
-                <div class="setting" id="secondary-color-setting" style="opacity:0.4; pointer-events:none;">
-                    <div class="setting-label">Secondary Color</div>
-                    <div class="setting-description">Coming soon – additional accent color</div>
-                    <div class="color-picker-wrapper">
-                        <input type="color" id="Secondary_Color" value="#ffffff">
-                        <span class="color-hex" id="secondaryColorHex">#ffffff</span>
+                    <div class="capability-note">The secondary color is automatically generated from your primary color.</div>
+                    <div class="setting-label" style="margin-top:10px;">Auto Secondary Color</div>
+                    <div class="color-picker-wrapper" style="opacity:0.6; pointer-events:none;">
+                        <input type="color" id="Secondary_Color" value="#6442a5" disabled>
+                        <span class="color-hex" id="secondaryColorHex">#6442a5</span>
                     </div>
-                    <div class="capability-note">Future feature – not yet implemented</div>
+                    <div class="capability-note">This color is used for hover and pressed states.</div>
                 </div>
             </div>
         </div>
@@ -333,30 +335,80 @@
             ];
 
             var selectedWallpaperId = 1;
-            var primaryColor = '#aa55ff';
             var timeOptions = ['System', '12-Hour', '24-Hour'];
             var timeIndex = 0;
             var zerosOn = false;
             var ampmOn = true;
-            var customPhotoData = null;
 
+            var customPhotoData = null;
             var photoLoadGeneration = 0;
             var photoLoadTimer = null;
             var canvas = document.getElementById('photoCanvas');
             canvas.width = watchWidth;
             canvas.height = watchHeight;
 
-            function applyStyles(color) {
+            // Theme definitions (including White)
+            var themes = [
+                { name: 'Purple', primary: '#9664ff', variant: '#6442a5' },
+                { name: 'Blue',   primary: '#746be6', variant: '#3a358c' },
+                { name: 'Cyan',   primary: '#35cdd2', variant: '#196f71' },
+                { name: 'Green',  primary: '#3fd564', variant: '#0a8a49' },
+                { name: 'Yellow', primary: '#ffd26a', variant: '#b37d00' },
+                { name: 'Red',    primary: '#d5216a', variant: '#6a103e' },
+                { name: 'Pink',   primary: '#fe55bf', variant: '#b50f77' },
+                { name: 'Orange', primary: '#fd8f4d', variant: '#ca4c02' },
+                { name: 'White',  primary: '#ffffff', variant: '#808080' }
+            ];
+
+            var primaryColor = '#9664ff';
+            var primaryVariant = '#6442a5';
+
+            function hexToRgb(hex) {
+                hex = hex.replace('#', '');
+                return {
+                    r: parseInt(hex.substring(0,2),16),
+                    g: parseInt(hex.substring(2,4),16),
+                    b: parseInt(hex.substring(4,6),16)
+                };
+            }
+
+            function rgbToHex(r,g,b) {
+                return '#' + [r,g,b].map(x => Math.round(x).toString(16).padStart(2,'0')).join('');
+            }
+
+            function calculateVariant(hex) {
+                var rgb = hexToRgb(hex);
+                var r = Math.round(rgb.r * 0.6);
+                var g = Math.round(rgb.g * 0.6);
+                var b = Math.round(rgb.b * 0.6);
+                return rgbToHex(r,g,b);
+            }
+
+            function applyStyles(color, variant) {
                 primaryColor = color;
-                document.documentElement.style.setProperty('--primary', color);
-                document.querySelectorAll('.window, .save-btn, #topBar').forEach(function(el) { el.style.borderColor = color; });
-                document.querySelectorAll('.window-header, .window-header-title, .setting-label-centered, .setting-value, .setting-label, .color-hex, .capability-note, .wallpaper-label, #topBarTitle').forEach(function(el) { el.style.color = color; });
-                document.querySelectorAll('.window-divider').forEach(function(el) { el.style.background = color; });
-                document.querySelectorAll('.setting-description').forEach(function(el) { el.style.color = color; el.style.opacity = '0.6'; });
-                document.querySelectorAll('.setting-middle').forEach(function(el) { el.style.borderTopColor = color; el.style.borderBottomColor = color; });
-                document.querySelectorAll('.color-picker-wrapper input[type="color"]').forEach(function(el) { el.style.borderColor = color; });
-                var style = document.getElementById('dynamicToggleStyle') || (function() { var s = document.createElement('style'); s.id = 'dynamicToggleStyle'; document.head.appendChild(s); return s; })();
-                style.textContent = '.toggle input:checked + .slider { background: ' + color + ' !important; }';
+                primaryVariant = variant || color;
+                document.documentElement.style.setProperty('--primary', primaryColor);
+                document.documentElement.style.setProperty('--primary-variant', primaryVariant);
+
+                // Compute selection colors (50% and 25% of variant)
+                var variantRgb = hexToRgb(primaryVariant);
+                var selectedBorder = 'rgba(' + variantRgb.r + ',' + variantRgb.g + ',' + variantRgb.b + ',0.5)';
+                var selectedBg = 'rgba(' + variantRgb.r + ',' + variantRgb.g + ',' + variantRgb.b + ',0.25)';
+                var hoverBorder = 'rgba(' + variantRgb.r + ',' + variantRgb.g + ',' + variantRgb.b + ',0.333)';
+                var hoverBg = 'rgba(' + variantRgb.r + ',' + variantRgb.g + ',' + variantRgb.b + ',0.167)';
+                document.documentElement.style.setProperty('--selected-border', selectedBorder);
+                document.documentElement.style.setProperty('--selected-bg', selectedBg);
+                document.documentElement.style.setProperty('--hover-border', hoverBorder);
+                document.documentElement.style.setProperty('--hover-bg', hoverBg);
+
+                document.querySelectorAll('.window, .save-btn, #topBar').forEach(function(el) { el.style.borderColor = primaryColor; });
+                document.querySelectorAll('.window-header, .window-header-title, .setting-label-centered, .setting-value, .setting-label, .color-hex, .capability-note, .wallpaper-label, #topBarTitle').forEach(function(el) { el.style.color = primaryColor; });
+                document.querySelectorAll('.window-divider').forEach(function(el) { el.style.background = primaryColor; });
+                document.querySelectorAll('.setting-description').forEach(function(el) { el.style.color = primaryColor; el.style.opacity = '0.6'; });
+                document.querySelectorAll('.setting-middle').forEach(function(el) { el.style.borderTopColor = primaryColor; el.style.borderBottomColor = primaryColor; });
+                document.querySelectorAll('.color-picker-wrapper input[type="color"]').forEach(function(el) { el.style.borderColor = primaryColor; });
+                var style = document.getElementById('dynamicToggleStyle') || (function() { var s=document.createElement('style'); s.id='dynamicToggleStyle'; document.head.appendChild(s); return s; })();
+                style.textContent = '.toggle input:checked + .slider { background: ' + primaryColor + ' !important; }';
             }
 
             function updateDisplays() {
@@ -370,6 +422,7 @@
                 section.style.display = (selectedWallpaperId === 8) ? 'block' : 'none';
             }
 
+            // Event listeners for time/zeros/ampm
             document.getElementById('timeLeft').addEventListener('click', function() {
                 timeIndex = (timeIndex - 1 + timeOptions.length) % timeOptions.length;
                 updateDisplays();
@@ -397,6 +450,7 @@
                 updateDisplays();
             });
 
+            // Top bar & window buttons
             document.getElementById('dismissBtnTop').addEventListener('click', function() {
                 var returnTo = getQueryParam('return_to');
                 if (returnTo) window.location = returnTo;
@@ -411,6 +465,46 @@
             });
             document.querySelectorAll('#closeBtnColor2, #closeBtnColor3, #closeBtnColor4').forEach(function(btn) {
                 btn.addEventListener('click', function() { document.getElementById('closeBtnTop').click(); });
+            });
+
+            // Build theme swatches
+            function buildThemeSwatches() {
+                var container = document.getElementById('themeSwatches');
+                container.innerHTML = '';
+                themes.forEach(function(theme) {
+                    var swatch = document.createElement('div');
+                    swatch.className = 'theme-swatch';
+                    if (theme.name === 'White') {
+                        swatch.classList.add('white');
+                    }
+                    swatch.style.setProperty('--swatch-color', theme.primary);
+                    swatch.title = theme.name;
+                    swatch.addEventListener('click', function() {
+                        document.querySelectorAll('.theme-swatch').forEach(function(s) { s.classList.remove('selected'); });
+                        swatch.classList.add('selected');
+                        var variant = theme.variant;
+                        primaryColor = theme.primary;
+                        primaryVariant = variant;
+                        document.getElementById('UI_Color').value = primaryColor;
+                        document.getElementById('colorHex').textContent = primaryColor;
+                        document.getElementById('Secondary_Color').value = primaryVariant;
+                        document.getElementById('secondaryColorHex').textContent = primaryVariant;
+                        applyStyles(primaryColor, primaryVariant);
+                    });
+                    container.appendChild(swatch);
+                });
+            }
+
+            // Color picker (custom)
+            document.getElementById('UI_Color').addEventListener('input', function() {
+                var c = this.value;
+                document.getElementById('colorHex').textContent = c;
+                var variant = calculateVariant(c);
+                document.getElementById('Secondary_Color').value = variant;
+                document.getElementById('secondaryColorHex').textContent = variant;
+                // Deselect any theme swatch
+                document.querySelectorAll('.theme-swatch').forEach(function(s) { s.classList.remove('selected'); });
+                applyStyles(c, variant);
             });
 
             function loadConfig(retries) {
@@ -442,13 +536,29 @@
                             if (!c.startsWith('#')) c = '#' + c;
                             document.getElementById('UI_Color').value = c;
                             document.getElementById('colorHex').textContent = c;
-                            applyStyles(c);
-                        }
-                        if (config.Secondary_Color) {
-                            var sc = config.Secondary_Color;
-                            if (!sc.startsWith('#')) sc = '#' + sc;
-                            document.getElementById('Secondary_Color').value = sc;
-                            document.getElementById('secondaryColorHex').textContent = sc;
+                            var variant = calculateVariant(c);
+                            var matched = false;
+                            themes.forEach(function(theme) {
+                                if (theme.primary.toLowerCase() === c.toLowerCase()) {
+                                    matched = true;
+                                    variant = theme.variant;
+                                }
+                            });
+                            if (!matched) {
+                                document.querySelectorAll('.theme-swatch').forEach(function(s) { s.classList.remove('selected'); });
+                            } else {
+                                // highlight matching swatch
+                                document.querySelectorAll('.theme-swatch').forEach(function(s) {
+                                    if (s.style.getPropertyValue('--swatch-color').toLowerCase() === c.toLowerCase()) {
+                                        s.classList.add('selected');
+                                    } else {
+                                        s.classList.remove('selected');
+                                    }
+                                });
+                            }
+                            document.getElementById('Secondary_Color').value = variant;
+                            document.getElementById('secondaryColorHex').textContent = variant;
+                            applyStyles(c, variant);
                         }
                         console.log('Loaded config:', config);
                         document.getElementById('topBarTitle').textContent = 'The World Machine';
@@ -463,7 +573,11 @@
                     return false;
                 } else {
                     console.log('No config – using defaults');
-                    applyStyles('#aa55ff');
+                    applyStyles('#9664ff', '#6442a5');
+                    document.getElementById('UI_Color').value = '#9664ff';
+                    document.getElementById('colorHex').textContent = '#9664ff';
+                    document.getElementById('Secondary_Color').value = '#6442a5';
+                    document.getElementById('secondaryColorHex').textContent = '#6442a5';
                     document.getElementById('topBarTitle').textContent = 'The World Machine';
                     updateDisplays();
                     updateCustomPhotoSection();
@@ -514,7 +628,7 @@
                 });
             }
 
-            // ---- Custom Photo Processing ----
+            // ---- Custom Photo Processing (unchanged) ----
             function setPhotoStatus(msg, isError) {
                 var status = document.getElementById('photoStatus');
                 status.textContent = msg;
@@ -762,7 +876,7 @@
                     ctx.putImageData(imageData,0,0);
                     canvas.style.display = 'block';
 
-                    // Convert Uint8Array to binary string, then base64, then compress
+                    // Compress and store
                     var binary = '';
                     for (var i = 0; i < result.pixelData.length; i++) {
                         binary += String.fromCharCode(result.pixelData[i]);
@@ -808,50 +922,36 @@
 
             function loadImageUrl(useProxy) {
                 var url = document.getElementById('photoUrl').value.trim();
-                if (!url) {
-                    resetPhotoLoad('Enter a direct HTTPS image URL.', true);
-                    return;
-                }
+                if (!url) { resetPhotoLoad('Enter a direct HTTPS image URL.', true); return; }
                 var viaProxy = useProxy === true;
-                var generation = beginPhotoLoad(
-                    viaProxy ? 'Loading via wsrv.nl…' : 'Loading image URL…',
-                    viaProxy ? null : function(timedOutGen) {
-                        // Direct load timed out. Automatically fallback to proxy.
-                        loadImageUrl(true);
-                    }
-                );
-
+                var generation = beginPhotoLoad(viaProxy ? 'Loading via wsrv.nl…' : 'Loading image URL…',
+                    viaProxy ? null : function(timedOutGen) { loadImageUrl(true); });
                 var img = new Image();
                 img.crossOrigin = 'anonymous';
-                if (typeof img.referrerPolicy !== 'undefined') {
-                    img.referrerPolicy = 'no-referrer';
-                }
-
+                if (typeof img.referrerPolicy !== 'undefined') img.referrerPolicy = 'no-referrer';
                 img.onerror = function() {
-                    if (viaProxy) {
-                        failPhotoLoad(generation, 'wsrv.nl could not fetch that image. Check that it is a public, direct image URL.');
-                    } else {
-                        // Direct load failed. Automatically fallback to proxy.
-                        loadImageUrl(true);
-                    }
+                    if (viaProxy) failPhotoLoad(generation, 'wsrv.nl could not fetch that image.');
+                    else loadImageUrl(true);
                 };
-
                 img.onload = function() {
                     prepareImage(img, generation, viaProxy ? 'URL via wsrv.nl' : 'URL',
-                        viaProxy ? null : function() {
-                            // This callback is no longer needed because we auto‑fallback,
-                            // but keep it for safety.
-                            loadImageUrl(true);
-                        });
+                        viaProxy ? null : function() { loadImageUrl(true); });
                 };
-
-                var finalUrl = viaProxy
-                    ? 'https://wsrv.nl/?url=' + encodeURIComponent(url) +
-                      '&w=' + watchWidth + '&h=' + watchHeight +
-                      '&fit=cover&a=center&output=png'
-                    : url;
+                var finalUrl = viaProxy ? 'https://wsrv.nl/?url=' + encodeURIComponent(url) + '&w=' + watchWidth + '&h=' + watchHeight + '&fit=cover&a=center&output=png' : url;
                 img.src = finalUrl;
             }
+
+            document.getElementById('photoUrl').addEventListener('input', function() {
+                resetPhotoLoad('URL changed. Tap Load URL to prepare it.', false);
+            });
+            document.getElementById('photoUrl').addEventListener('keydown', function(e) {
+                if (e.key === 'Enter' || e.keyCode === 13) {
+                    e.preventDefault();
+                    loadImageUrl(false);
+                }
+            });
+
+            // ---- End Custom Photo Processing ----
 
             function getConfig() {
                 var config = {
@@ -864,8 +964,6 @@
                 if (selectedWallpaperId === 8 && customPhotoData) {
                     config.CustomPhoto = customPhotoData;
                 }
-                var sec = document.getElementById('Secondary_Color').value.replace('#', '');
-                if (sec) config.Secondary_Color = sec;
                 return config;
             }
 
@@ -883,15 +981,8 @@
                 }
             });
 
-            document.getElementById('UI_Color').addEventListener('input', function() {
-                var c = this.value;
-                document.getElementById('colorHex').textContent = c;
-                applyStyles(c);
-            });
-            document.getElementById('Secondary_Color').addEventListener('input', function() {
-                document.getElementById('secondaryColorHex').textContent = this.value;
-            });
-
+            // Initialize
+            buildThemeSwatches();
             buildGrid();
             loadConfig(5);
             updateCustomPhotoSection();
