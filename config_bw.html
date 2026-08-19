@@ -82,17 +82,56 @@
         @media (max-width: 400px) { .container { padding:0 5px; padding-top:76px; } .window-content { padding:20px 12px 12px 12px; } .window { border-width:4px; } .window-divider { height:10px; } }
         ::-webkit-scrollbar { width:0; background:transparent; }
 
-        /* FIX: invert window header icons and top bar icon */
-        body.inverted .window-header-icon img,
-        body.inverted .topBar-icon img {
-            filter: invert(1) !important;
+        /* Modal Popup */
+        .modal-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.5);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
         }
+        body.inverted .modal-overlay { background: rgba(255,255,255,0.5); }
+        .modal-overlay.active { display: flex; }
+        .modal-box {
+            background: #000;
+            border: 6px solid var(--primary);
+            width: 492px;
+            max-width: 90vw;
+            box-sizing: border-box;
+            color: var(--primary);
+        }
+        body.inverted .modal-box { background: #fff; }
+        .modal-content { padding: 9px 0 12px; }
+        .modal-image-row { display: flex; align-items: center; margin-left: 9px; margin-right: 9px; margin-bottom: 9px; }
+        .modal-question-icon {
+            width: 42px; height: 42px;
+            background-color: var(--primary);
+            -webkit-mask-image: url('https://raw.githubusercontent.com/GuruGitHubTheG/TWM/main/icons/question.png');
+            mask-image: url('https://raw.githubusercontent.com/GuruGitHubTheG/TWM/main/icons/question.png');
+            -webkit-mask-size: contain; mask-size: contain;
+            -webkit-mask-repeat: no-repeat; mask-repeat: no-repeat;
+            -webkit-mask-position: center; mask-position: center;
+            flex-shrink: 0;
+        }
+        .modal-line { height: 12px; background: var(--primary); margin: 0 0 21px; width: 100%; }
+        .modal-text { margin: 0 30px 15px; font-size: 26px; line-height: 32px; text-align: center; white-space: pre-line; color: var(--primary); }
+        .modal-buttons { display: flex; align-items: center; justify-content: center; gap: 24px; margin-bottom: 0px; }
+        .modal-btn {
+            width: 168px; height: 48px;
+            border: 3px solid var(--primary);
+            background: transparent; color: var(--primary);
+            font-family: 'Volter',sans-serif; font-size: 26px; letter-spacing: 1px;
+            cursor: pointer; display: flex; align-items: center; justify-content: center; padding: 0;
+        }
+        .modal-btn:hover, .modal-btn:active { color: var(--primary-variant); border-color: var(--primary-variant); background: transparent; }
 
-        /* FIX: invert left/right arrows */
+        /* Inverted fixes for icons */
+        body.inverted .window-header-icon img,
+        body.inverted .topBar-icon img { filter: invert(1) !important; }
         body.inverted .btn-left img,
-        body.inverted .btn-right img {
-            filter: invert(1) !important;
-        }
+        body.inverted .btn-right img { filter: invert(1) !important; }
     </style>
     <script src="https://cdn.jsdelivr.net/npm/lz-string@1.4.4/libs/lz-string.min.js"></script>
 </head>
@@ -206,8 +245,30 @@
         </div>
     </div>
 
+    <!-- Modal -->
+    <div class="modal-overlay" id="modalOverlay">
+        <div class="modal-box">
+            <div class="modal-content">
+                <div class="modal-image-row">
+                    <div class="modal-question-icon"></div>
+                </div>
+                <div class="modal-line"></div>
+                <div class="modal-text" id="modalText">Change Language?
+(This will restart The World
+Machine)</div>
+                <div class="modal-buttons">
+                    <button class="modal-btn" id="yesBtn">Yes</button>
+                    <button class="modal-btn" id="noBtn">No</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <audio id="sfxClick" src="https://gurugithubtheg.github.io/TWM/sfx/twm_mouse_click.wav" preload="auto"></audio>
     <audio id="sfxUnclick" src="https://gurugithubtheg.github.io/TWM/sfx/twm_mouse_unclick.wav" preload="auto"></audio>
+    <audio id="notif2" src="https://gurugithubtheg.github.io/TWM/sfx/twm_notif2.wav" preload="auto"></audio>
+    <audio id="notif3" src="https://gurugithubtheg.github.io/TWM/sfx/twm_notif3.wav" preload="auto"></audio>
+    <audio id="notif4" src="https://gurugithubtheg.github.io/TWM/sfx/twm_notif4.wav" preload="auto"></audio>
 
     <script>
         (function() {
@@ -240,6 +301,15 @@
             var canvas = document.getElementById('photoCanvas');
             canvas.width = watchWidth;
             canvas.height = watchHeight;
+
+            var notifOrder = [2, 3, 4, 2, 2, 3, 4, 2, 2, 3, 4, 2];
+            var notifIndex = 0;
+            function playNotificationSound() {
+                var num = notifOrder[notifIndex];
+                var audio = document.getElementById('notif' + num);
+                if (audio) { audio.currentTime = 0; audio.play().catch(function(){}); }
+                notifIndex = (notifIndex + 1) % notifOrder.length;
+            }
 
             function applyInversion(enabled) {
                 invertedOn = enabled;
@@ -296,6 +366,9 @@
                         if (config.ShowAMPM !== undefined) ampmOn = config.ShowAMPM !== false;
                         if (config.Inverted !== undefined) applyInversion(config.Inverted === true);
                         if (config.Wallpaper !== undefined) { var wp = parseInt(config.Wallpaper,10); if (!isNaN(wp)) { selectedWallpaperId = wp; document.querySelectorAll('.wallpaper-item').forEach(function(el) { el.classList.toggle('selected', parseInt(el.dataset.id) === selectedWallpaperId); }); updateCustomPhotoSection(); } }
+                        if (config.CustomPhoto && selectedWallpaperId === 8) {
+                            decodeCustomPhotoToThumbnail(config.CustomPhoto);
+                        }
                         document.getElementById('topBarTitle').textContent = 'The World Machine';
                         updateDisplays();
                         return true;
@@ -303,6 +376,42 @@
                 }
                 if (retries > 0) { setTimeout(function() { loadConfig(retries - 1); }, 500); return false; }
                 else { document.getElementById('topBarTitle').textContent = 'The World Machine'; updateDisplays(); updateCustomPhotoSection(); return false; }
+            }
+
+            function decodeCustomPhotoToThumbnail(photoData) {
+                if (!photoData || !photoData.compressed || !photoData.palette) return;
+                try {
+                    var base64Pixel = LZString.decompressFromEncodedURIComponent(photoData.compressed);
+                    if (!base64Pixel) return;
+                    var binary = atob(base64Pixel);
+                    var pixelData = new Uint8Array(binary.length);
+                    for (var i = 0; i < binary.length; i++) pixelData[i] = binary.charCodeAt(i);
+                    var width = watchWidth, height = watchHeight;
+                    var tempCanvas = document.createElement('canvas');
+                    tempCanvas.width = width; tempCanvas.height = height;
+                    var ctx = tempCanvas.getContext('2d');
+                    var imageData = ctx.createImageData(width, height);
+                    var palette = photoData.palette;
+                    var rowBytes = Math.floor((width + 7) / 8);
+                    for (var y = 0; y < height; y++) {
+                        for (var x = 0; x < width; x++) {
+                            var byteIndex = y * rowBytes + Math.floor(x / 8);
+                            var bitIndex = 7 - (x % 8);
+                            var bit = (pixelData[byteIndex] >> bitIndex) & 1;
+                            var colorIndex = bit;
+                            var paletteEntry = palette[colorIndex];
+                            var gray = (paletteEntry === 0xFF) ? 255 : 0;
+                            var offset = (y * width + x) * 4;
+                            imageData.data[offset] = gray;
+                            imageData.data[offset+1] = gray;
+                            imageData.data[offset+2] = gray;
+                            imageData.data[offset+3] = 255;
+                        }
+                    }
+                    ctx.putImageData(imageData, 0, 0);
+                    var thumb = document.querySelector('.wallpaper-item[data-id="8"] img');
+                    if (thumb) thumb.src = tempCanvas.toDataURL('image/png');
+                } catch(e) { console.log('Failed to decode custom photo thumbnail: ' + e.message); }
             }
 
             function buildGrid() {
@@ -333,26 +442,19 @@
             }
             function setSubmitDisabled(disabled) {
                 var buttons = document.querySelectorAll('button[type="submit"], input[type="submit"], .save-btn');
-                for (var i = 0; i < buttons.length; i++) {
-                    buttons[i].disabled = disabled;
-                    buttons[i].style.opacity = disabled ? '0.5' : '1';
-                }
+                for (var i = 0; i < buttons.length; i++) { buttons[i].disabled = disabled; buttons[i].style.opacity = disabled ? '0.5' : '1'; }
             }
-            function hideCompatibilityRetry() {
-                document.getElementById('photoProxyBtn').style.display = 'none';
-            }
+            function hideCompatibilityRetry() { document.getElementById('photoProxyBtn').style.display = 'none'; }
             function resetPhotoLoad(message, isError) {
                 if (photoLoadTimer) { clearTimeout(photoLoadTimer); photoLoadTimer = null; }
                 photoLoadGeneration++;
                 customPhotoData = null;
-                var customThumb = document.querySelector('.wallpaper-item[data-id="8"] img');
-                if (customThumb) {
-                    customThumb.src = 'data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7';
-                }
                 canvas.style.display = 'none';
                 hideCompatibilityRetry();
                 setSubmitDisabled(false);
                 setPhotoStatus(message, isError);
+                var customThumb = document.querySelector('.wallpaper-item[data-id="8"] img');
+                if (customThumb) customThumb.src = 'data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7';
             }
             function beginPhotoLoad(message, timeoutCallback) {
                 if (photoLoadTimer) { clearTimeout(photoLoadTimer); photoLoadTimer = null; }
@@ -363,10 +465,7 @@
                 canvas.style.display = 'none';
                 hideCompatibilityRetry();
                 var generation = photoLoadGeneration;
-                photoLoadTimer = setTimeout(function() {
-                    if (timeoutCallback) timeoutCallback(generation);
-                    else failPhotoLoad(generation, 'Photo loading timed out. Check the URL or try a smaller image.');
-                }, 30000);
+                photoLoadTimer = setTimeout(function() { if (timeoutCallback) timeoutCallback(generation); else failPhotoLoad(generation, 'Photo loading timed out. Check the URL or try a smaller image.'); }, 30000);
                 return generation;
             }
             function failPhotoLoad(generation, message) {
@@ -379,8 +478,7 @@
             }
             function offerCompatibilityRetry(generation, message) {
                 if (generation !== photoLoadGeneration) return;
-                failPhotoLoad(generation, message ||
-                    'The browser could not load this image directly. The host may block access; retry through wsrv.nl below.');
+                failPhotoLoad(generation, message || 'The browser could not load this image directly. The host may block access; retry through wsrv.nl below.');
                 document.getElementById('photoProxyBtn').style.display = 'block';
             }
 
@@ -388,23 +486,18 @@
                 var rowBytes = Math.floor((width + 7) / 8);
                 var pixelData = new Uint8Array(rowBytes * height);
                 var data = imageData.data;
-                var cur = new Float32Array(width + 2);
-                var next = new Float32Array(width + 2);
-
+                var cur = new Float32Array(width + 2), next = new Float32Array(width + 2);
                 for (var y = 0; y < height; y++) {
                     for (var x = 0; x < width; x++) {
                         var idx = (y * width + x) * 4;
-                        var luminance = 0.299 * data[idx] + 0.587 * data[idx+1] + 0.114 * data[idx+2];
+                        var luminance = 0.299*data[idx] + 0.587*data[idx+1] + 0.114*data[idx+2];
                         luminance = Math.max(0, Math.min(255, luminance + cur[x+1]));
-                        var threshold = 128;
-                        var black = luminance < threshold;
+                        var black = luminance < 128;
                         var output = black ? 0 : 255;
-                        data[idx] = output;
-                        data[idx+1] = output;
-                        data[idx+2] = output;
+                        data[idx] = data[idx+1] = data[idx+2] = output;
                         data[idx+3] = 255;
                         var byteIdx = y * rowBytes + Math.floor(x / 8);
-                        var bitIndex = 7 - (x & 7);
+                        var bitIndex = 7 - (x % 8);
                         if (black) pixelData[byteIdx] |= (1 << bitIndex);
                         else pixelData[byteIdx] &= ~(1 << bitIndex);
                         var error = luminance - output;
@@ -414,11 +507,9 @@
                         next[x+2] += error / 16;
                     }
                     var temp = cur; cur = next; next = temp;
-                    for (var c = 0; c < width + 2; c++) next[c] = 0;
+                    for (var c=0; c<width+2; c++) next[c]=0;
                 }
-
-                var palette = [0xFF, 0xC0];
-                return { pixelData: pixelData, palette: palette, color: false };
+                return { pixelData: pixelData, palette: [0xFF,0xC0], color: false };
             }
 
             function prepareImage(image, generation, sourceLabel, blockedRetry) {
@@ -427,8 +518,7 @@
                     var srcW = image.naturalWidth || image.width;
                     var srcH = image.naturalHeight || image.height;
                     var ctx = canvas.getContext('2d');
-                    ctx.fillStyle = '#000';
-                    ctx.fillRect(0,0,watchWidth,watchHeight);
+                    ctx.fillStyle = '#000'; ctx.fillRect(0,0,watchWidth,watchHeight);
                     ctx.imageSmoothingEnabled = true;
                     if (typeof ctx.imageSmoothingQuality !== 'undefined') ctx.imageSmoothingQuality = 'high';
                     var scale = Math.max(watchWidth/srcW, watchHeight/srcH);
@@ -440,20 +530,10 @@
                     ctx.putImageData(imageData,0,0);
                     canvas.style.display = 'block';
                     var customThumb = document.querySelector('.wallpaper-item[data-id="8"] img');
-                    if (customThumb && image.src) {
-                        customThumb.src = image.src;
-                    }
-                    var binary = '';
-                    for (var i = 0; i < result.pixelData.length; i++) {
-                        binary += String.fromCharCode(result.pixelData[i]);
-                    }
-                    var base64 = btoa(binary);
-                    var compressed = LZString.compressToEncodedURIComponent(base64);
-                    customPhotoData = {
-                        compressed: compressed,
-                        palette: result.palette,
-                        color: false
-                    };
+                    if (customThumb && image.src) customThumb.src = image.src;
+                    var binary=''; for(var i=0;i<result.pixelData.length;i++) binary += String.fromCharCode(result.pixelData[i]);
+                    var compressed = LZString.compressToEncodedURIComponent(btoa(binary));
+                    customPhotoData = { compressed: compressed, palette: result.palette, color: false };
                     setSubmitDisabled(false);
                     setPhotoStatus('Ready: ' + watchWidth + '×' + watchHeight + ' B/W custom photo.', false);
                     if (photoLoadTimer) { clearTimeout(photoLoadTimer); photoLoadTimer = null; }
@@ -472,65 +552,54 @@
                 if (!file) return;
                 var generation = beginPhotoLoad('Loading photo file…');
                 var reader = new FileReader();
-                reader.onerror = function() { failPhotoLoad(generation, 'The photo could not be read.'); };
+                reader.onerror = function(){ failPhotoLoad(generation, 'The photo could not be read.'); };
                 reader.onload = function(e) {
                     var img = new Image();
-                    img.onerror = function() { failPhotoLoad(generation, 'The selected image could not be decoded.'); };
-                    img.onload = function() { prepareImage(img, generation, 'file'); };
+                    img.onerror = function(){ failPhotoLoad(generation, 'The selected image could not be decoded.'); };
+                    img.onload = function(){ prepareImage(img, generation, 'file'); };
                     img.src = e.target.result;
                 };
                 reader.readAsDataURL(file);
             });
-
-            document.getElementById('loadUrlBtn').addEventListener('click', function() { loadImageUrl(false); });
-            document.getElementById('photoProxyBtn').addEventListener('click', function() { loadImageUrl(true); });
-
+            document.getElementById('loadUrlBtn').addEventListener('click', function(){ loadImageUrl(false); });
+            document.getElementById('photoProxyBtn').addEventListener('click', function(){ loadImageUrl(true); });
             function loadImageUrl(useProxy) {
                 var url = document.getElementById('photoUrl').value.trim();
                 if (!url) { resetPhotoLoad('Enter a direct HTTPS image URL.', true); return; }
                 var viaProxy = useProxy === true;
-                var generation = beginPhotoLoad(viaProxy ? 'Loading via wsrv.nl…' : 'Loading image URL…',
-                    viaProxy ? null : function(timedOutGen) { loadImageUrl(true); });
+                var generation = beginPhotoLoad(viaProxy ? 'Loading via wsrv.nl…' : 'Loading image URL…', viaProxy ? null : function(timedOutGen){ loadImageUrl(true); });
                 var img = new Image();
                 img.crossOrigin = 'anonymous';
                 if (typeof img.referrerPolicy !== 'undefined') img.referrerPolicy = 'no-referrer';
-                img.onerror = function() {
-                    if (viaProxy) failPhotoLoad(generation, 'wsrv.nl could not fetch that image.');
-                    else loadImageUrl(true);
-                };
-                img.onload = function() {
-                    prepareImage(img, generation, viaProxy ? 'URL via wsrv.nl' : 'URL',
-                        viaProxy ? null : function() { loadImageUrl(true); });
-                };
-                var finalUrl = viaProxy ? 'https://wsrv.nl/?url=' + encodeURIComponent(url) + '&w=' + watchWidth + '&h=' + watchHeight + '&fit=cover&a=center&output=png' : url;
-                img.src = finalUrl;
+                img.onerror = function(){ if(viaProxy) failPhotoLoad(generation,'wsrv.nl could not fetch that image.'); else loadImageUrl(true); };
+                img.onload = function(){ prepareImage(img, generation, viaProxy ? 'URL via wsrv.nl' : 'URL', viaProxy ? null : function(){ loadImageUrl(true); }); };
+                img.src = viaProxy ? 'https://wsrv.nl/?url=' + encodeURIComponent(url) + '&w=' + watchWidth + '&h=' + watchHeight + '&fit=cover&a=center&output=png' : url;
             }
-
-            document.getElementById('photoUrl').addEventListener('input', function() {
-                resetPhotoLoad('URL changed. Tap Load URL to prepare it.', false);
-            });
-            document.getElementById('photoUrl').addEventListener('keydown', function(e) {
-                if (e.key === 'Enter' || e.keyCode === 13) {
-                    e.preventDefault();
-                    loadImageUrl(false);
-                }
-            });
-
-            // ---------- END CUSTOM PHOTO PROCESSING ----------
+            document.getElementById('photoUrl').addEventListener('input', function(){ resetPhotoLoad('URL changed. Tap Load URL to prepare it.', false); });
+            document.getElementById('photoUrl').addEventListener('keydown', function(e){ if(e.key==='Enter'||e.keyCode===13){ e.preventDefault(); loadImageUrl(false); } });
 
             function getConfig() {
-                var config = {
-                    ClockMode: timeIndex,
-                    LeadingZeros: zerosOn,
-                    ShowAMPM: ampmOn,
-                    Wallpaper: selectedWallpaperId,
-                    Inverted: invertedOn
-                };
-                if (selectedWallpaperId === 8 && customPhotoData) {
-                    config.CustomPhoto = customPhotoData;
-                }
+                var config = { ClockMode: timeIndex, LeadingZeros: zerosOn, ShowAMPM: ampmOn, Wallpaper: selectedWallpaperId, Inverted: invertedOn };
+                if (selectedWallpaperId === 8 && customPhotoData) config.CustomPhoto = customPhotoData;
                 return config;
             }
+
+            function showModal(text, onYes, onNo) {
+                playNotificationSound();
+                document.getElementById('modalText').textContent = text;
+                window._modalYesCallback = onYes || null;
+                window._modalNoCallback = onNo || null;
+                document.getElementById('modalOverlay').classList.add('active');
+            }
+            function hideModal() {
+                document.getElementById('modalOverlay').classList.remove('active');
+                window._modalYesCallback = null;
+                window._modalNoCallback = null;
+            }
+            document.getElementById('yesBtn').addEventListener('click', function(){ var cb=window._modalYesCallback; hideModal(); if(cb) cb(); });
+            document.getElementById('noBtn').addEventListener('click', function(){ var cb=window._modalNoCallback; hideModal(); if(cb) cb(); });
+            document.getElementById('modalOverlay').addEventListener('click', function(e){ if(e.target===this) hideModal(); });
+            window.showTWMConfirm = function(){ showModal('Change Language?\n(This will restart The World\nMachine)', null, null); };
 
             buildGrid();
             loadConfig(5);
@@ -538,20 +607,8 @@
 
             var sfxClick = document.getElementById('sfxClick');
             var sfxUnclick = document.getElementById('sfxUnclick');
-
-            document.addEventListener('pointerdown', function() {
-                if (sfxClick) {
-                    sfxClick.currentTime = 0;
-                    sfxClick.play().catch(function() {});
-                }
-            }, true);
-
-            document.addEventListener('pointerup', function() {
-                if (sfxUnclick) {
-                    sfxUnclick.currentTime = 0;
-                    sfxUnclick.play().catch(function() {});
-                }
-            }, true);
+            document.addEventListener('pointerdown', function(){ if(sfxClick){ sfxClick.currentTime=0; sfxClick.play().catch(function(){}); } }, true);
+            document.addEventListener('pointerup', function(){ if(sfxUnclick){ sfxUnclick.currentTime=0; sfxUnclick.play().catch(function(){}); } }, true);
         })();
     </script>
 </body>

@@ -223,6 +223,92 @@
             .window-divider { height:10px; }
         }
         ::-webkit-scrollbar { width:0; background:transparent; }
+
+        /* Modal Popup */
+        .modal-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.5);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+        }
+        .modal-overlay.active {
+            display: flex;
+        }
+        .modal-box {
+            background: #000;
+            border: 6px solid var(--primary,#aa55ff);
+            width: 492px;
+            max-width: 90vw;
+            box-sizing: border-box;
+            color: var(--primary,#aa55ff);
+        }
+        .modal-content {
+            padding: 9px 0 12px;
+        }
+        .modal-image-row {
+            display: flex;
+            align-items: center;
+            margin-left: 9px;
+            margin-right: 9px;
+            margin-bottom: 9px;
+        }
+        .modal-question-icon {
+            width: 42px;
+            height: 42px;
+            background-color: var(--primary,#aa55ff);
+            -webkit-mask-image: url('https://raw.githubusercontent.com/GuruGitHubTheG/TWM/main/icons/question.png');
+            mask-image: url('https://raw.githubusercontent.com/GuruGitHubTheG/TWM/main/icons/question.png');
+            -webkit-mask-size: contain;
+            mask-size: contain;
+            -webkit-mask-repeat: no-repeat;
+            mask-repeat: no-repeat;
+            -webkit-mask-position: center;
+            mask-position: center;
+            flex-shrink: 0;
+        }
+        .modal-line {
+            height: 12px;
+            background: var(--primary,#aa55ff);
+            margin: 0 0 21px;
+            width: 100%;
+        }
+        .modal-text {
+            margin: 0 30px 15px;
+            font-size: 26px;
+            line-height: 32px;
+            text-align: center;
+            white-space: pre-line;
+        }
+        .modal-buttons {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 24px;
+            margin-bottom: 0px;
+        }
+        .modal-btn {
+            width: 168px;
+            height: 48px;
+            border: 3px solid var(--primary,#aa55ff);
+            background: transparent;
+            color: var(--primary,#aa55ff);
+            font-family: 'Volter',sans-serif;
+            font-size: 26px;
+            letter-spacing: 1px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0;
+        }
+        .modal-btn:hover, .modal-btn:active {
+            color: var(--primary-variant, rgb(100,66,165));
+            border-color: var(--primary-variant, rgb(100,66,165));
+            background: transparent;
+        }
     </style>
     <script src="https://cdn.jsdelivr.net/npm/lz-string@1.4.4/libs/lz-string.min.js"></script>
 </head>
@@ -347,8 +433,31 @@
         </div>
     </div>
 
+    <!-- Modal -->
+    <div class="modal-overlay" id="modalOverlay">
+        <div class="modal-box">
+            <div class="modal-content">
+                <div class="modal-image-row">
+                    <div class="modal-question-icon"></div>
+                </div>
+                <div class="modal-line"></div>
+                <div class="modal-text" id="modalText">Change Language?
+(This will restart The World
+Machine)</div>
+                <div class="modal-buttons">
+                    <button class="modal-btn" id="yesBtn">Yes</button>
+                    <button class="modal-btn" id="noBtn">No</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Audio elements -->
     <audio id="sfxClick" src="https://gurugithubtheg.github.io/TWM/sfx/twm_mouse_click.wav" preload="auto"></audio>
     <audio id="sfxUnclick" src="https://gurugithubtheg.github.io/TWM/sfx/twm_mouse_unclick.wav" preload="auto"></audio>
+    <audio id="notif2" src="https://gurugithubtheg.github.io/TWM/sfx/twm_notif2.wav" preload="auto"></audio>
+    <audio id="notif3" src="https://gurugithubtheg.github.io/TWM/sfx/twm_notif3.wav" preload="auto"></audio>
+    <audio id="notif4" src="https://gurugithubtheg.github.io/TWM/sfx/twm_notif4.wav" preload="auto"></audio>
 
     <script>
         (function() {
@@ -402,7 +511,22 @@
             var primaryVariant = '#6442a5';
             var rainbowActive = false;
             var rainbowTimer = null;
+            var rainbowMode = 'smooth';
+            var powerRainbowHueIndex = 0;
+            var POWER_RAINBOW_HUES = [0, 30, 60, 120, 180, 240, 270, 300];
             var rainbowStartTime = null;
+
+            var notifOrder = [2, 3, 4, 2, 2, 3, 4, 2, 2, 3, 4, 2];
+            var notifIndex = 0;
+            function playNotificationSound() {
+                var num = notifOrder[notifIndex];
+                var audio = document.getElementById('notif' + num);
+                if (audio) {
+                    audio.currentTime = 0;
+                    audio.play().catch(function(){});
+                }
+                notifIndex = (notifIndex + 1) % notifOrder.length;
+            }
 
             function hexToRgb(hex) {
                 hex = hex.replace('#', '');
@@ -447,19 +571,33 @@
                 document.querySelectorAll('.color-picker-wrapper input[type="color"]').forEach(function(el) { el.style.borderColor = primaryColor; });
             }
 
+            function stopRainbowTimer() {
+                if (rainbowTimer) {
+                    clearInterval(rainbowTimer);
+                    rainbowTimer = null;
+                }
+            }
+
             function startRainbowAnimation() {
-                if (rainbowTimer) return; // already running
+                stopRainbowTimer();
+                rainbowMode = 'smooth';
                 rainbowStartTime = performance.now();
-                updateRainbowColors(); // apply initial red immediately
+                updateRainbowColors();
                 rainbowTimer = setInterval(updateRainbowColors, 16);
             }
-            function updateRainbowColors() {
-                if (!rainbowStartTime) return;
-                var elapsed = performance.now() - rainbowStartTime;
-                var hue = (elapsed % 5000) / 5000 * 360;
-                var primaryHex = hslToHex(hue, 70, 60);
-                var variantHex = hslToHex(hue, 70, 30);
 
+            function startPowerRainbowAnimation() {
+                stopRainbowTimer();
+                rainbowMode = 'power';
+                powerRainbowHueIndex = 0;
+                updatePowerRainbowColors();
+                rainbowTimer = setInterval(function() {
+                    powerRainbowHueIndex = (powerRainbowHueIndex + 1) % POWER_RAINBOW_HUES.length;
+                    updatePowerRainbowColors();
+                }, 1000);
+            }
+
+            function applyRainbowColors(primaryHex, variantHex) {
                 document.querySelectorAll('.theme-icon-color.rainbow').forEach(function(el) {
                     el.style.backgroundColor = primaryHex;
                 });
@@ -474,9 +612,92 @@
                     item.style.setProperty('--hover-border', 'rgba(' + variantRgb.r + ',' + variantRgb.g + ',' + variantRgb.b + ',0.333)');
                     item.style.setProperty('--hover-bg', 'rgba(' + variantRgb.r + ',' + variantRgb.g + ',' + variantRgb.b + ',0.167)');
                 });
-
                 if (rainbowActive) {
                     applyStyles(primaryHex, variantHex);
+                }
+            }
+
+            function updateRainbowColors() {
+                if (!rainbowStartTime) return;
+                var elapsed = performance.now() - rainbowStartTime;
+                var hue = (elapsed % 5000) / 5000 * 360;
+                var primaryHex = hslToHex(hue, 70, 60);
+                var variantHex = hslToHex(hue, 70, 30);
+                applyRainbowColors(primaryHex, variantHex);
+            }
+
+            function updatePowerRainbowColors() {
+                var hue = POWER_RAINBOW_HUES[powerRainbowHueIndex];
+                var primaryHex = hslToHex(hue, 70, 60);
+                var variantHex = hslToHex(hue, 70, 30);
+                applyRainbowColors(primaryHex, variantHex);
+            }
+
+            function decodeCustomPhotoToThumbnail(photoData) {
+                if (!photoData || !photoData.compressed || !photoData.palette) return;
+                try {
+                    var base64Pixel = LZString.decompressFromEncodedURIComponent(photoData.compressed);
+                    if (!base64Pixel) return;
+                    var binary = atob(base64Pixel);
+                    var pixelData = new Uint8Array(binary.length);
+                    for (var i = 0; i < binary.length; i++) {
+                        pixelData[i] = binary.charCodeAt(i);
+                    }
+                    var width = watchWidth;
+                    var height = watchHeight;
+                    var tempCanvas = document.createElement('canvas');
+                    tempCanvas.width = width;
+                    tempCanvas.height = height;
+                    var ctx = tempCanvas.getContext('2d');
+                    var imageData = ctx.createImageData(width, height);
+
+                    if (photoData.color) {
+                        var palette = photoData.palette;
+                        var rowBytes = Math.floor((width + 1) / 2);
+                        for (var y = 0; y < height; y++) {
+                            for (var x = 0; x < width; x++) {
+                                var byteIndex = y * rowBytes + Math.floor(x / 2);
+                                var byte = pixelData[byteIndex];
+                                var index = (x % 2 === 0) ? (byte >> 4) : (byte & 0x0F);
+                                var paletteEntry = palette[index];
+                                var id = paletteEntry & 0x3F;
+                                var r = (id >> 4) & 3;
+                                var g = (id >> 2) & 3;
+                                var b = id & 3;
+                                var offset = (y * width + x) * 4;
+                                imageData.data[offset] = r * 85;
+                                imageData.data[offset + 1] = g * 85;
+                                imageData.data[offset + 2] = b * 85;
+                                imageData.data[offset + 3] = 255;
+                            }
+                        }
+                    } else {
+                        var palette = photoData.palette;
+                        var rowBytes = Math.floor((width + 7) / 8);
+                        for (var y = 0; y < height; y++) {
+                            for (var x = 0; x < width; x++) {
+                                var byteIndex = y * rowBytes + Math.floor(x / 8);
+                                var bitIndex = 7 - (x % 8);
+                                var bit = (pixelData[byteIndex] >> bitIndex) & 1;
+                                var colorIndex = bit;
+                                var paletteEntry = palette[colorIndex];
+                                var gray = (paletteEntry === 0xFF) ? 255 : 0;
+                                var offset = (y * width + x) * 4;
+                                imageData.data[offset] = gray;
+                                imageData.data[offset + 1] = gray;
+                                imageData.data[offset + 2] = gray;
+                                imageData.data[offset + 3] = 255;
+                            }
+                        }
+                    }
+
+                    ctx.putImageData(imageData, 0, 0);
+                    var thumb = document.querySelector('.wallpaper-item[data-id="8"] img');
+                    if (thumb) {
+                        thumb.src = tempCanvas.toDataURL('image/png');
+                    }
+                } catch (e) {
+                    console.log('Failed to decode custom photo thumbnail: ' + e.message);
                 }
             }
 
@@ -563,24 +784,18 @@
                     item.appendChild(iconWrapper);
                     item.appendChild(textWrapper);
                     item.addEventListener('click', function() {
+                        if (theme.primary === 'rainbow') {
+                            showRainbowConfirm();
+                            return;
+                        }
                         document.querySelectorAll('.theme-item').forEach(function(el) { el.classList.remove('selected'); });
                         item.classList.add('selected');
-                        if (theme.primary === 'rainbow') {
-                            rainbowActive = true;
-                            updateRainbowColors(); // sync UI to current animation frame, no restart
-                            document.getElementById('UI_Color').value = '#ee6363';
-                            document.getElementById('colorHex').textContent = 'Rainbow';
-                            document.getElementById('Secondary_Color').value = '#a00d0d';
-                            document.getElementById('secondaryColorHex').textContent = 'Rainbow';
-                        } else {
-                            rainbowActive = false;
-                            // do NOT stop animation
-                            document.getElementById('UI_Color').value = theme.primary;
-                            document.getElementById('colorHex').textContent = theme.primary;
-                            document.getElementById('Secondary_Color').value = theme.variant;
-                            document.getElementById('secondaryColorHex').textContent = theme.variant;
-                            applyStyles(theme.primary, theme.variant);
-                        }
+                        rainbowActive = false;
+                        document.getElementById('UI_Color').value = theme.primary;
+                        document.getElementById('colorHex').textContent = theme.primary;
+                        document.getElementById('Secondary_Color').value = theme.variant;
+                        document.getElementById('secondaryColorHex').textContent = theme.variant;
+                        applyStyles(theme.primary, theme.variant);
                     });
                     container.appendChild(item);
                 });
@@ -588,7 +803,6 @@
 
             document.getElementById('UI_Color').addEventListener('input', function() {
                 rainbowActive = false;
-                // do NOT stop animation
                 var c = this.value;
                 document.getElementById('colorHex').textContent = c;
                 var variant = calculateVariant(c);
@@ -608,22 +822,15 @@
                         if (config.LeadingZeros !== undefined) zerosOn = config.LeadingZeros === true;
                         if (config.ShowAMPM !== undefined) ampmOn = config.ShowAMPM !== false;
                         if (config.Wallpaper !== undefined) { var wp = parseInt(config.Wallpaper,10); if (!isNaN(wp)) { selectedWallpaperId = wp; document.querySelectorAll('.wallpaper-item').forEach(function(el) { el.classList.toggle('selected', parseInt(el.dataset.id) === selectedWallpaperId); }); updateCustomPhotoSection(); } }
+                        if (config.CustomPhoto && selectedWallpaperId === 8) {
+                            decodeCustomPhotoToThumbnail(config.CustomPhoto);
+                        }
                         if (config.UI_Color) {
                             var c = config.UI_Color;
                             if (c === 'rainbow') {
-                                rainbowActive = true;
-                                updateRainbowColors(); // sync UI, no restart
-                                document.querySelectorAll('.theme-item').forEach(function(el) {
-                                    if (el.dataset.rainbow === 'true') el.classList.add('selected');
-                                    else el.classList.remove('selected');
-                                });
-                                document.getElementById('UI_Color').value = '#ee6363';
-                                document.getElementById('colorHex').textContent = 'Rainbow';
-                                document.getElementById('Secondary_Color').value = '#a00d0d';
-                                document.getElementById('secondaryColorHex').textContent = 'Rainbow';
+                                activateRainbowStandard();
                             } else {
                                 rainbowActive = false;
-                                // do NOT stop animation
                                 if (!c.startsWith('#')) c = '#' + c;
                                 document.getElementById('UI_Color').value = c;
                                 document.getElementById('colorHex').textContent = c;
@@ -697,14 +904,14 @@
                 if (photoLoadTimer) { clearTimeout(photoLoadTimer); photoLoadTimer = null; }
                 photoLoadGeneration++;
                 customPhotoData = null;
-                var customThumb = document.querySelector('.wallpaper-item[data-id="8"] img');
-                if (customThumb) {
-                    customThumb.src = 'data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7';
-                }
                 canvas.style.display = 'none';
                 hideCompatibilityRetry();
                 setSubmitDisabled(false);
                 setPhotoStatus(message, isError);
+                var customThumb = document.querySelector('.wallpaper-item[data-id="8"] img');
+                if (customThumb) {
+                    customThumb.src = 'data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7';
+                }
             }
             function beginPhotoLoad(message, timeoutCallback) {
                 if (photoLoadTimer) { clearTimeout(photoLoadTimer); photoLoadTimer = null; }
@@ -920,7 +1127,6 @@
                     ctx.putImageData(imageData,0,0);
                     canvas.style.display = 'block';
 
-                    // Update the Custom Photo thumbnail in the wallpapers grid with the original image
                     var customThumb = document.querySelector('.wallpaper-item[data-id="8"] img');
                     if (customThumb && image.src) {
                         customThumb.src = image.src;
@@ -1003,12 +1209,16 @@
             // ---------- END CUSTOM PHOTO PROCESSING ----------
 
             function getConfig() {
+                var uiColor = document.getElementById('UI_Color').value.replace('#', '');
+                if (rainbowActive) {
+                    uiColor = (rainbowMode === 'power') ? 'rainbow_power' : 'rainbow';
+                }
                 var config = {
                     ClockMode: timeIndex,
                     LeadingZeros: zerosOn,
                     ShowAMPM: ampmOn,
                     Wallpaper: selectedWallpaperId,
-                    UI_Color: rainbowActive ? 'rainbow' : document.getElementById('UI_Color').value.replace('#', '')
+                    UI_Color: uiColor
                 };
                 if (selectedWallpaperId === 8 && customPhotoData) {
                     config.CustomPhoto = customPhotoData;
@@ -1016,11 +1226,81 @@
                 return config;
             }
 
+            function activateRainbowStandard() {
+                document.querySelectorAll('.theme-item').forEach(function(el) { el.classList.remove('selected'); });
+                var rainbowItem = document.querySelector('.theme-item[data-rainbow="true"]');
+                if (rainbowItem) rainbowItem.classList.add('selected');
+                rainbowActive = true;
+                startRainbowAnimation();
+                document.getElementById('UI_Color').value = '#ee6363';
+                document.getElementById('colorHex').textContent = 'Rainbow';
+                document.getElementById('Secondary_Color').value = '#a00d0d';
+                document.getElementById('secondaryColorHex').textContent = 'Rainbow';
+            }
+
+            function activateRainbowPowerSaving() {
+                document.querySelectorAll('.theme-item').forEach(function(el) { el.classList.remove('selected'); });
+                var rainbowItem = document.querySelector('.theme-item[data-rainbow="true"]');
+                if (rainbowItem) rainbowItem.classList.add('selected');
+                rainbowActive = true;
+                startPowerRainbowAnimation();
+                document.getElementById('UI_Color').value = '#ee6363';
+                document.getElementById('colorHex').textContent = 'Rainbow (Power Saving)';
+                document.getElementById('Secondary_Color').value = '#a00d0d';
+                document.getElementById('secondaryColorHex').textContent = 'Rainbow (Power Saving)';
+            }
+
+            function showModal(text, onYes, onNo) {
+                playNotificationSound();
+                document.getElementById('modalText').textContent = text;
+                window._modalYesCallback = onYes || null;
+                window._modalNoCallback = onNo || null;
+                document.getElementById('modalOverlay').classList.add('active');
+            }
+
+            function hideModal() {
+                document.getElementById('modalOverlay').classList.remove('active');
+                window._modalYesCallback = null;
+                window._modalNoCallback = null;
+            }
+
+            document.getElementById('yesBtn').addEventListener('click', function() {
+                var cb = window._modalYesCallback;
+                hideModal();
+                if (cb) cb();
+            });
+
+            document.getElementById('noBtn').addEventListener('click', function() {
+                var cb = window._modalNoCallback;
+                hideModal();
+                if (cb) cb();
+            });
+
+            document.getElementById('modalOverlay').addEventListener('click', function(e) {
+                if (e.target === this) hideModal();
+            });
+
+            function showRainbowConfirm() {
+                showModal(
+                    'This mode uses a lot of power.\nWould you like to use\npower-saving mode?',
+                    activateRainbowPowerSaving,
+                    activateRainbowStandard
+                );
+            }
+
+            window.showTWMConfirm = function() {
+                showModal(
+                    'Change Language?\n(This will restart The World\nMachine)',
+                    null,
+                    null
+                );
+            };
+
             buildThemeGrid();
             buildGrid();
             loadConfig(5);
             updateCustomPhotoSection();
-            startRainbowAnimation(); // start only once, never stopped
+            startRainbowAnimation();
 
             var sfxClick = document.getElementById('sfxClick');
             var sfxUnclick = document.getElementById('sfxUnclick');
