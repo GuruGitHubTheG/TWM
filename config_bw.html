@@ -310,11 +310,202 @@
                 });
             }
 
-            // ... custom photo processing unchanged ...
+            // ---------- CUSTOM PHOTO PROCESSING ----------
+            function setPhotoStatus(msg, isError) {
+                var status = document.getElementById('photoStatus');
+                status.textContent = msg;
+                status.style.color = isError ? '#ff7777' : '#aaa';
+            }
+            function setSubmitDisabled(disabled) {
+                var buttons = document.querySelectorAll('button[type="submit"], input[type="submit"], .save-btn');
+                for (var i = 0; i < buttons.length; i++) {
+                    buttons[i].disabled = disabled;
+                    buttons[i].style.opacity = disabled ? '0.5' : '1';
+                }
+            }
+            function hideCompatibilityRetry() {
+                document.getElementById('photoProxyBtn').style.display = 'none';
+            }
+            function resetPhotoLoad(message, isError) {
+                if (photoLoadTimer) { clearTimeout(photoLoadTimer); photoLoadTimer = null; }
+                photoLoadGeneration++;
+                customPhotoData = null;
+                canvas.style.display = 'none';
+                hideCompatibilityRetry();
+                setSubmitDisabled(false);
+                setPhotoStatus(message, isError);
+            }
+            function beginPhotoLoad(message, timeoutCallback) {
+                if (photoLoadTimer) { clearTimeout(photoLoadTimer); photoLoadTimer = null; }
+                photoLoadGeneration++;
+                setSubmitDisabled(true);
+                setPhotoStatus(message, false);
+                customPhotoData = null;
+                canvas.style.display = 'none';
+                hideCompatibilityRetry();
+                var generation = photoLoadGeneration;
+                photoLoadTimer = setTimeout(function() {
+                    if (timeoutCallback) timeoutCallback(generation);
+                    else failPhotoLoad(generation, 'Photo loading timed out. Check the URL or try a smaller image.');
+                }, 30000);
+                return generation;
+            }
+            function failPhotoLoad(generation, message) {
+                if (generation !== photoLoadGeneration) return;
+                if (photoLoadTimer) { clearTimeout(photoLoadTimer); photoLoadTimer = null; }
+                photoLoadGeneration++;
+                customPhotoData = null;
+                setPhotoStatus(message, true);
+                setSubmitDisabled(false);
+            }
+            function offerCompatibilityRetry(generation, message) {
+                if (generation !== photoLoadGeneration) return;
+                failPhotoLoad(generation, message ||
+                    'The browser could not load this image directly. The host may block access; retry through wsrv.nl below.');
+                document.getElementById('photoProxyBtn').style.display = 'block';
+            }
+
+            function quantizeBWAndPack(imageData, width, height) {
+                var rowBytes = Math.floor((width + 7) / 8);
+                var pixelData = new Uint8Array(rowBytes * height);
+                var data = imageData.data;
+                var cur = new Float32Array(width + 2);
+                var next = new Float32Array(width + 2);
+
+                for (var y = 0; y < height; y++) {
+                    for (var x = 0; x < width; x++) {
+                        var idx = (y * width + x) * 4;
+                        var luminance = 0.299 * data[idx] + 0.587 * data[idx+1] + 0.114 * data[idx+2];
+                        luminance = Math.max(0, Math.min(255, luminance + cur[x+1]));
+                        var threshold = 128;
+                        var black = luminance < threshold;
+                        var output = black ? 0 : 255;
+                        data[idx] = output;
+                        data[idx+1] = output;
+                        data[idx+2] = output;
+                        data[idx+3] = 255;
+                        var byteIdx = y * rowBytes + Math.floor(x / 8);
+                        var bitIndex = 7 - (x & 7);
+                        if (black) pixelData[byteIdx] |= (1 << bitIndex);
+                        else pixelData[byteIdx] &= ~(1 << bitIndex);
+                        var error = luminance - output;
+                        cur[x+2] += error * 7/16;
+                        next[x] += error * 3/16;
+                        next[x+1] += error * 5/16;
+                        next[x+2] += error / 16;
+                    }
+                    var temp = cur; cur = next; next = temp;
+                    for (var c = 0; c < width + 2; c++) next[c] = 0;
+                }
+
+                var palette = [0xFF, 0xC0];
+                return { pixelData: pixelData, palette: palette, color: false };
+            }
+
+            function prepareImage(image, generation, sourceLabel, blockedRetry) {
+                if (generation !== photoLoadGeneration) return;
+                try {
+                    var srcW = image.naturalWidth || image.width;
+                    var srcH = image.naturalHeight || image.height;
+                    var ctx = canvas.getContext('2d');
+                    ctx.fillStyle = '#000';
+                    ctx.fillRect(0,0,watchWidth,watchHeight);
+                    ctx.imageSmoothingEnabled = true;
+                    if (typeof ctx.imageSmoothingQuality !== 'undefined') ctx.imageSmoothingQuality = 'high';
+                    var scale = Math.max(watchWidth/srcW, watchHeight/srcH);
+                    var cropW = watchWidth/scale, cropH = watchHeight/scale;
+                    var sx = (srcW-cropW)/2, sy = (srcH-cropH)/2;
+                    ctx.drawImage(image, sx, sy, cropW, cropH, 0,0,watchWidth,watchHeight);
+                    var imageData = ctx.getImageData(0,0,watchWidth,watchHeight);
+                    var result = quantizeBWAndPack(imageData, watchWidth, watchHeight);
+                    ctx.putImageData(imageData,0,0);
+                    canvas.style.display = 'block';
+                    var binary = '';
+                    for (var i = 0; i < result.pixelData.length; i++) {
+                        binary += String.fromCharCode(result.pixelData[i]);
+                    }
+                    var base64 = btoa(binary);
+                    var compressed = LZString.compressToEncodedURIComponent(base64);
+                    customPhotoData = {
+                        compressed: compressed,
+                        palette: result.palette,
+                        color: false
+                    };
+                    setSubmitDisabled(false);
+                    setPhotoStatus('Ready: ' + watchWidth + '×' + watchHeight + ' B/W custom photo.', false);
+                    if (photoLoadTimer) { clearTimeout(photoLoadTimer); photoLoadTimer = null; }
+                } catch(e) {
+                    var detail = e && e.message ? e.message : String(e);
+                    var blocked = e && e.name === 'SecurityError';
+                    blocked = blocked || /cross-origin|cross origin|taint|insecure/i.test(detail);
+                    if (blocked && blockedRetry) blockedRetry();
+                    else if (blocked) failPhotoLoad(generation, 'The image service returned data that the browser could not read.');
+                    else failPhotoLoad(generation, 'Photo processing failed: ' + detail);
+                }
+            }
+
+            document.getElementById('photoFile').addEventListener('change', function() {
+                var file = this.files && this.files[0];
+                if (!file) return;
+                var generation = beginPhotoLoad('Loading photo file…');
+                var reader = new FileReader();
+                reader.onerror = function() { failPhotoLoad(generation, 'The photo could not be read.'); };
+                reader.onload = function(e) {
+                    var img = new Image();
+                    img.onerror = function() { failPhotoLoad(generation, 'The selected image could not be decoded.'); };
+                    img.onload = function() { prepareImage(img, generation, 'file'); };
+                    img.src = e.target.result;
+                };
+                reader.readAsDataURL(file);
+            });
+
+            document.getElementById('loadUrlBtn').addEventListener('click', function() { loadImageUrl(false); });
+            document.getElementById('photoProxyBtn').addEventListener('click', function() { loadImageUrl(true); });
+
+            function loadImageUrl(useProxy) {
+                var url = document.getElementById('photoUrl').value.trim();
+                if (!url) { resetPhotoLoad('Enter a direct HTTPS image URL.', true); return; }
+                var viaProxy = useProxy === true;
+                var generation = beginPhotoLoad(viaProxy ? 'Loading via wsrv.nl…' : 'Loading image URL…',
+                    viaProxy ? null : function(timedOutGen) { loadImageUrl(true); });
+                var img = new Image();
+                img.crossOrigin = 'anonymous';
+                if (typeof img.referrerPolicy !== 'undefined') img.referrerPolicy = 'no-referrer';
+                img.onerror = function() {
+                    if (viaProxy) failPhotoLoad(generation, 'wsrv.nl could not fetch that image.');
+                    else loadImageUrl(true);
+                };
+                img.onload = function() {
+                    prepareImage(img, generation, viaProxy ? 'URL via wsrv.nl' : 'URL',
+                        viaProxy ? null : function() { loadImageUrl(true); });
+                };
+                var finalUrl = viaProxy ? 'https://wsrv.nl/?url=' + encodeURIComponent(url) + '&w=' + watchWidth + '&h=' + watchHeight + '&fit=cover&a=center&output=png' : url;
+                img.src = finalUrl;
+            }
+
+            document.getElementById('photoUrl').addEventListener('input', function() {
+                resetPhotoLoad('URL changed. Tap Load URL to prepare it.', false);
+            });
+            document.getElementById('photoUrl').addEventListener('keydown', function(e) {
+                if (e.key === 'Enter' || e.keyCode === 13) {
+                    e.preventDefault();
+                    loadImageUrl(false);
+                }
+            });
+
+            // ---------- END CUSTOM PHOTO PROCESSING ----------
 
             function getConfig() {
-                var config = { ClockMode: timeIndex, LeadingZeros: zerosOn, ShowAMPM: ampmOn, Wallpaper: selectedWallpaperId, Inverted: invertedOn };
-                if (selectedWallpaperId === 8 && customPhotoData) config.CustomPhoto = customPhotoData;
+                var config = {
+                    ClockMode: timeIndex,
+                    LeadingZeros: zerosOn,
+                    ShowAMPM: ampmOn,
+                    Wallpaper: selectedWallpaperId,
+                    Inverted: invertedOn
+                };
+                if (selectedWallpaperId === 8 && customPhotoData) {
+                    config.CustomPhoto = customPhotoData;
+                }
                 return config;
             }
 
