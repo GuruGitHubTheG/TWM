@@ -30,7 +30,7 @@
         .window-header-icon { flex-shrink:0; background-color:var(--primary,#aa55ff); -webkit-mask-size:contain; mask-size:contain; -webkit-mask-repeat:no-repeat; mask-repeat:no-repeat; -webkit-mask-position:center; mask-position:center; }
         #customizeIcon { width:42px; height:42px; -webkit-mask-image:url('https://raw.githubusercontent.com/GuruGitHubTheG/TWM/main/icons/gear.png'); mask-image:url('https://raw.githubusercontent.com/GuruGitHubTheG/TWM/main/icons/gear.png'); }
         #wallpaperIcon { width:42px; height:36px; -webkit-mask-image:url('https://raw.githubusercontent.com/GuruGitHubTheG/TWM/main/icons/folder.png'); mask-image:url('https://raw.githubusercontent.com/GuruGitHubTheG/TWM/main/icons/folder.png'); }
-        #themesIcon { width:42px; height:36px; -webkit-mask-image:url('https://raw.githubusercontent.com/GuruGitHubTheG/TWM/main/icons/folder.png'); mask-image:url('https://raw.githubusercontent.com/GuruGitHubTheG/TWM/main/icons/folder.png'); }
+        #themesIcon { width:42px; height:36px; -webkit-mask-image:url('https://raw.githubusercontent.com/GuruGitHubTheG/TWM/main/icons/paintbucket.png'); mask-image:url('https://raw.githubusercontent.com/GuruGitHubTheG/TWM/main/icons/paintbucket.png'); }
         .window-header-title { font-size:clamp(12px,4vw,28px); font-weight:normal; letter-spacing:1px; line-height:1; white-space:nowrap; overflow:hidden; text-overflow:clip; flex:0 1 auto; min-width:0; }
         .window-header-wrapper .header-icons { position:absolute; right:6px; top:6px; bottom:6px; display:flex; align-items:center; gap:6px; }
         .window-divider { height:12px; background:var(--primary,#aa55ff); }
@@ -102,22 +102,31 @@
             white-space:nowrap;
         }
 
-        .wallpaper-grid {
+        /* Wallpaper and Theme grids share similar styles */
+        .wallpaper-grid, .theme-grid {
             display:flex; flex-wrap:wrap; gap:20px 12px; justify-content:flex-start;
         }
         .wallpaper-item {
             width:240px; cursor:pointer; border:6px solid transparent; background:transparent; padding:0; position:relative; display:flex; flex-direction:column; align-items:flex-start; justify-content:flex-start; overflow:hidden; flex-shrink:0;
         }
+        .theme-item {
+            width:246px; cursor:pointer; border:6px solid transparent; background:transparent; padding:0; position:relative; display:flex; flex-direction:column; align-items:flex-start; justify-content:flex-start; overflow:hidden; flex-shrink:0;
+            height:auto;
+        }
         .wallpaper-item.two-liner { height:217px; }
         .wallpaper-item.one-liner { height:170px; }
-        .wallpaper-item.selected {
+
+        .wallpaper-item.selected,
+        .theme-item.selected {
             border-color: var(--selected-border, rgba(100,66,165,0.5));
             background: var(--selected-bg, rgba(100,66,165,0.25));
         }
-        .wallpaper-item:hover:not(.selected) {
+        .wallpaper-item:hover:not(.selected),
+        .theme-item:hover:not(.selected) {
             border-color: var(--hover-border, rgba(100,66,165,0.33));
             background: var(--hover-bg, rgba(100,66,165,0.17));
         }
+
         .wallpaper-screenshot-wrapper {
             position:relative; width:126px; height:72px; margin-top:18px; margin-left:51px; flex-shrink:0; z-index:2;
         }
@@ -128,6 +137,66 @@
         }
         .wallpaper-label {
             font-size:29px; line-height:1; color:var(--primary,#aa55ff); text-align:center; letter-spacing:0.3px; display:inline-block; background:#000; padding:6px 6px 9px 3px; border-radius:0; white-space:pre; word-wrap:break-word;
+        }
+
+        /* Theme item: paint bucket with shadow, matching wallpaper layout metrics */
+        .theme-icon-wrapper {
+            position: relative;
+            width: 100px;
+            height: 100px;
+            margin-top: 6px;
+            margin-left: 66px;
+            flex-shrink: 0;
+            z-index: 2;
+        }
+        .theme-icon-shadow {
+            position: absolute;
+            top: 3px;
+            left: 3px;
+            width: 100%;
+            height: 100%;
+            background: #000;
+            -webkit-mask-image: url('https://raw.githubusercontent.com/GuruGitHubTheG/TWM/main/icons/paintbucket.png');
+            mask-image: url('https://raw.githubusercontent.com/GuruGitHubTheG/TWM/main/icons/paintbucket.png');
+            -webkit-mask-size: contain;
+            mask-size: contain;
+            -webkit-mask-repeat: no-repeat;
+            mask-repeat: no-repeat;
+            -webkit-mask-position: center;
+            mask-position: center;
+            z-index: 1;
+        }
+        .theme-icon-color {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: var(--theme-color, #ffffff);
+            -webkit-mask-image: url('https://raw.githubusercontent.com/GuruGitHubTheG/TWM/main/icons/paintbucket.png');
+            mask-image: url('https://raw.githubusercontent.com/GuruGitHubTheG/TWM/main/icons/paintbucket.png');
+            -webkit-mask-size: contain;
+            mask-size: contain;
+            -webkit-mask-repeat: no-repeat;
+            mask-repeat: no-repeat;
+            -webkit-mask-position: center;
+            mask-position: center;
+            z-index: 2;
+        }
+        .theme-name {
+            margin-top: 9px;
+            margin-left: 66px;
+            width: 100px;
+            text-align: center;
+            font-size: 20px;
+            line-height: 1;
+            color: var(--primary, #aa55ff);
+            background: transparent;
+            padding: 0;
+            letter-spacing: 0.3px;
+            white-space: normal;
+            word-wrap: break-word;
+            flex-shrink: 0;
         }
 
         .setting { padding:10px 0; }
@@ -157,11 +226,6 @@
         }
         select:focus { border-color:var(--primary,#aa55ff); box-shadow:0 0 0 2px rgba(170,85,255,0.2); }
         select option { background:#1a1a1a; color:var(--primary,#aa55ff); }
-
-        .theme-swatches { display:flex; flex-wrap:wrap; gap:8px; margin-bottom:16px; }
-        .theme-swatch { width:36px; height:36px; border-radius:50%; cursor:pointer; border:3px solid transparent; padding:0; background:var(--swatch-color); }
-        .theme-swatch.selected { border-color:#fff; box-shadow:0 0 0 2px var(--primary); }
-        .theme-swatch.white { border:1px solid #555; } /* subtle border for white swatch */
 
         @media (max-width: 400px) {
             .container { padding:0 5px; padding-top:76px; }
@@ -292,7 +356,7 @@
                 <div class="setting">
                     <div class="setting-label">Theme Color</div>
                     <div class="setting-description">Choose a theme or pick a custom color</div>
-                    <div class="theme-swatches" id="themeSwatches"></div>
+                    <div class="theme-grid" id="themeGrid"></div>
                     <div class="setting-label" style="margin-top:14px;">Custom Color</div>
                     <div class="color-picker-wrapper">
                         <input type="color" id="UI_Color" value="#9664ff">
@@ -390,7 +454,6 @@
                 document.documentElement.style.setProperty('--primary', primaryColor);
                 document.documentElement.style.setProperty('--primary-variant', primaryVariant);
 
-                // Compute selection colors (50% and 25% of variant)
                 var variantRgb = hexToRgb(primaryVariant);
                 var selectedBorder = 'rgba(' + variantRgb.r + ',' + variantRgb.g + ',' + variantRgb.b + ',0.5)';
                 var selectedBg = 'rgba(' + variantRgb.r + ',' + variantRgb.g + ',' + variantRgb.b + ',0.25)';
@@ -402,7 +465,7 @@
                 document.documentElement.style.setProperty('--hover-bg', hoverBg);
 
                 document.querySelectorAll('.window, .save-btn, #topBar').forEach(function(el) { el.style.borderColor = primaryColor; });
-                document.querySelectorAll('.window-header, .window-header-title, .setting-label-centered, .setting-value, .setting-label, .color-hex, .capability-note, .wallpaper-label, #topBarTitle').forEach(function(el) { el.style.color = primaryColor; });
+                document.querySelectorAll('.window-header, .window-header-title, .setting-label-centered, .setting-value, .setting-label, .color-hex, .capability-note, .wallpaper-label, .theme-name, #topBarTitle').forEach(function(el) { el.style.color = primaryColor; });
                 document.querySelectorAll('.window-divider').forEach(function(el) { el.style.background = primaryColor; });
                 document.querySelectorAll('.setting-description').forEach(function(el) { el.style.color = primaryColor; el.style.opacity = '0.6'; });
                 document.querySelectorAll('.setting-middle').forEach(function(el) { el.style.borderTopColor = primaryColor; el.style.borderBottomColor = primaryColor; });
@@ -467,31 +530,49 @@
                 btn.addEventListener('click', function() { document.getElementById('closeBtnTop').click(); });
             });
 
-            // Build theme swatches
-            function buildThemeSwatches() {
-                var container = document.getElementById('themeSwatches');
+            // Build theme grid with shadow effect
+            function buildThemeGrid() {
+                var container = document.getElementById('themeGrid');
                 container.innerHTML = '';
                 themes.forEach(function(theme) {
-                    var swatch = document.createElement('div');
-                    swatch.className = 'theme-swatch';
-                    if (theme.name === 'White') {
-                        swatch.classList.add('white');
-                    }
-                    swatch.style.setProperty('--swatch-color', theme.primary);
-                    swatch.title = theme.name;
-                    swatch.addEventListener('click', function() {
-                        document.querySelectorAll('.theme-swatch').forEach(function(s) { s.classList.remove('selected'); });
-                        swatch.classList.add('selected');
+                    var item = document.createElement('div');
+                    item.className = 'theme-item';
+                    item.dataset.primary = theme.primary;
+                    item.dataset.variant = theme.variant;
+
+                    var iconWrapper = document.createElement('div');
+                    iconWrapper.className = 'theme-icon-wrapper';
+
+                    var iconShadow = document.createElement('div');
+                    iconShadow.className = 'theme-icon-shadow';
+
+                    var iconColor = document.createElement('div');
+                    iconColor.className = 'theme-icon-color';
+                    iconColor.style.setProperty('--theme-color', theme.primary);
+
+                    iconWrapper.appendChild(iconShadow);
+                    iconWrapper.appendChild(iconColor);
+
+                    var nameLabel = document.createElement('div');
+                    nameLabel.className = 'theme-name';
+                    nameLabel.textContent = theme.name;
+
+                    item.appendChild(iconWrapper);
+                    item.appendChild(nameLabel);
+
+                    item.addEventListener('click', function() {
+                        document.querySelectorAll('.theme-item').forEach(function(el) { el.classList.remove('selected'); });
+                        item.classList.add('selected');
+                        var primary = theme.primary;
                         var variant = theme.variant;
-                        primaryColor = theme.primary;
-                        primaryVariant = variant;
-                        document.getElementById('UI_Color').value = primaryColor;
-                        document.getElementById('colorHex').textContent = primaryColor;
-                        document.getElementById('Secondary_Color').value = primaryVariant;
-                        document.getElementById('secondaryColorHex').textContent = primaryVariant;
-                        applyStyles(primaryColor, primaryVariant);
+                        document.getElementById('UI_Color').value = primary;
+                        document.getElementById('colorHex').textContent = primary;
+                        document.getElementById('Secondary_Color').value = variant;
+                        document.getElementById('secondaryColorHex').textContent = variant;
+                        applyStyles(primary, variant);
                     });
-                    container.appendChild(swatch);
+
+                    container.appendChild(item);
                 });
             }
 
@@ -502,8 +583,8 @@
                 var variant = calculateVariant(c);
                 document.getElementById('Secondary_Color').value = variant;
                 document.getElementById('secondaryColorHex').textContent = variant;
-                // Deselect any theme swatch
-                document.querySelectorAll('.theme-swatch').forEach(function(s) { s.classList.remove('selected'); });
+                // Deselect any theme item
+                document.querySelectorAll('.theme-item').forEach(function(el) { el.classList.remove('selected'); });
                 applyStyles(c, variant);
             });
 
@@ -545,14 +626,13 @@
                                 }
                             });
                             if (!matched) {
-                                document.querySelectorAll('.theme-swatch').forEach(function(s) { s.classList.remove('selected'); });
+                                document.querySelectorAll('.theme-item').forEach(function(el) { el.classList.remove('selected'); });
                             } else {
-                                // highlight matching swatch
-                                document.querySelectorAll('.theme-swatch').forEach(function(s) {
-                                    if (s.style.getPropertyValue('--swatch-color').toLowerCase() === c.toLowerCase()) {
-                                        s.classList.add('selected');
+                                document.querySelectorAll('.theme-item').forEach(function(el) {
+                                    if (el.dataset.primary.toLowerCase() === c.toLowerCase()) {
+                                        el.classList.add('selected');
                                     } else {
-                                        s.classList.remove('selected');
+                                        el.classList.remove('selected');
                                     }
                                 });
                             }
@@ -982,7 +1062,7 @@
             });
 
             // Initialize
-            buildThemeSwatches();
+            buildThemeGrid();
             buildGrid();
             loadConfig(5);
             updateCustomPhotoSection();
