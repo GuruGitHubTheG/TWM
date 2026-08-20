@@ -480,6 +480,7 @@ Machine)</div>
 
     <script>
         (function() {
+            // ---------- QUERY PARAMETERS ----------
             function getQueryParam(param) {
                 var urlParams = new URLSearchParams(window.location.search);
                 return urlParams.get(param);
@@ -488,6 +489,7 @@ Machine)</div>
             var watchWidth = parseInt(getQueryParam('width'), 10) || 144;
             var watchHeight = parseInt(getQueryParam('height'), 10) || 168;
 
+            // ---------- WALLPAPERS ----------
             var wallpapers = [
                 { id: 1, label: 'The World\nMachine', image: 'https://raw.githubusercontent.com/GuruGitHubTheG/TWM/main/wallpapers/The_World_Machine_wallpaper.png' },
                 { id: 2, label: 'Barrens\nCraters', image: 'https://raw.githubusercontent.com/GuruGitHubTheG/TWM/main/wallpapers/Barrens_Craters_wallpaper.png' },
@@ -514,22 +516,13 @@ Machine)</div>
             canvas.width = watchWidth;
             canvas.height = watchHeight;
 
-            // ---------- FADE-IN CONTROL ----------
-            var appShown = false;
-            var showTimer = null;
-
-            function showApp() {
-                if (appShown) return;
-                appShown = true;
-                document.getElementById('topBar').style.opacity = '1';
-                document.getElementById('app').classList.add('loaded');
-            }
-
+            // ---------- PENDING CUSTOM PHOTO ----------
             var pendingCustomPhotoData = null;
             var pendingCustomThumbSrc = null;
             var customPhotoModalPreviousWallpaperId = null;
             var customPhotoModalPreviousExtraWallpaperId = null;
 
+            // ---------- EXTRA WALLPAPERS ----------
             var showExtraWallpapers = false;
             var selectedExtraWallpaperId = null;
             var extraWallpapers = [
@@ -553,6 +546,18 @@ Machine)</div>
             var extraWallpaperThumbBase = 'https://raw.githubusercontent.com/GuruGitHubTheG/TWM/main/wallpapers/more/';
             var extraWallpaperWatchBase = 'https://raw.githubusercontent.com/GuruGitHubTheG/TWM/main/wallpapers/more/bw/';
 
+            // ---------- FADE-IN CONTROL ----------
+            var appShown = false;
+            var showTimer = null;
+
+            function showApp() {
+                if (appShown) return;
+                appShown = true;
+                document.getElementById('topBar').style.opacity = '1';
+                document.getElementById('app').classList.add('loaded');
+            }
+
+            // ---------- CUSTOM PHOTO MODAL HELPERS ----------
             function showCustomPhotoModal() {
                 playNotificationSound();
                 document.getElementById('customPhotoModal').classList.add('active');
@@ -561,6 +566,7 @@ Machine)</div>
                 document.getElementById('customPhotoModal').classList.remove('active');
             }
 
+            // ---------- NOTIFICATIONS ----------
             var notifOrder = [2, 3, 4, 2, 2, 3, 4, 2, 2, 3, 4, 2];
             var notifIndex = 0;
             function playNotificationSound() {
@@ -570,6 +576,7 @@ Machine)</div>
                 notifIndex = (notifIndex + 1) % notifOrder.length;
             }
 
+            // ---------- SETTINGS HELPERS ----------
             function applyInversion(enabled) {
                 invertedOn = enabled;
                 if (enabled) document.body.classList.add('inverted');
@@ -586,6 +593,7 @@ Machine)</div>
                 if (!show) hideCustomPhotoModal();
             }
 
+            // ---------- EXTRA WALLPAPERS DISPLAY ----------
             function updateExtraDisplay() {
                 document.getElementById('extraDisplay').textContent = showExtraWallpapers ? 'ON' : 'OFF';
                 var win = document.getElementById('extra-wallpaper-window');
@@ -624,6 +632,7 @@ Machine)</div>
                 img.onload = function() { prepareExtraWallpaper(img, generation, 'extra'); };
                 img.src = url;
             }
+
             function selectExtraWallpaper(file, title) {
                 selectedWallpaperId = 8;
                 selectedExtraWallpaperId = file;
@@ -658,6 +667,7 @@ Machine)</div>
                 loadExtraWallpaperUrl(watchUrl, title);
             }
 
+            // ---------- EXTRA WALLPAPER PACKING (1-bit BW) ----------
             function prepareExtraWallpaper(image, generation, sourceLabel) {
                 if (generation !== photoLoadGeneration) return;
                 try {
@@ -704,6 +714,7 @@ Machine)</div>
                 return { pixelData: pixelData, palette: [0xFF, 0xC0], color: false };
             }
 
+            // ---------- SAVE / DISMISS ----------
             function saveConfig() {
                 var config = getConfig();
                 var json = JSON.stringify(config);
@@ -720,6 +731,7 @@ Machine)</div>
                 else window.location = 'pebblejs://close';
             }
 
+            // ---------- EVENT LISTENERS ----------
             document.getElementById('saveBtnTop').addEventListener('click', saveConfig);
             document.querySelectorAll('[id^="dismissBtn"]').forEach(function(btn) { btn.addEventListener('click', showAccessDeniedModal); });
             document.querySelectorAll('[id^="closeBtn"]').forEach(function(btn) { btn.addEventListener('click', showAccessDeniedModal); });
@@ -738,6 +750,7 @@ Machine)</div>
             document.getElementById('closeBtnBW5').addEventListener('click', showAccessDeniedModal);
             document.getElementById('restoreDefaultsBtn').addEventListener('click', confirmRestoreDefaults);
 
+            // Custom photo modal buttons
             document.getElementById('customPhotoOkBtn').addEventListener('click', function() {
                 if (pendingCustomPhotoData) {
                     customPhotoData = pendingCustomPhotoData;
@@ -753,7 +766,7 @@ Machine)</div>
             document.getElementById('customPhotoCancelBtn').addEventListener('click', function() {
                 pendingCustomPhotoData = null;
                 pendingCustomThumbSrc = null;
-                canvas.style.display = 'none';                     // unload preview image
+                canvas.style.display = 'none';
                 selectedWallpaperId = customPhotoModalPreviousWallpaperId;
                 selectedExtraWallpaperId = customPhotoModalPreviousExtraWallpaperId;
 
@@ -772,6 +785,7 @@ Machine)</div>
             });
             document.getElementById('customPhotoModal').addEventListener('click', function(e) { if (e.target === this) hideCustomPhotoModal(); });
 
+            // ---------- TOGGLE EXTRA WALLPAPERS ----------
             function toggleExtraWallpapers() {
                 if (!showExtraWallpapers) {
                     showModal(
@@ -785,6 +799,7 @@ Machine)</div>
                 }
             }
 
+            // ---------- RESTORE DEFAULTS ----------
             function confirmRestoreDefaults() {
                 showModal('Are you sure you would like to restore defaults?', function() { restoreDefaults(); }, null);
             }
@@ -819,6 +834,7 @@ Machine)</div>
                 hideCustomPhotoModal();
             }
 
+            // ---------- LOAD CONFIG ----------
             function loadConfig(retries) {
                 retries = retries || 3;
                 selectedExtraWallpaperId = null;
@@ -840,7 +856,7 @@ Machine)</div>
                         }
                         if (config.CustomPhoto && selectedWallpaperId === 8) {
                             decodeCustomPhotoToThumbnail(config.CustomPhoto);
-                            customPhotoData = config.CustomPhoto;   // <-- add this
+                            customPhotoData = config.CustomPhoto;
                         }
                         document.getElementById('topBarTitle').textContent = 'The World Machine';
                         updateDisplays();
@@ -872,6 +888,7 @@ Machine)</div>
                 }
             }
 
+            // ---------- BUILD WALLPAPER GRID ----------
             function buildGrid() {
                 var grid = document.getElementById('wallpaperGrid');
                 grid.innerHTML = '';
@@ -906,6 +923,7 @@ Machine)</div>
                 });
             }
 
+            // ---------- DECODE CUSTOM PHOTO THUMBNAIL (1-bit) ----------
             function decodeCustomPhotoToThumbnail(photoData) {
                 if (!photoData || !photoData.compressed || !photoData.palette) return;
                 try {
@@ -938,6 +956,7 @@ Machine)</div>
                 } catch (e) { console.log('Failed to decode custom photo thumbnail: ' + e.message); }
             }
 
+            // ---------- CUSTOM PHOTO PROCESSING (BW) ----------
             function setPhotoStatus(msg, isError) { /* no visible status */ }
             function setSubmitDisabled(disabled) {
                 var btns = document.querySelectorAll('button[type="submit"], input[type="submit"], .save-btn');
@@ -1054,6 +1073,7 @@ Machine)</div>
                 }
             }
 
+            // ---------- FILE & URL INPUT HANDLERS ----------
             document.getElementById('photoFileBtn').addEventListener('click', function() { document.getElementById('photoFile').click(); });
             document.getElementById('photoFile').addEventListener('change', function() {
                 var file = this.files && this.files[0];
@@ -1090,6 +1110,7 @@ Machine)</div>
             document.getElementById('photoUrl').addEventListener('input', function() { resetPhotoLoad('URL changed. Tap Load URL to prepare it.', false); });
             document.getElementById('photoUrl').addEventListener('keydown', function(e) { if (e.key === 'Enter' || e.keyCode === 13) { e.preventDefault(); loadImageUrl(false); } });
 
+            // ---------- MODAL HELPERS ----------
             function showModal(text, onYes, onNo, yesLabel, noLabel) {
                 playNotificationSound();
                 document.getElementById('modalText').textContent = text;
@@ -1136,6 +1157,7 @@ Machine)</div>
             document.getElementById('modalOverlay').addEventListener('click', function(e) { if (e.target === this) hideModal(); });
             window.showTWMConfirm = function() { showModal('Change Language?\n(This will restart The World\nMachine)', null, null); };
 
+            // ---------- GET CONFIG ----------
             function getConfig() {
                 var config = {
                     ClockMode: timeIndex,
@@ -1148,6 +1170,7 @@ Machine)</div>
                 return config;
             }
 
+            // ---------- INIT ----------
             buildGrid();
             loadConfig(5);
             updateCustomPhotoSection();
