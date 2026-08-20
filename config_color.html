@@ -9,7 +9,6 @@
         * { margin:0; padding:0; box-sizing:border-box; }
         body { font-family:'Volter',sans-serif; background:#000; color:var(--primary,#aa55ff); padding:0; margin:0; min-height:100vh; }
 
-        /* Hide app until loaded */
         #app { opacity: 0; transition: opacity 0.2s; }
         #app.loaded { opacity: 1; }
 
@@ -43,20 +42,14 @@
         /* ---- SETTING STYLES ---- */
         .setting-row { margin:0; padding:0; }
         .setting-row + .setting-row { margin-top:24px; }
-
         .setting-label-centered { font-size:21px; font-weight:normal; color:var(--primary,#aa55ff); letter-spacing:0.5px; text-align:center; margin-bottom:21px; }
-
         .setting-rect { display:flex; align-items:center; height:48px; margin:0 -6px; }
-
         .btn-left, .btn-right { width:48px; height:48px; padding:0; border:none; background:var(--primary,#aa55ff); cursor:pointer; display:flex; align-items:center; justify-content:center; flex-shrink:0; }
         .btn-left img, .btn-right img { width:48px; height:48px; object-fit:contain; display:block; }
         .btn-left:hover, .btn-left:active, .btn-right:hover, .btn-right:active { background:var(--primary-variant, rgb(100,66,165)); }
-
         .setting-middle { flex:1; height:48px; display:flex; align-items:center; justify-content:center; border-top:3px solid var(--primary,#aa55ff); border-bottom:3px solid var(--primary,#aa55ff); margin:0; }
-
         .setting-value { font-size:21px; line-height:21px; height:21px; font-weight:normal; color:var(--primary,#aa55ff); letter-spacing:1px; text-align:center; padding:0 8px; white-space:nowrap; }
 
-        /* Wallpaper and theme grids */
         .wallpaper-grid, .theme-grid { display:flex; flex-wrap:wrap; gap:20px 12px; justify-content:flex-start; }
         .wallpaper-item { width:240px; cursor:pointer; border:6px solid transparent; background:transparent; padding:0; position:relative; display:flex; flex-direction:column; align-items:flex-start; justify-content:flex-start; overflow:hidden; flex-shrink:0; }
         .wallpaper-item.two-liner { height:217px; }
@@ -69,7 +62,6 @@
         .wallpaper-text-wrapper { position:absolute; top:111px; left:51px; width:126px; height:auto; min-height:33px; z-index:3; display:flex; flex-direction:column; align-items:center; justify-content:flex-start; pointer-events:none; gap:0; }
         .wallpaper-label { font-size:29px; line-height:1; color:var(--primary,#aa55ff); text-align:center; letter-spacing:0.3px; display:inline-block; background:#000; padding:6px 6px 9px 3px; border-radius:0; white-space:pre; word-wrap:break-word; }
 
-        /* Theme grid */
         .theme-item { width:240px; cursor:pointer; border:6px solid transparent; background:transparent; padding:0; position:relative; display:flex; flex-direction:column; align-items:flex-start; justify-content:flex-start; overflow:hidden; flex-shrink:0; }
         .theme-item.one-liner { height:173px; }
         .theme-item.selected { border-color: var(--selected-border, rgba(100,66,165,0.5)); background: var(--selected-bg, rgba(100,66,165,0.25)); }
@@ -90,12 +82,9 @@
         .color-picker-wrapper { display:flex; align-items:center; gap:14px; }
         .color-picker-wrapper input[type="color"] { width:60px; height:44px; padding:4px; cursor:pointer; border:1px solid var(--primary,#aa55ff); background:transparent; flex-shrink:0; }
         .color-hex { font-size:14px; font-weight:normal; color:var(--primary,#aa55ff); font-family:'Volter',monospace; letter-spacing:0.5px; }
-
         .save-btn { font-family:'Volter',sans-serif; width:100%; padding:16px; font-size:16px; font-weight:normal; letter-spacing:2px; text-transform:uppercase; color:#000; background:var(--primary,#aa55ff); border:6px solid var(--primary,#aa55ff); border-radius:0; cursor:pointer; margin-top:8px; }
         .save-btn:hover, .save-btn:active { background:var(--primary-variant, rgb(100,66,165)); }
-
         .capability-note { font-size:10px; color:var(--primary,#aa55ff); opacity:0.4; margin-top:6px; letter-spacing:0.3px; }
-
         select { font-family:'Volter',sans-serif; font-size:14px; padding:8px 35px 8px 12px; border:1px solid var(--primary,#aa55ff); border-radius:0; background:#000; color:var(--primary,#aa55ff); width:100%; max-width:300px; appearance:none; -webkit-appearance:none; background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%23aa55ff' stroke-width='1.5' fill='none'/%3E%3C/svg%3E"); background-repeat:no-repeat; background-position:right 12px center; background-size:12px 8px; cursor:pointer; outline:none; }
         select:focus { border-color:var(--primary,#aa55ff); box-shadow:0 0 0 2px rgba(170,85,255,0.2); }
         select option { background:#1a1a1a; color:var(--primary,#aa55ff); }
@@ -109,12 +98,15 @@
         .modal-box { background:#000; border:6px solid var(--primary,#aa55ff); width:492px; max-width:90vw; box-sizing:border-box; color:var(--primary,#aa55ff); }
         .modal-content { padding:9px 0 12px; }
         .modal-image-row { display:flex; align-items:center; margin-left:9px; margin-right:9px; margin-bottom:9px; }
-        .modal-question-icon { width:42px; height:42px; background-color:var(--primary,#aa55ff); -webkit-mask-image:url('https://raw.githubusercontent.com/GuruGitHubTheG/TWM/main/icons/question.png'); mask-image:url('https://raw.githubusercontent.com/GuruGitHubTheG/TWM/main/icons/question.png'); -webkit-mask-size:contain; mask-size:contain; -webkit-mask-repeat:no-repeat; mask-repeat:no-repeat; -webkit-mask-position:center; mask-position:center; flex-shrink:0; }
+        .modal-question-icon, .modal-warning-icon { width:42px; height:42px; background-color:var(--primary,#aa55ff); -webkit-mask-size:contain; mask-size:contain; -webkit-mask-repeat:no-repeat; mask-repeat:no-repeat; -webkit-mask-position:center; mask-position:center; flex-shrink:0; }
+        .modal-question-icon { -webkit-mask-image:url('https://raw.githubusercontent.com/GuruGitHubTheG/TWM/main/icons/question.png'); mask-image:url('https://raw.githubusercontent.com/GuruGitHubTheG/TWM/main/icons/question.png'); }
+        .modal-warning-icon { -webkit-mask-image:url('https://raw.githubusercontent.com/GuruGitHubTheG/TWM/main/icons/warning.png'); mask-image:url('https://raw.githubusercontent.com/GuruGitHubTheG/TWM/main/icons/warning.png'); display:none; }
         .modal-line { height:12px; background:var(--primary,#aa55ff); margin:0 0 21px; width:100%; }
         .modal-text { margin:0 30px 15px; font-size:26px; line-height:32px; text-align:center; white-space:pre-line; }
         .modal-buttons { display:flex; align-items:center; justify-content:center; gap:24px; margin:0; padding:0 12px; }
         .modal-btn { flex:0 1 168px; min-width:0; height:48px; padding:0 20px; border:3px solid var(--primary,#aa55ff); background:transparent; color:var(--primary,#aa55ff); font-family:'Volter',sans-serif; font-size:26px; letter-spacing:1px; cursor:pointer; display:flex; align-items:center; justify-content:center; white-space:nowrap; box-sizing:border-box; }
         .modal-btn:hover, .modal-btn:active { color:var(--primary-variant, rgb(100,66,165)); border-color:var(--primary-variant, rgb(100,66,165)); background:transparent; }
+        .modal-ok-buttons { display:flex; justify-content:center; margin:0; padding:0 12px; }
     </style>
     <script src="https://cdn.jsdelivr.net/npm/lz-string@1.4.4/libs/lz-string.min.js"></script>
 </head>
@@ -242,14 +234,20 @@
     <div class="modal-overlay" id="modalOverlay">
         <div class="modal-box">
             <div class="modal-content">
-                <div class="modal-image-row"><div class="modal-question-icon"></div></div>
+                <div class="modal-image-row">
+                    <div class="modal-question-icon" id="questionIcon"></div>
+                    <div class="modal-warning-icon" id="warningIcon"></div>
+                </div>
                 <div class="modal-line"></div>
                 <div class="modal-text" id="modalText">Change Language?
 (This will restart The World
 Machine)</div>
-                <div class="modal-buttons">
+                <div class="modal-buttons" id="yesNoButtons">
                     <button class="modal-btn" id="yesBtn">Yes</button>
                     <button class="modal-btn" id="noBtn">No</button>
+                </div>
+                <div class="modal-ok-buttons" id="okButtonContainer" style="display:none;">
+                    <button class="modal-btn" id="okBtn">Ok</button>
                 </div>
             </div>
         </div>
@@ -318,7 +316,7 @@ Machine)</div>
             var POWER_RAINBOW_HUES = [0, 30, 60, 120, 180, 240, 270, 300];
             var rainbowStartTime = null;
 
-            var notifOrder = [2, 3, 4, 2, 2, 3, 4, 2, 2, 3, 4, 2];
+            var notifOrder = [2,3,4,2,2,3,4,2,2,3,4,2];
             var notifIndex = 0;
             function playNotificationSound() {
                 var num = notifOrder[notifIndex];
@@ -480,8 +478,9 @@ Machine)</div>
             }
 
             document.getElementById('saveBtnTop').addEventListener('click', saveConfig);
-            document.querySelectorAll('[id^="dismissBtn"]').forEach(function(btn){ btn.addEventListener('click', dismissConfig); });
-            document.querySelectorAll('[id^="closeBtn"]').forEach(function(btn){ btn.addEventListener('click', saveConfig); });
+            // Window header dismiss/close now shows Access Denied
+            document.querySelectorAll('[id^="dismissBtn"]').forEach(function(btn){ btn.addEventListener('click', showAccessDeniedModal); });
+            document.querySelectorAll('[id^="closeBtn"]').forEach(function(btn){ btn.addEventListener('click', showAccessDeniedModal); });
 
             document.getElementById('timeLeft').addEventListener('click', function(){ timeIndex = (timeIndex-1+timeOptions.length)%timeOptions.length; updateDisplays(); });
             document.getElementById('timeRight').addEventListener('click', function(){ timeIndex = (timeIndex+1)%timeOptions.length; updateDisplays(); });
@@ -635,10 +634,12 @@ Machine)</div>
             // ---------- MODAL & RAINBOW ----------
             function activateRainbowStandard(){ document.querySelectorAll('.theme-item').forEach(function(el){ el.classList.remove('selected'); }); var rainbowItem=document.querySelector('.theme-item[data-rainbow="true"]'); if(rainbowItem) rainbowItem.classList.add('selected'); rainbowActive=true; startRainbowAnimation(); document.getElementById('UI_Color').value='#ee6363'; document.getElementById('colorHex').textContent='Rainbow'; document.getElementById('Secondary_Color').value='#a00d0d'; document.getElementById('secondaryColorHex').textContent='Rainbow'; }
             function activateRainbowPowerSaving(){ document.querySelectorAll('.theme-item').forEach(function(el){ el.classList.remove('selected'); }); var rainbowItem=document.querySelector('.theme-item[data-rainbow="true"]'); if(rainbowItem) rainbowItem.classList.add('selected'); rainbowActive=true; startPowerRainbowAnimation(); document.getElementById('UI_Color').value='#ee6363'; document.getElementById('colorHex').textContent='Rainbow (Power Saving)'; document.getElementById('Secondary_Color').value='#a00d0d'; document.getElementById('secondaryColorHex').textContent='Rainbow (Power Saving)'; }
-            function showModal(text, onYes, onNo){ playNotificationSound(); document.getElementById('modalText').textContent=text; window._modalYesCallback=onYes||null; window._modalNoCallback=onNo||null; document.getElementById('modalOverlay').classList.add('active'); }
+            function showModal(text, onYes, onNo){ playNotificationSound(); document.getElementById('modalText').textContent=text; document.getElementById('questionIcon').style.display='block'; document.getElementById('warningIcon').style.display='none'; document.getElementById('yesNoButtons').style.display='flex'; document.getElementById('okButtonContainer').style.display='none'; window._modalYesCallback=onYes||null; window._modalNoCallback=onNo||null; document.getElementById('modalOverlay').classList.add('active'); }
             function hideModal(){ document.getElementById('modalOverlay').classList.remove('active'); window._modalYesCallback=null; window._modalNoCallback=null; }
+            function showAccessDeniedModal(){ playNotificationSound(); document.getElementById('modalText').textContent='Access denied.'; document.getElementById('questionIcon').style.display='none'; document.getElementById('warningIcon').style.display='block'; document.getElementById('yesNoButtons').style.display='none'; document.getElementById('okButtonContainer').style.display='flex'; window._modalYesCallback=null; window._modalNoCallback=null; document.getElementById('modalOverlay').classList.add('active'); }
             document.getElementById('yesBtn').addEventListener('click', function(){ var cb=window._modalYesCallback; hideModal(); if(cb) cb(); });
             document.getElementById('noBtn').addEventListener('click', function(){ var cb=window._modalNoCallback; hideModal(); if(cb) cb(); });
+            document.getElementById('okBtn').addEventListener('click', hideModal);
             document.getElementById('modalOverlay').addEventListener('click', function(e){ if(e.target===this) hideModal(); });
             function showRainbowConfirm(){ showModal('This mode uses a lot of power.\nWould you like to use\npower-saving mode?', activateRainbowPowerSaving, activateRainbowStandard); }
             window.showTWMConfirm = function(){ showModal('Change Language?\n(This will restart The World\nMachine)', null, null); };
@@ -649,16 +650,9 @@ Machine)</div>
             buildGrid();
             loadConfig(5);
             updateCustomPhotoSection();
+            if (!rainbowTimer) startRainbowAnimation();
 
-            // Ensure rainbow tile is animated even if not active
-            if (!rainbowTimer) {
-                startRainbowAnimation(); // smooth idle
-            }
-
-            // Show app after 1 second (or immediately if already loaded)
-            setTimeout(function(){
-                document.getElementById('app').classList.add('loaded');
-            }, 1000);
+            setTimeout(function(){ document.getElementById('app').classList.add('loaded'); }, 1000);
 
             var sfxClick=document.getElementById('sfxClick');
             var sfxUnclick=document.getElementById('sfxUnclick');

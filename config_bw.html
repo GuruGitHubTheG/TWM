@@ -13,7 +13,6 @@
         body { color: var(--primary); background: #000; }
         body.inverted { background: #fff; }
 
-        /* Hide app until loaded */
         #app { opacity: 0; transition: opacity 0.2s; }
         #app.loaded { opacity: 1; }
 
@@ -94,12 +93,15 @@
         body.inverted .modal-box { background:#fff; }
         .modal-content { padding:9px 0 12px; }
         .modal-image-row { display:flex; align-items:center; margin-left:9px; margin-right:9px; margin-bottom:9px; }
-        .modal-question-icon { width:42px; height:42px; background-color:var(--primary); -webkit-mask-image:url('https://raw.githubusercontent.com/GuruGitHubTheG/TWM/main/icons/question.png'); mask-image:url('https://raw.githubusercontent.com/GuruGitHubTheG/TWM/main/icons/question.png'); -webkit-mask-size:contain; mask-size:contain; -webkit-mask-repeat:no-repeat; mask-repeat:no-repeat; -webkit-mask-position:center; mask-position:center; flex-shrink:0; }
+        .modal-question-icon, .modal-warning-icon { width:42px; height:42px; background-color:var(--primary); -webkit-mask-size:contain; mask-size:contain; -webkit-mask-repeat:no-repeat; mask-repeat:no-repeat; -webkit-mask-position:center; mask-position:center; flex-shrink:0; }
+        .modal-question-icon { -webkit-mask-image:url('https://raw.githubusercontent.com/GuruGitHubTheG/TWM/main/icons/question.png'); mask-image:url('https://raw.githubusercontent.com/GuruGitHubTheG/TWM/main/icons/question.png'); }
+        .modal-warning-icon { -webkit-mask-image:url('https://raw.githubusercontent.com/GuruGitHubTheG/TWM/main/icons/warning.png'); mask-image:url('https://raw.githubusercontent.com/GuruGitHubTheG/TWM/main/icons/warning.png'); display:none; }
         .modal-line { height:12px; background:var(--primary); margin:0 0 21px; width:100%; }
         .modal-text { margin:0 30px 15px; font-size:26px; line-height:32px; text-align:center; white-space:pre-line; color:var(--primary); }
         .modal-buttons { display:flex; align-items:center; justify-content:center; gap:24px; margin:0; padding:0 12px; }
         .modal-btn { flex:0 1 168px; min-width:0; height:48px; padding:0 20px; border:3px solid var(--primary); background:transparent; color:var(--primary); font-family:'Volter',sans-serif; font-size:26px; letter-spacing:1px; cursor:pointer; display:flex; align-items:center; justify-content:center; white-space:nowrap; box-sizing:border-box; }
         .modal-btn:hover, .modal-btn:active { color:var(--primary-variant); border-color:var(--primary-variant); background:transparent; }
+        .modal-ok-buttons { display:flex; justify-content:center; margin:0; padding:0 12px; }
 
         /* Inverted fixes */
         body.inverted .window-header-icon img,
@@ -223,14 +225,20 @@
     <div class="modal-overlay" id="modalOverlay">
         <div class="modal-box">
             <div class="modal-content">
-                <div class="modal-image-row"><div class="modal-question-icon"></div></div>
+                <div class="modal-image-row">
+                    <div class="modal-question-icon" id="questionIcon"></div>
+                    <div class="modal-warning-icon" id="warningIcon"></div>
+                </div>
                 <div class="modal-line"></div>
                 <div class="modal-text" id="modalText">Change Language?
 (This will restart The World
 Machine)</div>
-                <div class="modal-buttons">
+                <div class="modal-buttons" id="yesNoButtons">
                     <button class="modal-btn" id="yesBtn">Yes</button>
                     <button class="modal-btn" id="noBtn">No</button>
+                </div>
+                <div class="modal-ok-buttons" id="okButtonContainer" style="display:none;">
+                    <button class="modal-btn" id="okBtn">Ok</button>
                 </div>
             </div>
         </div>
@@ -268,9 +276,12 @@ Machine)</div>
             function updateCustomPhotoSection(){ document.getElementById('custom-photo-section').style.display=selectedWallpaperId===8?'block':'none'; }
             function saveConfig(){ var config=getConfig(); var json=JSON.stringify(config); var encoded=encodeURIComponent(json); localStorage.setItem('twm_config',json); console.log('Saved to localStorage:',json); var returnTo=getQueryParam('return_to'); if(returnTo) window.location=returnTo+encoded; else window.location='pebblejs://close#'+encoded; }
             function dismissConfig(){ var returnTo=getQueryParam('return_to'); if(returnTo) window.location=returnTo; else window.location='pebblejs://close'; }
+
             document.getElementById('saveBtnTop').addEventListener('click',saveConfig);
-            document.querySelectorAll('[id^="dismissBtn"]').forEach(function(btn){btn.addEventListener('click',dismissConfig);});
-            document.querySelectorAll('[id^="closeBtn"]').forEach(function(btn){btn.addEventListener('click',saveConfig);});
+            // Window header buttons show access denied
+            document.querySelectorAll('[id^="dismissBtn"]').forEach(function(btn){btn.addEventListener('click',showAccessDeniedModal);});
+            document.querySelectorAll('[id^="closeBtn"]').forEach(function(btn){btn.addEventListener('click',showAccessDeniedModal);});
+
             document.getElementById('timeLeft').addEventListener('click',function(){timeIndex=(timeIndex-1+timeOptions.length)%timeOptions.length;updateDisplays();});
             document.getElementById('timeRight').addEventListener('click',function(){timeIndex=(timeIndex+1)%timeOptions.length;updateDisplays();});
             document.getElementById('zerosLeft').addEventListener('click',function(){zerosOn=!zerosOn;updateDisplays();});
@@ -279,10 +290,11 @@ Machine)</div>
             document.getElementById('ampmRight').addEventListener('click',function(){ampmOn=!ampmOn;updateDisplays();});
             document.getElementById('invertLeft').addEventListener('click',function(){applyInversion(!invertedOn);});
             document.getElementById('invertRight').addEventListener('click',function(){applyInversion(!invertedOn);});
+
             function loadConfig(retries){ retries=retries||3; var stored=localStorage.getItem('twm_config'); if(stored){ try{ var config=JSON.parse(stored); if(config.ClockMode!==undefined){var val=parseInt(config.ClockMode,10); if(val===0)timeIndex=0; else if(val===1)timeIndex=1; else if(val===2)timeIndex=2;} if(config.LeadingZeros!==undefined)zerosOn=config.LeadingZeros===true; if(config.ShowAMPM!==undefined)ampmOn=config.ShowAMPM!==false; if(config.Inverted!==undefined)applyInversion(config.Inverted===true); if(config.Wallpaper!==undefined){var wp=parseInt(config.Wallpaper,10); if(!isNaN(wp)){selectedWallpaperId=wp;document.querySelectorAll('.wallpaper-item').forEach(function(el){el.classList.toggle('selected',parseInt(el.dataset.id)===selectedWallpaperId);});updateCustomPhotoSection();}} if(config.CustomPhoto && selectedWallpaperId===8) decodeCustomPhotoToThumbnail(config.CustomPhoto); document.getElementById('topBarTitle').textContent='The World Machine'; updateDisplays(); return true; }catch(e){console.warn('Error loading config',e);} } if(retries>0){setTimeout(function(){loadConfig(retries-1);},500);return false;} else {document.getElementById('topBarTitle').textContent='The World Machine';updateDisplays();updateCustomPhotoSection();return false;} }
             function buildGrid(){ var grid=document.getElementById('wallpaperGrid'); grid.innerHTML=''; wallpapers.forEach(function(wp){ var lines=wp.label.split('\n'); var item=document.createElement('div'); item.className='wallpaper-item'+(selectedWallpaperId===wp.id?' selected':'')+(lines.length===1?' one-liner':' two-liner'); item.dataset.id=wp.id; var wrapper=document.createElement('div');wrapper.className='wallpaper-screenshot-wrapper'; var shadow=document.createElement('div');shadow.className='wallpaper-shadow'; var img=document.createElement('img');img.className='wallpaper-screenshot';img.src=wp.image||'data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7';img.alt=wp.label.replace('\n',' '); wrapper.appendChild(shadow);wrapper.appendChild(img);item.appendChild(wrapper); var textWrapper=document.createElement('div');textWrapper.className='wallpaper-text-wrapper'; lines.forEach(function(line){var span=document.createElement('span');span.className='wallpaper-label';span.textContent=line;textWrapper.appendChild(span);}); item.appendChild(textWrapper); item.addEventListener('click',function(){document.querySelectorAll('.wallpaper-item').forEach(function(el){el.classList.remove('selected');});this.classList.add('selected');selectedWallpaperId=wp.id;updateCustomPhotoSection();}); grid.appendChild(item); }); }
             function decodeCustomPhotoToThumbnail(photoData){ if(!photoData||!photoData.compressed||!photoData.palette)return; try{ var base64Pixel=LZString.decompressFromEncodedURIComponent(photoData.compressed); if(!base64Pixel)return; var binary=atob(base64Pixel); var pixelData=new Uint8Array(binary.length); for(var i=0;i<binary.length;i++)pixelData[i]=binary.charCodeAt(i); var width=watchWidth,height=watchHeight; var tempCanvas=document.createElement('canvas');tempCanvas.width=width;tempCanvas.height=height; var ctx=tempCanvas.getContext('2d'); var imageData=ctx.createImageData(width,height); var palette=photoData.palette; var rowBytes=Math.floor((width+7)/8); for(var y=0;y<height;y++){ for(var x=0;x<width;x++){ var byteIndex=y*rowBytes+Math.floor(x/8); var bitIndex=7-(x%8); var bit=(pixelData[byteIndex]>>bitIndex)&1; var colorIndex=bit; var paletteEntry=palette[colorIndex]; var gray=(paletteEntry===0xFF)?255:0; var offset=(y*width+x)*4; imageData.data[offset]=gray;imageData.data[offset+1]=gray;imageData.data[offset+2]=gray;imageData.data[offset+3]=255; } } ctx.putImageData(imageData,0,0); var thumb=document.querySelector('.wallpaper-item[data-id="8"] img'); if(thumb)thumb.src=tempCanvas.toDataURL('image/png'); }catch(e){console.log('Failed to decode custom photo thumbnail: '+e.message);} }
-            // Custom photo processing functions
+            // custom photo functions
             function setPhotoStatus(msg,isError){var s=document.getElementById('photoStatus');s.textContent=msg;s.style.color=isError?'#ff7777':'#aaa';}
             function setSubmitDisabled(disabled){var btns=document.querySelectorAll('button[type="submit"], input[type="submit"], .save-btn');for(var i=0;i<btns.length;i++){btns[i].disabled=disabled;btns[i].style.opacity=disabled?'0.5':'1';}}
             function hideCompatibilityRetry(){document.getElementById('photoProxyBtn').style.display='none';}
@@ -298,19 +310,20 @@ Machine)</div>
             function loadImageUrl(useProxy){var url=document.getElementById('photoUrl').value.trim();if(!url){resetPhotoLoad('Enter a direct HTTPS image URL.',true);return;}var viaProxy=useProxy===true;var generation=beginPhotoLoad(viaProxy?'Loading via wsrv.nl…':'Loading image URL…',viaProxy?null:function(timedOutGen){loadImageUrl(true);});var img=new Image();img.crossOrigin='anonymous';if(typeof img.referrerPolicy!=='undefined')img.referrerPolicy='no-referrer';img.onerror=function(){if(viaProxy)failPhotoLoad(generation,'wsrv.nl could not fetch that image.');else loadImageUrl(true);};img.onload=function(){prepareImage(img,generation,viaProxy?'URL via wsrv.nl':'URL',viaProxy?null:function(){loadImageUrl(true);});};img.src=viaProxy?'https://wsrv.nl/?url='+encodeURIComponent(url)+'&w='+watchWidth+'&h='+watchHeight+'&fit=cover&a=center&output=png':url;}
             document.getElementById('photoUrl').addEventListener('input',function(){resetPhotoLoad('URL changed. Tap Load URL to prepare it.',false);});
             document.getElementById('photoUrl').addEventListener('keydown',function(e){if(e.key==='Enter'||e.keyCode===13){e.preventDefault();loadImageUrl(false);}});
+
             function getConfig(){var config={ClockMode:timeIndex,LeadingZeros:zerosOn,ShowAMPM:ampmOn,Wallpaper:selectedWallpaperId,Inverted:invertedOn};if(selectedWallpaperId===8&&customPhotoData)config.CustomPhoto=customPhotoData;return config;}
-            function showModal(text,onYes,onNo){playNotificationSound();document.getElementById('modalText').textContent=text;window._modalYesCallback=onYes||null;window._modalNoCallback=onNo||null;document.getElementById('modalOverlay').classList.add('active');}
+
+            function showModal(text,onYes,onNo){playNotificationSound();document.getElementById('modalText').textContent=text;document.getElementById('questionIcon').style.display='block';document.getElementById('warningIcon').style.display='none';document.getElementById('yesNoButtons').style.display='flex';document.getElementById('okButtonContainer').style.display='none';window._modalYesCallback=onYes||null;window._modalNoCallback=onNo||null;document.getElementById('modalOverlay').classList.add('active');}
             function hideModal(){document.getElementById('modalOverlay').classList.remove('active');window._modalYesCallback=null;window._modalNoCallback=null;}
+            function showAccessDeniedModal(){playNotificationSound();document.getElementById('modalText').textContent='Access denied.';document.getElementById('questionIcon').style.display='none';document.getElementById('warningIcon').style.display='block';document.getElementById('yesNoButtons').style.display='none';document.getElementById('okButtonContainer').style.display='flex';window._modalYesCallback=null;window._modalNoCallback=null;document.getElementById('modalOverlay').classList.add('active');}
             document.getElementById('yesBtn').addEventListener('click',function(){var cb=window._modalYesCallback;hideModal();if(cb)cb();});
             document.getElementById('noBtn').addEventListener('click',function(){var cb=window._modalNoCallback;hideModal();if(cb)cb();});
+            document.getElementById('okBtn').addEventListener('click',hideModal);
             document.getElementById('modalOverlay').addEventListener('click',function(e){if(e.target===this)hideModal();});
             window.showTWMConfirm=function(){showModal('Change Language?\n(This will restart The World\nMachine)',null,null);};
-            buildGrid();loadConfig(5);updateCustomPhotoSection();
 
-            // Show app after 1 second (or immediately if already loaded)
-            setTimeout(function(){
-                document.getElementById('app').classList.add('loaded');
-            }, 1000);
+            buildGrid();loadConfig(5);updateCustomPhotoSection();
+            setTimeout(function(){document.getElementById('app').classList.add('loaded');},1000);
 
             var sfxClick=document.getElementById('sfxClick');var sfxUnclick=document.getElementById('sfxUnclick');
             document.addEventListener('pointerdown',function(){if(sfxClick){sfxClick.currentTime=0;sfxClick.play().catch(function(){});}},true);
