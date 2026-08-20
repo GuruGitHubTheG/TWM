@@ -109,6 +109,11 @@
         .modal-btn { flex:0 1 168px; min-width:0; height:48px; padding:0 20px; border:3px solid var(--primary); background:transparent; color:var(--primary); font-family:'Volter',sans-serif; font-size:26px; letter-spacing:1px; cursor:pointer; display:flex; align-items:center; justify-content:center; white-space:nowrap; box-sizing:border-box; }
         .modal-btn:hover, .modal-btn:active { color:var(--primary-variant); border-color:var(--primary-variant); background:transparent; }
         .modal-ok-buttons { display:flex; justify-content:center; margin:0; padding:0 12px; }
+        #yesNoButtons .modal-btn {
+            flex: 1 1 0;
+            min-width: 0;
+            font-size: clamp(16px, 5vw, 26px);
+        }
 
         /* Inverted fixes */
         body.inverted .window-header-icon img,
