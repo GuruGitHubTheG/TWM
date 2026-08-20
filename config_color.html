@@ -9,13 +9,16 @@
         * { margin:0; padding:0; box-sizing:border-box; }
         body { font-family:'Volter',sans-serif; background:#000; color:var(--primary,#aa55ff); padding:0; margin:0; min-height:100vh; }
 
-        #app { opacity: 1; }
+        #app { opacity: 0; transition: opacity 0.2s; }
+        #app.loaded { opacity: 1; }
 
         #topBar {
             position: fixed; top:0; left:0; right:0; z-index:100;
-            background:#000; border-bottom:6px solid var(--primary,#aa55ff);
+            background:#000; border-bottom:6px solid var(--primary);
             padding:6px 18px 6px 6px; min-height:60px;
             display:flex; align-items:center;
+            opacity: 0;
+            transition: opacity 0.2s;
         }
         .topBar-left { display:flex; align-items:center; gap:12px; min-width:0; }
         .topBar-icon { width:48px; height:48px; flex-shrink:0; background-color:var(--primary,#aa55ff); -webkit-mask-image:url('https://raw.githubusercontent.com/GuruGitHubTheG/TWM/main/icons/oneshot.png'); mask-image:url('https://raw.githubusercontent.com/GuruGitHubTheG/TWM/main/icons/oneshot.png'); -webkit-mask-size:contain; mask-size:contain; -webkit-mask-repeat:no-repeat; mask-repeat:no-repeat; -webkit-mask-position:center; mask-position:center; }
@@ -550,6 +553,17 @@ Machine)</div>
             var canvas = document.getElementById('photoCanvas');
             canvas.width = watchWidth;
             canvas.height = watchHeight;
+
+            // ---------- FADE-IN CONTROL ----------
+            var appShown = false;
+            var showTimer = null;
+
+            function showApp() {
+                if (appShown) return;
+                appShown = true;
+                document.getElementById('topBar').style.opacity = '1';
+                document.getElementById('app').classList.add('loaded');
+            }
 
             // ---------- PENDING CUSTOM PHOTO ----------
             var pendingCustomPhotoData = null;
@@ -1149,11 +1163,16 @@ Machine)</div>
                         showExtraWallpapers = (showExtra === 'true');
                         updateExtraDisplay();
 
+                        if (showTimer) { clearTimeout(showTimer); showTimer = null; }
+                        showApp();
                         return true;
                     } catch(e) { console.warn('Error loading config', e); }
                 }
                 if (retries > 0) {
                     setTimeout(function(){ loadConfig(retries-1); }, 500);
+                    if (!showTimer) {
+                        showTimer = setTimeout(function(){ showApp(); }, 1000);
+                    }
                     return false;
                 } else {
                     applyStyles('#9664ff','#6442a5');
@@ -1163,6 +1182,9 @@ Machine)</div>
                     updateDisplays();
                     updateCustomPhotoSection();
                     updateExtraDisplay();
+                    if (!showTimer) {
+                        showTimer = setTimeout(function(){ showApp(); }, 1000);
+                    }
                     return false;
                 }
             }
