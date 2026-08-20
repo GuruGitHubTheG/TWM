@@ -13,16 +13,13 @@
         body { color: var(--primary); background: #000; }
         body.inverted { background: #fff; }
 
-        #app { opacity: 0; transition: opacity 0.2s; }
-        #app.loaded { opacity: 1; }
+        #app { opacity: 1; }
 
         #topBar {
             position: fixed; top:0; left:0; right:0; z-index:100;
             background:#000; border-bottom:6px solid var(--primary);
             padding:6px 18px 6px 6px; min-height:60px;
             display:flex; align-items:center;
-            opacity: 0;
-            transition: opacity 0.2s;
         }
         body.inverted #topBar { background:#fff; border-bottom-color:var(--primary); }
         .topBar-left { display:flex; align-items:center; gap:12px; min-width:0; }
@@ -109,16 +106,6 @@
             background: transparent;
         }
 
-        .photo-file-name {
-            font-family: 'Volter', sans-serif;
-            font-size: 21px;
-            letter-spacing: 0.5px;
-            color: var(--primary);
-            margin-bottom: 10px;
-            text-align: center;
-            word-break: break-all;
-        }
-
         .wallpaper-grid { display:flex; flex-wrap:wrap; gap:20px 12px; justify-content:flex-start; }
         .wallpaper-item { width:240px; cursor:pointer; border:6px solid transparent; background:transparent; padding:0; position:relative; display:flex; flex-direction:column; align-items:flex-start; justify-content:flex-start; overflow:hidden; flex-shrink:0; }
         .wallpaper-item.two-liner { height:217px; }
@@ -180,7 +167,7 @@
             margin-bottom: 10px;
         }
         #customPhotoModal .custom-photo-controls {
-            margin: 0 18px 12px;
+            margin: 0 18px 20px;
             text-align: left;
         }
         .info-icon {
@@ -245,23 +232,26 @@
 
         .custom-photo-preview {
             flex: 1 1 50%;
-            min-height: 200px;
+            height: 164px;               /* fixed height matches right column */
+            min-height: 0;               /* allow shrinking if needed */
             display: flex;
             align-items: center;
             justify-content: center;
-            border: 3px solid var(--primary);
+            border: 2px solid var(--primary);
             background: #000;
             box-sizing: border-box;
             overflow: hidden;
+            padding: 8px;
         }
 
         .custom-photo-preview canvas {
             max-width: 100%;
-            max-height: 240px;
+            max-height: 100%;
             height: auto;
             width: auto;
             border: none !important;
             margin: 0 !important;
+            object-fit: contain;
         }
 
         .custom-photo-inputs {
@@ -280,13 +270,13 @@
         }
 
         .custom-photo-info {
-            margin: 12px 18px 0;
             font-family: 'Volter', sans-serif;
             font-size: 16px;
             line-height: 1.3;
             color: var(--primary);
             text-align: center;
             word-break: break-word;
+            margin-top: 2px;
         }
     </style>
     <script src="https://cdn.jsdelivr.net/npm/lz-string@1.4.4/libs/lz-string.min.js"></script>
@@ -435,7 +425,7 @@
                 <div class="custom-photo-controls">
                     <div class="custom-photo-layout">
                         <div class="custom-photo-preview" id="photoPreviewContainer">
-                            <canvas id="photoCanvas" style="display:none; max-width:100%; height:auto; margin:0 auto;"></canvas>
+                            <canvas id="photoCanvas" style="display:none;"></canvas>
                         </div>
 
                         <div class="custom-photo-inputs">
@@ -446,8 +436,6 @@
                             <button id="photoProxyBtn" class="custom-photo-btn" style="display:none;">Retry via wsrv.nl</button>
                         </div>
                     </div>
-
-                    <div class="custom-photo-info" id="photoInfo">No file chosen — Choose a photo to prepare it for your watch.</div>
                 </div>
 
                 <div class="modal-buttons" id="customPhotoButtons">
@@ -489,7 +477,6 @@ Machine)</div>
 
     <script>
         (function() {
-            // ---------- QUERY PARAMETERS ----------
             function getQueryParam(param) {
                 var urlParams = new URLSearchParams(window.location.search);
                 return urlParams.get(param);
@@ -498,7 +485,6 @@ Machine)</div>
             var watchWidth = parseInt(getQueryParam('width'), 10) || 144;
             var watchHeight = parseInt(getQueryParam('height'), 10) || 168;
 
-            // ---------- WALLPAPERS ----------
             var wallpapers = [
                 { id: 1, label: 'The World\nMachine', image: 'https://raw.githubusercontent.com/GuruGitHubTheG/TWM/main/wallpapers/The_World_Machine_wallpaper.png' },
                 { id: 2, label: 'Barrens\nCraters', image: 'https://raw.githubusercontent.com/GuruGitHubTheG/TWM/main/wallpapers/Barrens_Craters_wallpaper.png' },
@@ -525,17 +511,11 @@ Machine)</div>
             canvas.width = watchWidth;
             canvas.height = watchHeight;
 
-            var currentPhotoFileName = 'No file chosen';
-            var currentPhotoStatus = 'Choose a photo to prepare it for your watch.';
+            var pendingCustomPhotoData = null;
+            var pendingCustomThumbSrc = null;
+            var customPhotoModalPreviousWallpaperId = null;
+            var customPhotoModalPreviousExtraWallpaperId = null;
 
-            function updatePhotoInfo() {
-                var el = document.getElementById('photoInfo');
-                if (el) {
-                    el.textContent = currentPhotoFileName + ' — ' + currentPhotoStatus;
-                }
-            }
-
-            // ---------- EXTRA WALLPAPERS ----------
             var showExtraWallpapers = false;
             var selectedExtraWallpaperId = null;
             var extraWallpapers = [
@@ -559,64 +539,39 @@ Machine)</div>
             var extraWallpaperThumbBase = 'https://raw.githubusercontent.com/GuruGitHubTheG/TWM/main/wallpapers/more/';
             var extraWallpaperWatchBase = 'https://raw.githubusercontent.com/GuruGitHubTheG/TWM/main/wallpapers/more/bw/';
 
-            // ---------- FADE-IN CONTROL ----------
-            var appShown = false;
-            var showTimer = null;
-
-            function showApp() {
-                if (appShown) return;
-                appShown = true;
-                document.getElementById('topBar').style.opacity = '1';
-                document.getElementById('app').classList.add('loaded');
+            function showCustomPhotoModal() {
+                playNotificationSound();
+                document.getElementById('customPhotoModal').classList.add('active');
+            }
+            function hideCustomPhotoModal() {
+                document.getElementById('customPhotoModal').classList.remove('active');
             }
 
-            // ---------- NOTIFICATIONS ----------
             var notifOrder = [2, 3, 4, 2, 2, 3, 4, 2, 2, 3, 4, 2];
             var notifIndex = 0;
-
             function playNotificationSound() {
                 var num = notifOrder[notifIndex];
                 var audio = document.getElementById('notif' + num);
-                if (audio) {
-                    audio.currentTime = 0;
-                    audio.play().catch(function() {});
-                }
+                if (audio) { audio.currentTime = 0; audio.play().catch(function() {}); }
                 notifIndex = (notifIndex + 1) % notifOrder.length;
             }
 
-            // ---------- SETTINGS HELPERS ----------
             function applyInversion(enabled) {
                 invertedOn = enabled;
                 if (enabled) document.body.classList.add('inverted');
                 else document.body.classList.remove('inverted');
                 document.getElementById('invertDisplay').textContent = enabled ? 'ON' : 'OFF';
             }
-
             function updateDisplays() {
                 document.getElementById('timeDisplay').textContent = timeOptions[timeIndex];
                 document.getElementById('zerosDisplay').textContent = zerosOn ? 'ON' : 'OFF';
                 document.getElementById('ampmDisplay').textContent = ampmOn ? 'ON' : 'OFF';
             }
-
-            // ---------- CUSTOM PHOTO MODAL ----------
-            function showCustomPhotoModal() {
-                document.getElementById('customPhotoModal').classList.add('active');
-            }
-
-            function hideCustomPhotoModal() {
-                document.getElementById('customPhotoModal').classList.remove('active');
-            }
-
             function updateCustomPhotoSection() {
-                // The modal should only be shown when the built-in Custom Photo tile is selected
-                // and no extra wallpaper is selected.
                 var show = selectedWallpaperId === 8 && selectedExtraWallpaperId === null;
-                if (!show) {
-                    hideCustomPhotoModal();
-                }
+                if (!show) hideCustomPhotoModal();
             }
 
-            // ---------- EXTRA WALLPAPERS DISPLAY ----------
             function updateExtraDisplay() {
                 document.getElementById('extraDisplay').textContent = showExtraWallpapers ? 'ON' : 'OFF';
                 var win = document.getElementById('extra-wallpaper-window');
@@ -624,7 +579,6 @@ Machine)</div>
                 if (showExtraWallpapers) buildExtraWallpaperGrid();
                 localStorage.setItem('twm_show_extra_wallpapers', showExtraWallpapers ? 'true' : 'false');
             }
-
             function buildExtraWallpaperGrid() {
                 var grid = document.getElementById('extraWallpaperGrid');
                 if (!grid) return;
@@ -635,33 +589,15 @@ Machine)</div>
                     item.className = 'wallpaper-item extra-wallpaper-item' + (lines.length === 1 ? ' one-liner' : ' two-liner');
                     item.dataset.extraFile = ep.file;
                     if (selectedExtraWallpaperId === ep.file) item.classList.add('selected');
-
-                    var wrapper = document.createElement('div');
-                    wrapper.className = 'wallpaper-screenshot-wrapper';
-                    var shadow = document.createElement('div');
-                    shadow.className = 'wallpaper-shadow';
+                    var wrapper = document.createElement('div'); wrapper.className = 'wallpaper-screenshot-wrapper';
+                    var shadow = document.createElement('div'); shadow.className = 'wallpaper-shadow';
                     var thumbFile = ep.file.replace('.png', '_wallpaper.png');
-                    var img = document.createElement('img');
-                    img.className = 'wallpaper-screenshot';
-                    img.src = extraWallpaperThumbBase + thumbFile;
-                    img.alt = ep.title;
-                    wrapper.appendChild(shadow);
-                    wrapper.appendChild(img);
-                    item.appendChild(wrapper);
-
-                    var textWrapper = document.createElement('div');
-                    textWrapper.className = 'wallpaper-text-wrapper';
-                    lines.forEach(function(line) {
-                        var span = document.createElement('span');
-                        span.className = 'wallpaper-label';
-                        span.textContent = line;
-                        textWrapper.appendChild(span);
-                    });
+                    var img = document.createElement('img'); img.className = 'wallpaper-screenshot'; img.src = extraWallpaperThumbBase + thumbFile; img.alt = ep.title;
+                    wrapper.appendChild(shadow); wrapper.appendChild(img); item.appendChild(wrapper);
+                    var textWrapper = document.createElement('div'); textWrapper.className = 'wallpaper-text-wrapper';
+                    lines.forEach(function(line) { var span = document.createElement('span'); span.className = 'wallpaper-label'; span.textContent = line; textWrapper.appendChild(span); });
                     item.appendChild(textWrapper);
-
-                    item.addEventListener('click', function() {
-                        selectExtraWallpaper(ep.file, ep.title);
-                    });
+                    item.addEventListener('click', function() { selectExtraWallpaper(ep.file, ep.title); });
                     grid.appendChild(item);
                 });
             }
@@ -674,7 +610,6 @@ Machine)</div>
                 img.onload = function() { prepareExtraWallpaper(img, generation, 'extra'); };
                 img.src = url;
             }
-
             function selectExtraWallpaper(file, title) {
                 selectedWallpaperId = 8;
                 selectedExtraWallpaperId = file;
@@ -682,7 +617,7 @@ Machine)</div>
                 document.querySelectorAll('.extra-wallpaper-item').forEach(function(el) { el.classList.remove('selected'); });
                 var extraItem = document.querySelector('.extra-wallpaper-item[data-extra-file="' + file + '"]');
                 if (extraItem) extraItem.classList.add('selected');
-                updateCustomPhotoSection(); // hides custom modal
+                updateCustomPhotoSection();
                 hideCustomPhotoModal();
 
                 var watchSuffix = (watchHeight === 228) ? '_228.png' : '_168.png';
@@ -709,7 +644,6 @@ Machine)</div>
                 loadExtraWallpaperUrl(watchUrl, title);
             }
 
-            // ---------- EXTRA WALLPAPER PACKING (no scaling/dithering) ----------
             function prepareExtraWallpaper(image, generation, sourceLabel) {
                 if (generation !== photoLoadGeneration) return;
                 try {
@@ -732,7 +666,6 @@ Machine)</div>
                     var compressed = LZString.compressToEncodedURIComponent(btoa(binary));
                     customPhotoData = { compressed: compressed, palette: result.palette, color: false };
                     setSubmitDisabled(false);
-                    setPhotoStatus('Ready: ' + watchWidth + '×' + watchHeight + ' extra wallpaper.', false);
                     if (photoLoadTimer) { clearTimeout(photoLoadTimer); photoLoadTimer = null; }
                 } catch (e) {
                     var detail = e && e.message ? e.message : String(e);
@@ -757,7 +690,6 @@ Machine)</div>
                 return { pixelData: pixelData, palette: [0xFF, 0xC0], color: false };
             }
 
-            // ---------- SAVE / DISMISS ----------
             function saveConfig() {
                 var config = getConfig();
                 var json = JSON.stringify(config);
@@ -768,14 +700,12 @@ Machine)</div>
                 if (returnTo) window.location = returnTo + encoded;
                 else window.location = 'pebblejs://close#' + encoded;
             }
-
             function dismissConfig() {
                 var returnTo = getQueryParam('return_to');
                 if (returnTo) window.location = returnTo;
                 else window.location = 'pebblejs://close';
             }
 
-            // ---------- EVENT LISTENERS ----------
             document.getElementById('saveBtnTop').addEventListener('click', saveConfig);
             document.querySelectorAll('[id^="dismissBtn"]').forEach(function(btn) { btn.addEventListener('click', showAccessDeniedModal); });
             document.querySelectorAll('[id^="closeBtn"]').forEach(function(btn) { btn.addEventListener('click', showAccessDeniedModal); });
@@ -794,26 +724,46 @@ Machine)</div>
             document.getElementById('closeBtnBW5').addEventListener('click', showAccessDeniedModal);
             document.getElementById('restoreDefaultsBtn').addEventListener('click', confirmRestoreDefaults);
 
-            // Custom photo modal buttons
-            document.getElementById('customPhotoOkBtn').addEventListener('click', hideCustomPhotoModal);
-            document.getElementById('customPhotoCancelBtn').addEventListener('click', hideCustomPhotoModal);
-            document.getElementById('customPhotoModal').addEventListener('click', function(e) {
-                if (e.target === this) hideCustomPhotoModal();
+            document.getElementById('customPhotoOkBtn').addEventListener('click', function() {
+                if (pendingCustomPhotoData) {
+                    customPhotoData = pendingCustomPhotoData;
+                    var customThumb = document.querySelector('.wallpaper-item[data-id="8"] img');
+                    if (customThumb && pendingCustomThumbSrc) {
+                        customThumb.src = pendingCustomThumbSrc;
+                    }
+                    pendingCustomPhotoData = null;
+                    pendingCustomThumbSrc = null;
+                }
+                hideCustomPhotoModal();
             });
+            document.getElementById('customPhotoCancelBtn').addEventListener('click', function() {
+                pendingCustomPhotoData = null;
+                pendingCustomThumbSrc = null;
+                canvas.style.display = 'none';                     // unload preview image
+                selectedWallpaperId = customPhotoModalPreviousWallpaperId;
+                selectedExtraWallpaperId = customPhotoModalPreviousExtraWallpaperId;
 
-            // ---------- TOGGLE EXTRA WALLPAPERS ----------
+                document.querySelectorAll('.wallpaper-item').forEach(function(el) { el.classList.remove('selected'); });
+                document.querySelectorAll('.extra-wallpaper-item').forEach(function(el) { el.classList.remove('selected'); });
+
+                if (selectedExtraWallpaperId) {
+                    var extraItem = document.querySelector('.extra-wallpaper-item[data-extra-file="' + selectedExtraWallpaperId + '"]');
+                    if (extraItem) extraItem.classList.add('selected');
+                } else {
+                    var builtIn = document.querySelector('.wallpaper-item[data-id="' + selectedWallpaperId + '"]');
+                    if (builtIn) builtIn.classList.add('selected');
+                }
+                hideCustomPhotoModal();
+                updateCustomPhotoSection();
+            });
+            document.getElementById('customPhotoModal').addEventListener('click', function(e) { if (e.target === this) hideCustomPhotoModal(); });
+
             function toggleExtraWallpapers() {
                 if (!showExtraWallpapers) {
                     showModal(
                         'Enabling this option will show wallpapers which contain spoilers. Continue?',
-                        function() {
-                            showExtraWallpapers = true;
-                            updateExtraDisplay();
-                        },
-                        function() {
-                            showExtraWallpapers = false;
-                            updateExtraDisplay();
-                        }
+                        function() { showExtraWallpapers = true; updateExtraDisplay(); },
+                        function() { showExtraWallpapers = false; updateExtraDisplay(); }
                     );
                 } else {
                     showExtraWallpapers = false;
@@ -821,17 +771,9 @@ Machine)</div>
                 }
             }
 
-            // ---------- RESTORE DEFAULTS ----------
             function confirmRestoreDefaults() {
-                showModal(
-                    'Are you sure you would like to restore defaults?',
-                    function() {
-                        restoreDefaults();
-                    },
-                    null
-                );
+                showModal('Are you sure you would like to restore defaults?', function() { restoreDefaults(); }, null);
             }
-
             function restoreDefaults() {
                 timeIndex = 0;
                 zerosOn = false;
@@ -841,6 +783,8 @@ Machine)</div>
                 selectedExtraWallpaperId = null;
                 customPhotoData = null;
                 showExtraWallpapers = false;
+                pendingCustomPhotoData = null;
+                pendingCustomThumbSrc = null;
 
                 localStorage.removeItem('twm_show_extra_wallpapers');
                 localStorage.removeItem('twm_selected_extra_wallpaper');
@@ -857,12 +801,10 @@ Machine)</div>
                 var customThumb = document.querySelector('.wallpaper-item[data-id="8"] img');
                 if (customThumb) customThumb.src = 'data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7';
                 canvas.style.display = 'none';
-                setPhotoStatus('Choose a photo to prepare it for your watch.', false);
                 setSubmitDisabled(false);
                 hideCustomPhotoModal();
             }
 
-            // ---------- LOAD CONFIG ----------
             function loadConfig(retries) {
                 retries = retries || 3;
                 selectedExtraWallpaperId = null;
@@ -870,12 +812,7 @@ Machine)</div>
                 if (stored) {
                     try {
                         var config = JSON.parse(stored);
-                        if (config.ClockMode !== undefined) {
-                            var val = parseInt(config.ClockMode, 10);
-                            if (val === 0) timeIndex = 0;
-                            else if (val === 1) timeIndex = 1;
-                            else if (val === 2) timeIndex = 2;
-                        }
+                        if (config.ClockMode !== undefined) { var val = parseInt(config.ClockMode, 10); if (val === 0) timeIndex = 0; else if (val === 1) timeIndex = 1; else if (val === 2) timeIndex = 2; }
                         if (config.LeadingZeros !== undefined) zerosOn = config.LeadingZeros === true;
                         if (config.ShowAMPM !== undefined) ampmOn = config.ShowAMPM !== false;
                         if (config.Inverted !== undefined) applyInversion(config.Inverted === true);
@@ -883,9 +820,7 @@ Machine)</div>
                             var wp = parseInt(config.Wallpaper, 10);
                             if (!isNaN(wp)) {
                                 selectedWallpaperId = wp;
-                                document.querySelectorAll('.wallpaper-item').forEach(function(el) {
-                                    el.classList.toggle('selected', parseInt(el.dataset.id) === selectedWallpaperId);
-                                });
+                                document.querySelectorAll('.wallpaper-item').forEach(function(el) { el.classList.toggle('selected', parseInt(el.dataset.id) === selectedWallpaperId); });
                                 updateCustomPhotoSection();
                             }
                         }
@@ -897,23 +832,13 @@ Machine)</div>
                         showExtraWallpapers = (showExtra === 'true');
                         updateExtraDisplay();
 
-                        if (showTimer) { clearTimeout(showTimer); showTimer = null; }
-                        showApp();
                         return true;
-                    } catch (e) {
-                        console.warn('Error loading config', e);
-                    }
+                    } catch (e) { console.warn('Error loading config', e); }
                 }
                 if (retries > 0) {
                     setTimeout(function() { loadConfig(retries - 1); }, 500);
-                    if (!showTimer) {
-                        showTimer = setTimeout(function() { showApp(); }, 1000);
-                    }
                     return false;
                 } else {
-                    if (!showTimer) {
-                        showTimer = setTimeout(function() { showApp(); }, 1000);
-                    }
                     document.getElementById('topBarTitle').textContent = 'The World Machine';
                     updateDisplays();
                     updateCustomPhotoSection();
@@ -922,7 +847,6 @@ Machine)</div>
                 }
             }
 
-            // ---------- BUILD WALLPAPER GRID ----------
             function buildGrid() {
                 var grid = document.getElementById('wallpaperGrid');
                 grid.innerHTML = '';
@@ -931,47 +855,32 @@ Machine)</div>
                     var item = document.createElement('div');
                     item.className = 'wallpaper-item' + (selectedWallpaperId === wp.id ? ' selected' : '') + (lines.length === 1 ? ' one-liner' : ' two-liner');
                     item.dataset.id = wp.id;
-                    var wrapper = document.createElement('div');
-                    wrapper.className = 'wallpaper-screenshot-wrapper';
-                    var shadow = document.createElement('div');
-                    shadow.className = 'wallpaper-shadow';
-                    var img = document.createElement('img');
-                    img.className = 'wallpaper-screenshot';
-                    img.src = wp.image || 'data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7';
-                    img.alt = wp.label.replace('\n', ' ');
-                    wrapper.appendChild(shadow);
-                    wrapper.appendChild(img);
-                    item.appendChild(wrapper);
-
-                    var textWrapper = document.createElement('div');
-                    textWrapper.className = 'wallpaper-text-wrapper';
-                    lines.forEach(function(line) {
-                        var span = document.createElement('span');
-                        span.className = 'wallpaper-label';
-                        span.textContent = line;
-                        textWrapper.appendChild(span);
-                    });
+                    var wrapper = document.createElement('div'); wrapper.className = 'wallpaper-screenshot-wrapper';
+                    var shadow = document.createElement('div'); shadow.className = 'wallpaper-shadow';
+                    var img = document.createElement('img'); img.className = 'wallpaper-screenshot'; img.src = wp.image || 'data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7'; img.alt = wp.label.replace('\n', ' ');
+                    wrapper.appendChild(shadow); wrapper.appendChild(img); item.appendChild(wrapper);
+                    var textWrapper = document.createElement('div'); textWrapper.className = 'wallpaper-text-wrapper';
+                    lines.forEach(function(line) { var span = document.createElement('span'); span.className = 'wallpaper-label'; span.textContent = line; textWrapper.appendChild(span); });
                     item.appendChild(textWrapper);
-
                     item.addEventListener('click', function() {
+                        if (wp.id === 8) {
+                            customPhotoModalPreviousWallpaperId = selectedWallpaperId;
+                            customPhotoModalPreviousExtraWallpaperId = selectedExtraWallpaperId;
+                        }
                         document.querySelectorAll('.wallpaper-item').forEach(function(el) { el.classList.remove('selected'); });
                         this.classList.add('selected');
                         selectedWallpaperId = wp.id;
                         selectedExtraWallpaperId = null;
                         document.querySelectorAll('.extra-wallpaper-item').forEach(function(el) { el.classList.remove('selected'); });
                         localStorage.removeItem('twm_selected_extra_wallpaper');
-                        if (wp.id === 8) {
-                            showCustomPhotoModal();
-                        } else {
-                            hideCustomPhotoModal();
-                        }
+                        if (wp.id === 8) showCustomPhotoModal();
+                        else hideCustomPhotoModal();
                         updateCustomPhotoSection();
                     });
                     grid.appendChild(item);
                 });
             }
 
-            // ---------- DECODE CUSTOM PHOTO THUMBNAIL ----------
             function decodeCustomPhotoToThumbnail(photoData) {
                 if (!photoData || !photoData.compressed || !photoData.palette) return;
                 try {
@@ -981,8 +890,7 @@ Machine)</div>
                     var pixelData = new Uint8Array(binary.length);
                     for (var i = 0; i < binary.length; i++) pixelData[i] = binary.charCodeAt(i);
                     var width = watchWidth, height = watchHeight;
-                    var tempCanvas = document.createElement('canvas');
-                    tempCanvas.width = width; tempCanvas.height = height;
+                    var tempCanvas = document.createElement('canvas'); tempCanvas.width = width; tempCanvas.height = height;
                     var ctx = tempCanvas.getContext('2d');
                     var imageData = ctx.createImageData(width, height);
                     var palette = photoData.palette;
@@ -996,60 +904,39 @@ Machine)</div>
                             var paletteEntry = palette[colorIndex];
                             var gray = (paletteEntry === 0xFF) ? 255 : 0;
                             var offset = (y * width + x) * 4;
-                            imageData.data[offset] = gray;
-                            imageData.data[offset + 1] = gray;
-                            imageData.data[offset + 2] = gray;
-                            imageData.data[offset + 3] = 255;
+                            imageData.data[offset] = gray; imageData.data[offset + 1] = gray; imageData.data[offset + 2] = gray; imageData.data[offset + 3] = 255;
                         }
                     }
                     ctx.putImageData(imageData, 0, 0);
                     var thumb = document.querySelector('.wallpaper-item[data-id="8"] img');
                     if (thumb) thumb.src = tempCanvas.toDataURL('image/png');
-                } catch (e) {
-                    console.log('Failed to decode custom photo thumbnail: ' + e.message);
-                }
+                } catch (e) { console.log('Failed to decode custom photo thumbnail: ' + e.message); }
             }
 
-            // ---------- CUSTOM PHOTO PROCESSING ----------
-            function setPhotoStatus(msg, isError) {
-                currentPhotoStatus = msg;
-                var el = document.getElementById('photoInfo');
-                if (el) {
-                    el.textContent = currentPhotoFileName + ' — ' + currentPhotoStatus;
-                    el.style.color = isError ? '#ff7777' : 'var(--primary)';
-                }
-            }
-
+            function setPhotoStatus(msg, isError) { /* no visible status */ }
             function setSubmitDisabled(disabled) {
                 var btns = document.querySelectorAll('button[type="submit"], input[type="submit"], .save-btn');
-                for (var i = 0; i < btns.length; i++) {
-                    btns[i].disabled = disabled;
-                    btns[i].style.opacity = disabled ? '0.5' : '1';
-                }
+                for (var i = 0; i < btns.length; i++) { btns[i].disabled = disabled; btns[i].style.opacity = disabled ? '0.5' : '1'; }
             }
-
-            function hideCompatibilityRetry() {
-                document.getElementById('photoProxyBtn').style.display = 'none';
-            }
-
+            function hideCompatibilityRetry() { document.getElementById('photoProxyBtn').style.display = 'none'; }
             function resetPhotoLoad(message, isError) {
                 if (photoLoadTimer) { clearTimeout(photoLoadTimer); photoLoadTimer = null; }
                 photoLoadGeneration++;
                 customPhotoData = null;
+                pendingCustomPhotoData = null;
+                pendingCustomThumbSrc = null;
                 canvas.style.display = 'none';
                 hideCompatibilityRetry();
                 setSubmitDisabled(false);
-                currentPhotoFileName = 'No file chosen';
-                setPhotoStatus(message, isError);
                 var customThumb = document.querySelector('.wallpaper-item[data-id="8"] img');
                 if (customThumb) customThumb.src = 'data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7';
             }
-
             function beginPhotoLoad(message, timeoutCallback) {
                 if (photoLoadTimer) { clearTimeout(photoLoadTimer); photoLoadTimer = null; }
                 photoLoadGeneration++;
+                pendingCustomPhotoData = null;
+                pendingCustomThumbSrc = null;
                 setSubmitDisabled(true);
-                setPhotoStatus(message, false);
                 customPhotoData = null;
                 canvas.style.display = 'none';
                 hideCompatibilityRetry();
@@ -1060,20 +947,20 @@ Machine)</div>
                 }, 30000);
                 return generation;
             }
-
             function failPhotoLoad(generation, message) {
                 if (generation !== photoLoadGeneration) return;
                 if (photoLoadTimer) { clearTimeout(photoLoadTimer); photoLoadTimer = null; }
                 photoLoadGeneration++;
                 customPhotoData = null;
-                setPhotoStatus(message, true);
+                pendingCustomPhotoData = null;
+                pendingCustomThumbSrc = null;
                 setSubmitDisabled(false);
+                showImageLoadFailedModal();
             }
-
             function offerCompatibilityRetry(generation, message) {
                 if (generation !== photoLoadGeneration) return;
-                failPhotoLoad(generation, message || 'The browser could not load this image directly. The host may block access; retry through wsrv.nl below.');
                 document.getElementById('photoProxyBtn').style.display = 'block';
+                failPhotoLoad(generation, message || 'Image load failed.');
             }
 
             function quantizeBWAndPack(imageData, width, height) {
@@ -1125,14 +1012,12 @@ Machine)</div>
                     var result = quantizeBWAndPack(imageData, watchWidth, watchHeight);
                     ctx.putImageData(imageData, 0, 0);
                     canvas.style.display = 'block';
-                    var customThumb = document.querySelector('.wallpaper-item[data-id="8"] img');
-                    if (customThumb && image.src) customThumb.src = image.src;
                     var binary = '';
                     for (var i = 0; i < result.pixelData.length; i++) binary += String.fromCharCode(result.pixelData[i]);
                     var compressed = LZString.compressToEncodedURIComponent(btoa(binary));
-                    customPhotoData = { compressed: compressed, palette: result.palette, color: false };
+                    pendingCustomPhotoData = { compressed: compressed, palette: result.palette, color: false };
+                    pendingCustomThumbSrc = canvas.toDataURL('image/png');
                     setSubmitDisabled(false);
-                    setPhotoStatus('Ready: ' + watchWidth + '×' + watchHeight + ' B/W custom photo.', false);
                     if (photoLoadTimer) { clearTimeout(photoLoadTimer); photoLoadTimer = null; }
                 } catch (e) {
                     var detail = e && e.message ? e.message : String(e);
@@ -1144,84 +1029,39 @@ Machine)</div>
                 }
             }
 
-            // ---------- FILE & URL INPUT HANDLERS ----------
-            document.getElementById('photoFileBtn').addEventListener('click', function() {
-                document.getElementById('photoFile').click();
-            });
-
+            document.getElementById('photoFileBtn').addEventListener('click', function() { document.getElementById('photoFile').click(); });
             document.getElementById('photoFile').addEventListener('change', function() {
                 var file = this.files && this.files[0];
-                currentPhotoFileName = file ? file.name : 'No file chosen';
-                if (!file) {
-                    setPhotoStatus('Choose a photo to prepare it for your watch.', false);
-                    return;
-                }
-
+                if (!file) return;
                 var generation = beginPhotoLoad('Loading photo file…');
                 var reader = new FileReader();
                 reader.onerror = function() { failPhotoLoad(generation, 'The photo could not be read.'); };
                 reader.onload = function(e) {
                     var img = new Image();
                     img.onerror = function() { failPhotoLoad(generation, 'The selected image could not be decoded.'); };
-                    img.onload = function() {
-                        currentPhotoFileName = file.name;
-                        prepareImage(img, generation, 'file');
-                    };
+                    img.onload = function() { prepareImage(img, generation, 'file'); };
                     img.src = e.target.result;
                 };
                 reader.readAsDataURL(file);
             });
-
             document.getElementById('loadUrlBtn').addEventListener('click', function() { loadImageUrl(false); });
             document.getElementById('photoProxyBtn').addEventListener('click', function() { loadImageUrl(true); });
-
             function loadImageUrl(useProxy) {
                 var url = document.getElementById('photoUrl').value.trim();
-                if (!url) {
-                    resetPhotoLoad('Enter a direct HTTPS image URL.', true);
-                    return;
-                }
+                if (!url) { resetPhotoLoad('Enter a direct HTTPS image URL.', true); return; }
                 var viaProxy = useProxy === true;
                 var generation = beginPhotoLoad(viaProxy ? 'Loading via wsrv.nl…' : 'Loading image URL…', viaProxy ? null : function(timedOutGen) { loadImageUrl(true); });
                 var img = new Image();
                 img.crossOrigin = 'anonymous';
                 if (typeof img.referrerPolicy !== 'undefined') img.referrerPolicy = 'no-referrer';
-                img.onerror = function() {
-                    if (viaProxy) failPhotoLoad(generation, 'wsrv.nl could not fetch that image.');
-                    else loadImageUrl(true);
-                };
-                img.onload = function() {
-                    prepareImage(img, generation, viaProxy ? 'URL via wsrv.nl' : 'URL', viaProxy ? null : function() { loadImageUrl(true); });
-                };
+                img.onerror = function() { if (viaProxy) failPhotoLoad(generation, 'wsrv.nl could not fetch that image.'); else loadImageUrl(true); };
+                img.onload = function() { prepareImage(img, generation, viaProxy ? 'URL via wsrv.nl' : 'URL', viaProxy ? null : function() { loadImageUrl(true); }); };
                 var finalUrl = viaProxy ? 'https://wsrv.nl/?url=' + encodeURIComponent(url) + '&w=' + watchWidth + '&h=' + watchHeight + '&fit=cover&a=center&output=png' : url;
                 img.src = finalUrl;
             }
+            document.getElementById('photoUrl').addEventListener('input', function() { resetPhotoLoad('URL changed. Tap Load URL to prepare it.', false); });
+            document.getElementById('photoUrl').addEventListener('keydown', function(e) { if (e.key === 'Enter' || e.keyCode === 13) { e.preventDefault(); loadImageUrl(false); } });
 
-            document.getElementById('photoUrl').addEventListener('input', function() {
-                resetPhotoLoad('URL changed. Tap Load URL to prepare it.', false);
-            });
-
-            document.getElementById('photoUrl').addEventListener('keydown', function(e) {
-                if (e.key === 'Enter' || e.keyCode === 13) {
-                    e.preventDefault();
-                    loadImageUrl(false);
-                }
-            });
-
-            // ---------- GET CONFIG ----------
-            function getConfig() {
-                var config = {
-                    ClockMode: timeIndex,
-                    LeadingZeros: zerosOn,
-                    ShowAMPM: ampmOn,
-                    Wallpaper: selectedWallpaperId,
-                    Inverted: invertedOn
-                };
-                if (selectedWallpaperId === 8 && customPhotoData) config.CustomPhoto = customPhotoData;
-                return config;
-            }
-
-            // ---------- MODAL HELPERS ----------
             function showModal(text, onYes, onNo, yesLabel, noLabel) {
                 playNotificationSound();
                 document.getElementById('modalText').textContent = text;
@@ -1235,13 +1075,11 @@ Machine)</div>
                 window._modalNoCallback = onNo || null;
                 document.getElementById('modalOverlay').classList.add('active');
             }
-
             function hideModal() {
                 document.getElementById('modalOverlay').classList.remove('active');
                 window._modalYesCallback = null;
                 window._modalNoCallback = null;
             }
-
             function showAccessDeniedModal() {
                 playNotificationSound();
                 document.getElementById('modalText').textContent = 'Access denied.';
@@ -1253,15 +1091,35 @@ Machine)</div>
                 window._modalNoCallback = null;
                 document.getElementById('modalOverlay').classList.add('active');
             }
-
+            function showImageLoadFailedModal() {
+                playNotificationSound();
+                document.getElementById('modalText').textContent = 'Image load failed.';
+                document.getElementById('questionIcon').style.display = 'none';
+                document.getElementById('warningIcon').style.display = 'block';
+                document.getElementById('yesNoButtons').style.display = 'none';
+                document.getElementById('okButtonContainer').style.display = 'flex';
+                window._modalYesCallback = null;
+                window._modalNoCallback = null;
+                document.getElementById('modalOverlay').classList.add('active');
+            }
             document.getElementById('yesBtn').addEventListener('click', function() { var cb = window._modalYesCallback; hideModal(); if (cb) cb(); });
             document.getElementById('noBtn').addEventListener('click', function() { var cb = window._modalNoCallback; hideModal(); if (cb) cb(); });
             document.getElementById('okBtn').addEventListener('click', hideModal);
             document.getElementById('modalOverlay').addEventListener('click', function(e) { if (e.target === this) hideModal(); });
-
             window.showTWMConfirm = function() { showModal('Change Language?\n(This will restart The World\nMachine)', null, null); };
 
-            // ---------- INIT ----------
+            function getConfig() {
+                var config = {
+                    ClockMode: timeIndex,
+                    LeadingZeros: zerosOn,
+                    ShowAMPM: ampmOn,
+                    Wallpaper: selectedWallpaperId,
+                    Inverted: invertedOn
+                };
+                if (selectedWallpaperId === 8 && customPhotoData) config.CustomPhoto = customPhotoData;
+                return config;
+            }
+
             buildGrid();
             loadConfig(5);
             updateCustomPhotoSection();
