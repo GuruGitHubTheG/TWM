@@ -63,6 +63,29 @@
         .setting-middle { flex:1; height:48px; display:flex; align-items:center; justify-content:center; border-top:3px solid var(--primary); border-bottom:3px solid var(--primary); margin:0; }
         .setting-value { font-size:21px; line-height:21px; height:21px; font-weight:normal; color:var(--primary); letter-spacing:1px; text-align:center; padding:0 8px; white-space:nowrap; }
 
+        .restore-defaults-btn {
+            width: 100%;
+            height: 48px;
+            border: 3px solid var(--primary);
+            background: transparent;
+            color: var(--primary);
+            font-family: 'Volter', sans-serif;
+            font-size: 21px;
+            letter-spacing: 1px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0;
+            margin-top: 24px;
+        }
+        .restore-defaults-btn:hover,
+        .restore-defaults-btn:active {
+            border-color: var(--primary-variant);
+            color: var(--primary-variant);
+            background: transparent;
+        }
+
         .wallpaper-grid { display:flex; flex-wrap:wrap; gap:20px 12px; justify-content:flex-start; }
         .wallpaper-item { width:240px; cursor:pointer; border:6px solid transparent; background:transparent; padding:0; position:relative; display:flex; flex-direction:column; align-items:flex-start; justify-content:flex-start; overflow:hidden; flex-shrink:0; }
         .wallpaper-item.two-liner { height:217px; }
@@ -107,13 +130,13 @@
         .modal-text { margin:0 30px 15px; font-size:26px; line-height:32px; text-align:center; white-space:pre-line; color:var(--primary); }
         .modal-buttons { display:flex; align-items:center; justify-content:center; gap:24px; margin:0; padding:0 12px; }
         .modal-btn { flex:0 1 168px; min-width:0; height:48px; padding:0 20px; border:3px solid var(--primary); background:transparent; color:var(--primary); font-family:'Volter',sans-serif; font-size:26px; letter-spacing:1px; cursor:pointer; display:flex; align-items:center; justify-content:center; white-space:nowrap; box-sizing:border-box; }
-        .modal-btn:hover, .modal-btn:active { color:var(--primary-variant); border-color:var(--primary-variant); background:transparent; }
-        .modal-ok-buttons { display:flex; justify-content:center; margin:0; padding:0 12px; }
         #yesNoButtons .modal-btn {
             flex: 1 1 0;
             min-width: 0;
             font-size: clamp(16px, 5vw, 26px);
         }
+        .modal-btn:hover, .modal-btn:active { color:var(--primary-variant); border-color:var(--primary-variant); background:transparent; }
+        .modal-ok-buttons { display:flex; justify-content:center; margin:0; padding:0 12px; }
 
         /* Inverted fixes */
         body.inverted .window-header-icon img,
@@ -181,6 +204,9 @@
                         <div class="setting-middle"><span class="setting-value" id="extraDisplay">OFF</span></div>
                         <button class="btn-right" id="extraRight"><img src="https://raw.githubusercontent.com/GuruGitHubTheG/TWM/main/icons/right.png" alt=">"></button>
                     </div>
+                </div>
+                <div class="setting-row">
+                    <button class="restore-defaults-btn" id="restoreDefaultsBtn">Restore Defaults</button>
                 </div>
             </div>
         </div>
@@ -404,11 +430,9 @@ Machine)</div>
                 if (extraItem) extraItem.classList.add('selected');
                 updateCustomPhotoSection();
 
-                // Compute the watch suffix once
                 var watchSuffix = (watchHeight === 228) ? '_228.png' : '_168.png';
 
                 if (file === 'Secret_RAM_Club.png') {
-                    // Special case: ask user which variant to load
                     showModal(
                         'Who should the wallpaper focus on?',
                         function() {
@@ -425,13 +449,11 @@ Machine)</div>
                     return;
                 }
 
-                // Normal extra wallpaper
                 var watchFile = file.replace('.png', watchSuffix);
                 var watchUrl = extraWallpaperWatchBase + watchFile;
                 loadExtraWallpaperUrl(watchUrl, title);
             }
 
-            // Direct pack without scaling/dithering
             function prepareExtraWallpaper(image, generation, sourceLabel) {
                 if (generation !== photoLoadGeneration) return;
                 try {
@@ -449,7 +471,6 @@ Machine)</div>
                     var imageData = ctx.getImageData(0, 0, watchWidth, watchHeight);
                     var result = packBWNoDither(imageData.data, watchWidth, watchHeight);
                     ctx.putImageData(imageData, 0, 0);
-                    // Do NOT show canvas preview or update custom photo thumbnail
                     var binary = '';
                     for (var i = 0; i < result.pixelData.length; i++) binary += String.fromCharCode(result.pixelData[i]);
                     var compressed = LZString.compressToEncodedURIComponent(btoa(binary));
@@ -499,10 +520,10 @@ Machine)</div>
             document.getElementById('extraRight').addEventListener('click', toggleExtraWallpapers);
             document.getElementById('dismissBtnBW5').addEventListener('click', showAccessDeniedModal);
             document.getElementById('closeBtnBW5').addEventListener('click', showAccessDeniedModal);
+            document.getElementById('restoreDefaultsBtn').addEventListener('click', confirmRestoreDefaults);
 
             function toggleExtraWallpapers() {
                 if (!showExtraWallpapers) {
-                    // Turning ON requires confirmation
                     showModal(
                         'Enabling this option will show wallpapers which contain spoilers. Continue?',
                         function() {
@@ -515,26 +536,147 @@ Machine)</div>
                         }
                     );
                 } else {
-                    // Turning OFF is allowed directly
                     showExtraWallpapers = false;
                     updateExtraDisplay();
                 }
             }
 
-            function loadConfig(retries){ retries=retries||3; selectedExtraWallpaperId = null; var stored=localStorage.getItem('twm_config'); if(stored){ try{ var config=JSON.parse(stored); if(config.ClockMode!==undefined){var val=parseInt(config.ClockMode,10); if(val===0)timeIndex=0; else if(val===1)timeIndex=1; else if(val===2)timeIndex=2;} if(config.LeadingZeros!==undefined)zerosOn=config.LeadingZeros===true; if(config.ShowAMPM!==undefined)ampmOn=config.ShowAMPM!==false; if(config.Inverted!==undefined)applyInversion(config.Inverted===true); if(config.Wallpaper!==undefined){var wp=parseInt(config.Wallpaper,10); if(!isNaN(wp)){selectedWallpaperId=wp;document.querySelectorAll('.wallpaper-item').forEach(function(el){el.classList.toggle('selected',parseInt(el.dataset.id)===selectedWallpaperId);});updateCustomPhotoSection();}} if(config.CustomPhoto && selectedWallpaperId===8) decodeCustomPhotoToThumbnail(config.CustomPhoto); document.getElementById('topBarTitle').textContent='The World Machine'; updateDisplays();
+            function restoreDefaults() {
+                timeIndex = 0;
+                zerosOn = false;
+                ampmOn = true;
+                invertedOn = false;
+                selectedWallpaperId = 1;
+                selectedExtraWallpaperId = null;
+                customPhotoData = null;
+                showExtraWallpapers = false;
 
-                    // Extra wallpapers local-only settings
-                    var showExtra = localStorage.getItem('twm_show_extra_wallpapers');
-                    showExtraWallpapers = (showExtra === 'true');
-                    selectedExtraWallpaperId = null;   // never restore unsaved extra selection
+                localStorage.removeItem('twm_show_extra_wallpapers');
+                localStorage.removeItem('twm_selected_extra_wallpaper');
+
+                applyInversion(false);
+                updateDisplays();
+                updateCustomPhotoSection();
+                updateExtraDisplay();
+
+                document.querySelectorAll('.wallpaper-item').forEach(function(el){ el.classList.remove('selected'); });
+                var defaultWallpaper = document.querySelector('.wallpaper-item[data-id="1"]');
+                if (defaultWallpaper) defaultWallpaper.classList.add('selected');
+
+                var customThumb = document.querySelector('.wallpaper-item[data-id="8"] img');
+                if (customThumb) customThumb.src = 'data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7';
+                canvas.style.display = 'none';
+                setPhotoStatus('Choose a photo to prepare it for your watch.', false);
+                setSubmitDisabled(false);
+            }
+
+            function confirmRestoreDefaults() {
+                showModal(
+                    'Are you sure you would like to restore defaults?',
+                    function() {
+                        restoreDefaults();
+                    },
+                    null
+                );
+            }
+
+            function loadConfig(retries){
+                retries=retries||3;
+                selectedExtraWallpaperId = null;
+                var stored=localStorage.getItem('twm_config');
+                if(stored){
+                    try{
+                        var config=JSON.parse(stored);
+                        if(config.ClockMode!==undefined){var val=parseInt(config.ClockMode,10); if(val===0)timeIndex=0; else if(val===1)timeIndex=1; else if(val===2)timeIndex=2;}
+                        if(config.LeadingZeros!==undefined)zerosOn=config.LeadingZeros===true;
+                        if(config.ShowAMPM!==undefined)ampmOn=config.ShowAMPM!==false;
+                        if(config.Inverted!==undefined)applyInversion(config.Inverted===true);
+                        if(config.Wallpaper!==undefined){var wp=parseInt(config.Wallpaper,10); if(!isNaN(wp)){selectedWallpaperId=wp;document.querySelectorAll('.wallpaper-item').forEach(function(el){el.classList.toggle('selected',parseInt(el.dataset.id)===selectedWallpaperId);});updateCustomPhotoSection();}}
+                        if(config.CustomPhoto && selectedWallpaperId===8) decodeCustomPhotoToThumbnail(config.CustomPhoto);
+                        document.getElementById('topBarTitle').textContent='The World Machine';
+                        updateDisplays();
+
+                        var showExtra = localStorage.getItem('twm_show_extra_wallpapers');
+                        showExtraWallpapers = (showExtra === 'true');
+                        updateExtraDisplay();
+
+                        if(showTimer){ clearTimeout(showTimer); showTimer=null; }
+                        showApp();
+
+                        return true;
+                    }catch(e){console.warn('Error loading config',e);}
+                }
+                if(retries>0){setTimeout(function(){loadConfig(retries-1);},500); if(!showTimer){ showTimer=setTimeout(function(){ showApp(); },1000); } return false; }
+                else {
+                    if(!showTimer){ showTimer=setTimeout(function(){ showApp(); },1000); }
+                    document.getElementById('topBarTitle').textContent='The World Machine';
+                    updateDisplays();
+                    updateCustomPhotoSection();
                     updateExtraDisplay();
+                    return false;
+                }
+            }
 
-                    if(showTimer){ clearTimeout(showTimer); showTimer=null; }
-                    showApp();
+            function buildGrid(){
+                var grid=document.getElementById('wallpaperGrid');
+                grid.innerHTML='';
+                wallpapers.forEach(function(wp){
+                    var lines=wp.label.split('\n');
+                    var item=document.createElement('div');
+                    item.className='wallpaper-item'+(selectedWallpaperId===wp.id?' selected':'')+(lines.length===1?' one-liner':' two-liner');
+                    item.dataset.id=wp.id;
+                    var wrapper=document.createElement('div');wrapper.className='wallpaper-screenshot-wrapper';
+                    var shadow=document.createElement('div');shadow.className='wallpaper-shadow';
+                    var img=document.createElement('img');img.className='wallpaper-screenshot';img.src=wp.image||'data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7';img.alt=wp.label.replace('\n',' ');
+                    wrapper.appendChild(shadow);wrapper.appendChild(img);item.appendChild(wrapper);
+                    var textWrapper=document.createElement('div');textWrapper.className='wallpaper-text-wrapper';
+                    lines.forEach(function(line){var span=document.createElement('span');span.className='wallpaper-label';span.textContent=line;textWrapper.appendChild(span);});
+                    item.appendChild(textWrapper);
+                    item.addEventListener('click',function(){
+                        document.querySelectorAll('.wallpaper-item').forEach(function(el){el.classList.remove('selected');});
+                        this.classList.add('selected');
+                        selectedWallpaperId=wp.id;
+                        selectedExtraWallpaperId=null;
+                        document.querySelectorAll('.extra-wallpaper-item').forEach(function(el){el.classList.remove('selected');});
+                        localStorage.removeItem('twm_selected_extra_wallpaper');
+                        updateCustomPhotoSection();
+                    });
+                    grid.appendChild(item);
+                });
+            }
 
-                    return true; }catch(e){console.warn('Error loading config',e);} } if(retries>0){setTimeout(function(){loadConfig(retries-1);},500); if(!showTimer){ showTimer=setTimeout(function(){ showApp(); },1000); } return false; } else { if(!showTimer){ showTimer=setTimeout(function(){ showApp(); },1000); } document.getElementById('topBarTitle').textContent='The World Machine';updateDisplays();updateCustomPhotoSection();updateExtraDisplay();return false; } }
-            function buildGrid(){ var grid=document.getElementById('wallpaperGrid'); grid.innerHTML=''; wallpapers.forEach(function(wp){ var lines=wp.label.split('\n'); var item=document.createElement('div'); item.className='wallpaper-item'+(selectedWallpaperId===wp.id?' selected':'')+(lines.length===1?' one-liner':' two-liner'); item.dataset.id=wp.id; var wrapper=document.createElement('div');wrapper.className='wallpaper-screenshot-wrapper'; var shadow=document.createElement('div');shadow.className='wallpaper-shadow'; var img=document.createElement('img');img.className='wallpaper-screenshot';img.src=wp.image||'data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7';img.alt=wp.label.replace('\n',' '); wrapper.appendChild(shadow);wrapper.appendChild(img);item.appendChild(wrapper); var textWrapper=document.createElement('div');textWrapper.className='wallpaper-text-wrapper'; lines.forEach(function(line){var span=document.createElement('span');span.className='wallpaper-label';span.textContent=line;textWrapper.appendChild(span);}); item.appendChild(textWrapper); item.addEventListener('click',function(){document.querySelectorAll('.wallpaper-item').forEach(function(el){el.classList.remove('selected');});this.classList.add('selected');selectedWallpaperId=wp.id;selectedExtraWallpaperId=null;document.querySelectorAll('.extra-wallpaper-item').forEach(function(el){el.classList.remove('selected');});localStorage.removeItem('twm_selected_extra_wallpaper');updateCustomPhotoSection();}); grid.appendChild(item); }); }
-            function decodeCustomPhotoToThumbnail(photoData){ if(!photoData||!photoData.compressed||!photoData.palette)return; try{ var base64Pixel=LZString.decompressFromEncodedURIComponent(photoData.compressed); if(!base64Pixel)return; var binary=atob(base64Pixel); var pixelData=new Uint8Array(binary.length); for(var i=0;i<binary.length;i++)pixelData[i]=binary.charCodeAt(i); var width=watchWidth,height=watchHeight; var tempCanvas=document.createElement('canvas');tempCanvas.width=width;tempCanvas.height=height; var ctx=tempCanvas.getContext('2d'); var imageData=ctx.createImageData(width,height); var palette=photoData.palette; var rowBytes=Math.floor((width+7)/8); for(var y=0;y<height;y++){ for(var x=0;x<width;x++){ var byteIndex=y*rowBytes+Math.floor(x/8); var bitIndex=7-(x%8); var bit=(pixelData[byteIndex]>>bitIndex)&1; var colorIndex=bit; var paletteEntry=palette[colorIndex]; var gray=(paletteEntry===0xFF)?255:0; var offset=(y*width+x)*4; imageData.data[offset]=gray;imageData.data[offset+1]=gray;imageData.data[offset+2]=gray;imageData.data[offset+3]=255; } } ctx.putImageData(imageData,0,0); var thumb=document.querySelector('.wallpaper-item[data-id="8"] img'); if(thumb)thumb.src=tempCanvas.toDataURL('image/png'); }catch(e){console.log('Failed to decode custom photo thumbnail: '+e.message);} }
+            function decodeCustomPhotoToThumbnail(photoData){
+                if(!photoData||!photoData.compressed||!photoData.palette)return;
+                try{
+                    var base64Pixel=LZString.decompressFromEncodedURIComponent(photoData.compressed);
+                    if(!base64Pixel)return;
+                    var binary=atob(base64Pixel);
+                    var pixelData=new Uint8Array(binary.length);
+                    for(var i=0;i<binary.length;i++)pixelData[i]=binary.charCodeAt(i);
+                    var width=watchWidth,height=watchHeight;
+                    var tempCanvas=document.createElement('canvas');tempCanvas.width=width;tempCanvas.height=height;
+                    var ctx=tempCanvas.getContext('2d');
+                    var imageData=ctx.createImageData(width,height);
+                    var palette=photoData.palette;
+                    var rowBytes=Math.floor((width+7)/8);
+                    for(var y=0;y<height;y++){
+                        for(var x=0;x<width;x++){
+                            var byteIndex=y*rowBytes+Math.floor(x/8);
+                            var bitIndex=7-(x%8);
+                            var bit=(pixelData[byteIndex]>>bitIndex)&1;
+                            var colorIndex=bit;
+                            var paletteEntry=palette[colorIndex];
+                            var gray=(paletteEntry===0xFF)?255:0;
+                            var offset=(y*width+x)*4;
+                            imageData.data[offset]=gray;imageData.data[offset+1]=gray;imageData.data[offset+2]=gray;imageData.data[offset+3]=255;
+                        }
+                    }
+                    ctx.putImageData(imageData,0,0);
+                    var thumb=document.querySelector('.wallpaper-item[data-id="8"] img');
+                    if(thumb)thumb.src=tempCanvas.toDataURL('image/png');
+                }catch(e){console.log('Failed to decode custom photo thumbnail: '+e.message);}
+            }
+
             // Custom photo processing functions
             function setPhotoStatus(msg,isError){var s=document.getElementById('photoStatus');s.textContent=msg;s.style.color=isError?'#ff7777':'#aaa';}
             function setSubmitDisabled(disabled){var btns=document.querySelectorAll('button[type="submit"], input[type="submit"], .save-btn');for(var i=0;i<btns.length;i++){btns[i].disabled=disabled;btns[i].style.opacity=disabled?'0.5':'1';}}

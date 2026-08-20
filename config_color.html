@@ -58,6 +58,29 @@
         .setting-middle { flex:1; height:48px; display:flex; align-items:center; justify-content:center; border-top:3px solid var(--primary,#aa55ff); border-bottom:3px solid var(--primary,#aa55ff); margin:0; }
         .setting-value { font-size:21px; line-height:21px; height:21px; font-weight:normal; color:var(--primary,#aa55ff); letter-spacing:1px; text-align:center; padding:0 8px; white-space:nowrap; }
 
+        .restore-defaults-btn {
+            width: 100%;
+            height: 48px;
+            border: 3px solid var(--primary,#aa55ff);
+            background: transparent;
+            color: var(--primary,#aa55ff);
+            font-family: 'Volter', sans-serif;
+            font-size: 21px;
+            letter-spacing: 1px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0;
+            margin-top: 24px;
+        }
+        .restore-defaults-btn:hover,
+        .restore-defaults-btn:active {
+            border-color: var(--primary-variant);
+            color: var(--primary-variant);
+            background: transparent;
+        }
+
         .wallpaper-grid, .theme-grid { display:flex; flex-wrap:wrap; gap:20px 12px; justify-content:flex-start; }
         .wallpaper-item { width:240px; cursor:pointer; border:6px solid transparent; background:transparent; padding:0; position:relative; display:flex; flex-direction:column; align-items:flex-start; justify-content:flex-start; overflow:hidden; flex-shrink:0; }
         .wallpaper-item.two-liner { height:217px; }
@@ -113,13 +136,13 @@
         .modal-text { margin:0 30px 15px; font-size:26px; line-height:32px; text-align:center; white-space:pre-line; }
         .modal-buttons { display:flex; align-items:center; justify-content:center; gap:24px; margin:0; padding:0 12px; }
         .modal-btn { flex:0 1 168px; min-width:0; height:48px; padding:0 20px; border:3px solid var(--primary,#aa55ff); background:transparent; color:var(--primary,#aa55ff); font-family:'Volter',sans-serif; font-size:26px; letter-spacing:1px; cursor:pointer; display:flex; align-items:center; justify-content:center; white-space:nowrap; box-sizing:border-box; }
-        .modal-btn:hover, .modal-btn:active { color:var(--primary-variant, rgb(100,66,165)); border-color:var(--primary-variant, rgb(100,66,165)); background:transparent; }
-        .modal-ok-buttons { display:flex; justify-content:center; margin:0; padding:0 12px; }
         #yesNoButtons .modal-btn {
             flex: 1 1 0;
             min-width: 0;
             font-size: clamp(16px, 5vw, 26px);
         }
+        .modal-btn:hover, .modal-btn:active { color:var(--primary-variant, rgb(100,66,165)); border-color:var(--primary-variant, rgb(100,66,165)); background:transparent; }
+        .modal-ok-buttons { display:flex; justify-content:center; margin:0; padding:0 12px; }
     </style>
     <script src="https://cdn.jsdelivr.net/npm/lz-string@1.4.4/libs/lz-string.min.js"></script>
 </head>
@@ -182,6 +205,9 @@
                         <div class="setting-middle"><span class="setting-value" id="extraDisplay">OFF</span></div>
                         <button class="btn-right" id="extraRight"><img src="https://raw.githubusercontent.com/GuruGitHubTheG/TWM/main/icons/right.png" alt=">"></button>
                     </div>
+                </div>
+                <div class="setting-row">
+                    <button class="restore-defaults-btn" id="restoreDefaultsBtn">Restore Defaults</button>
                 </div>
             </div>
         </div>
@@ -592,11 +618,9 @@ Machine)</div>
                 if (extraItem) extraItem.classList.add('selected');
                 updateCustomPhotoSection();
 
-                // Compute the watch suffix once
                 var watchSuffix = (watchHeight === 228) ? '_228.png' : '_168.png';
 
                 if (file === 'Secret_RAM_Club.png') {
-                    // Special case: ask user which variant to load
                     showModal(
                         'Who should the wallpaper focus on?',
                         function() {
@@ -613,7 +637,6 @@ Machine)</div>
                     return;
                 }
 
-                // Normal extra wallpaper
                 var watchFile = file.replace('.png', watchSuffix);
                 var watchUrl = extraWallpaperWatchBase + watchFile;
                 loadExtraWallpaperUrl(watchUrl, title);
@@ -636,7 +659,6 @@ Machine)</div>
                     var imageData = ctx.getImageData(0, 0, watchWidth, watchHeight);
                     var result = packColorNoDither(imageData.data, watchWidth, watchHeight);
                     ctx.putImageData(imageData, 0, 0);
-                    // Do NOT show canvas preview or update custom photo thumbnail
                     var binary = '';
                     for (var i = 0; i < result.pixelData.length; i++) binary += String.fromCharCode(result.pixelData[i]);
                     var base64 = btoa(binary);
@@ -725,6 +747,7 @@ Machine)</div>
             document.getElementById('extraRight').addEventListener('click', toggleExtraWallpapers);
             document.getElementById('dismissBtnColor5').addEventListener('click', showAccessDeniedModal);
             document.getElementById('closeBtnColor5').addEventListener('click', showAccessDeniedModal);
+            document.getElementById('restoreDefaultsBtn').addEventListener('click', confirmRestoreDefaults);
 
             function toggleExtraWallpapers() {
                 if (!showExtraWallpapers) {
@@ -743,6 +766,57 @@ Machine)</div>
                     showExtraWallpapers = false;
                     updateExtraDisplay();
                 }
+            }
+
+            function restoreDefaults() {
+                timeIndex = 0;
+                zerosOn = false;
+                ampmOn = true;
+                selectedWallpaperId = 1;
+                selectedExtraWallpaperId = null;
+                customPhotoData = null;
+                showExtraWallpapers = false;
+
+                rainbowActive = false;
+                stopRainbowTimer();
+                applyStyles('#9664ff', '#6442a5');
+                document.getElementById('UI_Color').value = '#9664ff';
+                document.getElementById('colorHex').textContent = '#9664ff';
+                document.getElementById('Secondary_Color').value = '#6442a5';
+                document.getElementById('secondaryColorHex').textContent = '#6442a5';
+
+                localStorage.removeItem('twm_show_extra_wallpapers');
+                localStorage.removeItem('twm_selected_extra_wallpaper');
+
+                updateDisplays();
+                updateCustomPhotoSection();
+                updateExtraDisplay();
+
+                document.querySelectorAll('.wallpaper-item').forEach(function(el){ el.classList.remove('selected'); });
+                var defaultWallpaper = document.querySelector('.wallpaper-item[data-id="1"]');
+                if (defaultWallpaper) defaultWallpaper.classList.add('selected');
+
+                document.querySelectorAll('.theme-item').forEach(function(el){ el.classList.remove('selected'); });
+                var defaultTheme = document.querySelector('.theme-item[data-primary="#9664ff"]');
+                if (defaultTheme) defaultTheme.classList.add('selected');
+
+                var customThumb = document.querySelector('.wallpaper-item[data-id="8"] img');
+                if (customThumb) customThumb.src = 'data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7';
+                canvas.style.display = 'none';
+                setPhotoStatus('Choose a photo to prepare it for your watch.', false);
+                setSubmitDisabled(false);
+
+                startRainbowAnimation();
+            }
+
+            function confirmRestoreDefaults() {
+                showModal(
+                    'Are you sure you would like to restore defaults?',
+                    function() {
+                        restoreDefaults();
+                    },
+                    null
+                );
             }
 
             function buildThemeGrid() {
@@ -801,11 +875,11 @@ Machine)</div>
                 applyStyles(c, variant);
             });
 
-            function loadConfig(retries){
-                retries=retries||3;
+            function loadConfig(retries) {
+                retries = retries || 3;
                 selectedExtraWallpaperId = null;
-                var stored=localStorage.getItem('twm_config');
-                if(stored){
+                var stored = localStorage.getItem('twm_config');
+                if (stored) {
                     try {
                         var config = JSON.parse(stored);
                         if (config.ClockMode !== undefined) { var val = parseInt(config.ClockMode,10); if(val===0) timeIndex=0; else if(val===1) timeIndex=1; else if(val===2) timeIndex=2; }
@@ -837,7 +911,6 @@ Machine)</div>
 
                         var showExtra = localStorage.getItem('twm_show_extra_wallpapers');
                         showExtraWallpapers = (showExtra === 'true');
-                        selectedExtraWallpaperId = null;   // never restore unsaved extra selection
                         updateExtraDisplay();
 
                         if(showTimer){ clearTimeout(showTimer); showTimer=null; }
@@ -919,19 +992,7 @@ Machine)</div>
             // ---------- MODAL & RAINBOW ----------
             function activateRainbowStandard(){ document.querySelectorAll('.theme-item').forEach(function(el){ el.classList.remove('selected'); }); var rainbowItem=document.querySelector('.theme-item[data-rainbow="true"]'); if(rainbowItem) rainbowItem.classList.add('selected'); rainbowActive=true; startRainbowAnimation(); document.getElementById('UI_Color').value='#ee6363'; document.getElementById('colorHex').textContent='Rainbow'; document.getElementById('Secondary_Color').value='#a00d0d'; document.getElementById('secondaryColorHex').textContent='Rainbow'; }
             function activateRainbowPowerSaving(){ document.querySelectorAll('.theme-item').forEach(function(el){ el.classList.remove('selected'); }); var rainbowItem=document.querySelector('.theme-item[data-rainbow="true"]'); if(rainbowItem) rainbowItem.classList.add('selected'); rainbowActive=true; startPowerRainbowAnimation(); document.getElementById('UI_Color').value='#ee6363'; document.getElementById('colorHex').textContent='Rainbow (Power Saving)'; document.getElementById('Secondary_Color').value='#a00d0d'; document.getElementById('secondaryColorHex').textContent='Rainbow (Power Saving)'; }
-            function showModal(text, onYes, onNo, yesLabel, noLabel){
-                playNotificationSound();
-                document.getElementById('modalText').textContent = text;
-                document.getElementById('questionIcon').style.display = 'block';
-                document.getElementById('warningIcon').style.display = 'none';
-                document.getElementById('yesNoButtons').style.display = 'flex';
-                document.getElementById('okButtonContainer').style.display = 'none';
-                document.getElementById('yesBtn').textContent = yesLabel || 'Yes';
-                document.getElementById('noBtn').textContent = noLabel || 'No';
-                window._modalYesCallback = onYes || null;
-                window._modalNoCallback = onNo || null;
-                document.getElementById('modalOverlay').classList.add('active');
-            }
+            function showModal(text, onYes, onNo, yesLabel, noLabel){ playNotificationSound(); document.getElementById('modalText').textContent=text; document.getElementById('questionIcon').style.display='block'; document.getElementById('warningIcon').style.display='none'; document.getElementById('yesNoButtons').style.display='flex'; document.getElementById('okButtonContainer').style.display='none'; document.getElementById('yesBtn').textContent = yesLabel || 'Yes'; document.getElementById('noBtn').textContent = noLabel || 'No'; window._modalYesCallback=onYes||null; window._modalNoCallback=onNo||null; document.getElementById('modalOverlay').classList.add('active'); }
             function hideModal(){ document.getElementById('modalOverlay').classList.remove('active'); window._modalYesCallback=null; window._modalNoCallback=null; }
             function showAccessDeniedModal(){ playNotificationSound(); document.getElementById('modalText').textContent='Access denied.'; document.getElementById('questionIcon').style.display='none'; document.getElementById('warningIcon').style.display='block'; document.getElementById('yesNoButtons').style.display='none'; document.getElementById('okButtonContainer').style.display='flex'; window._modalYesCallback=null; window._modalNoCallback=null; document.getElementById('modalOverlay').classList.add('active'); }
             document.getElementById('yesBtn').addEventListener('click', function(){ var cb=window._modalYesCallback; hideModal(); if(cb) cb(); });
@@ -948,9 +1009,8 @@ Machine)</div>
             loadConfig(5);
             updateCustomPhotoSection();
 
-            // Ensure rainbow tile is animated even if not active
             if (!rainbowTimer) {
-                startRainbowAnimation(); // smooth idle
+                startRainbowAnimation();
             }
 
             var sfxClick=document.getElementById('sfxClick');
