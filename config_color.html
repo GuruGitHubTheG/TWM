@@ -316,7 +316,7 @@ Machine)</div>
             var POWER_RAINBOW_HUES = [0, 30, 60, 120, 180, 240, 270, 300];
             var rainbowStartTime = null;
 
-            var notifOrder = [2,3,4,2,2,3,4,2,2,3,4,2];
+            var notifOrder = [2, 3, 4, 2, 2, 3, 4, 2, 2, 3, 4, 2];
             var notifIndex = 0;
             function playNotificationSound() {
                 var num = notifOrder[notifIndex];
@@ -577,6 +577,10 @@ Machine)</div>
                         }
                         document.getElementById('topBarTitle').textContent = 'The World Machine';
                         updateDisplays();
+
+                        // ✅ Show the app immediately when settings are loaded
+                        document.getElementById('app').classList.add('loaded');
+
                         return true;
                     } catch(e) { console.warn('Error loading config', e); }
                 }
@@ -650,9 +654,18 @@ Machine)</div>
             buildGrid();
             loadConfig(5);
             updateCustomPhotoSection();
-            if (!rainbowTimer) startRainbowAnimation();
 
-            setTimeout(function(){ document.getElementById('app').classList.add('loaded'); }, 1000);
+            // Ensure rainbow tile is animated even if not active
+            if (!rainbowTimer) {
+                startRainbowAnimation(); // smooth idle
+            }
+
+            // ✅ Fallback: show the app after 1 second only if it hasn't already been shown
+            setTimeout(function(){
+                if (!document.getElementById('app').classList.contains('loaded')) {
+                    document.getElementById('app').classList.add('loaded');
+                }
+            }, 1000);
 
             var sfxClick=document.getElementById('sfxClick');
             var sfxUnclick=document.getElementById('sfxUnclick');
