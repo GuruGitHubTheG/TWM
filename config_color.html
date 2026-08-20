@@ -17,7 +17,7 @@
             background:#000; border-bottom:6px solid var(--primary,#aa55ff);
             padding:6px 18px 6px 6px; min-height:60px;
             display:flex; align-items:center;
-            opacity: 0; /* initially hidden */
+            opacity: 0;
             transition: opacity 0.2s;
         }
         .topBar-left { display:flex; align-items:center; gap:12px; min-width:0; }
@@ -41,6 +41,7 @@
         #customizeIcon { width:42px; height:42px; -webkit-mask-image:url('https://raw.githubusercontent.com/GuruGitHubTheG/TWM/main/icons/gear.png'); mask-image:url('https://raw.githubusercontent.com/GuruGitHubTheG/TWM/main/icons/gear.png'); }
         #wallpaperIcon { width:42px; height:36px; -webkit-mask-image:url('https://raw.githubusercontent.com/GuruGitHubTheG/TWM/main/icons/folder.png'); mask-image:url('https://raw.githubusercontent.com/GuruGitHubTheG/TWM/main/icons/folder.png'); }
         #themesIcon { width:42px; height:36px; -webkit-mask-image:url('https://raw.githubusercontent.com/GuruGitHubTheG/TWM/main/icons/folder.png'); mask-image:url('https://raw.githubusercontent.com/GuruGitHubTheG/TWM/main/icons/folder.png'); }
+        #extraWallpaperIcon { width:42px; height:36px; -webkit-mask-image:url('https://raw.githubusercontent.com/GuruGitHubTheG/TWM/main/icons/folder.png'); mask-image:url('https://raw.githubusercontent.com/GuruGitHubTheG/TWM/main/icons/folder.png'); }
         .window-header-title { font-size:clamp(12px,4vw,28px); font-weight:normal; letter-spacing:1px; line-height:1; white-space:nowrap; overflow:hidden; text-overflow:clip; flex:0 1 auto; min-width:0; }
         .window-header-wrapper .header-icons { position:absolute; right:6px; top:6px; bottom:6px; display:flex; align-items:center; gap:6px; }
         .window-divider { height:12px; background:var(--primary,#aa55ff); }
@@ -169,6 +170,14 @@
                         <button class="btn-right" id="ampmRight"><img src="https://raw.githubusercontent.com/GuruGitHubTheG/TWM/main/icons/right.png" alt=">"></button>
                     </div>
                 </div>
+                <div class="setting-row">
+                    <div class="setting-label-centered">Show Extra Wallpapers</div>
+                    <div class="setting-rect">
+                        <button class="btn-left" id="extraLeft"><img src="https://raw.githubusercontent.com/GuruGitHubTheG/TWM/main/icons/left.png" alt="<"></button>
+                        <div class="setting-middle"><span class="setting-value" id="extraDisplay">OFF</span></div>
+                        <button class="btn-right" id="extraRight"><img src="https://raw.githubusercontent.com/GuruGitHubTheG/TWM/main/icons/right.png" alt=">"></button>
+                    </div>
+                </div>
             </div>
         </div>
 
@@ -199,6 +208,26 @@
                     <canvas id="photoCanvas" style="display:none; max-width:100%; height:auto; margin:0 auto; border:1px solid #555; background:#000;"></canvas>
                     <div id="photoStatus" style="color:#aaa; margin-top:8px;">Choose a photo to prepare it for your watch.</div>
                 </div>
+            </div>
+        </div>
+
+        <!-- Extra Wallpapers -->
+        <div class="window" id="extra-wallpaper-window" style="display:none;">
+            <div class="window-header-wrapper">
+                <div class="window-header">
+                    <div class="window-header-left">
+                        <div class="window-header-icon" id="extraWallpaperIcon"></div>
+                        <span class="window-header-title">Extra Wallpapers</span>
+                    </div>
+                    <div class="header-icons">
+                        <button class="header-icon-btn" id="dismissBtnColor5"><img src="https://raw.githubusercontent.com/GuruGitHubTheG/TWM/main/icons/dismiss.png" alt="dismiss"></button>
+                        <button class="header-icon-btn" id="closeBtnColor5"><img src="https://raw.githubusercontent.com/GuruGitHubTheG/TWM/main/icons/close.png" alt="close"></button>
+                    </div>
+                </div>
+            </div>
+            <div class="window-divider" style="background:var(--primary, #aa55ff);"></div>
+            <div class="window-content">
+                <div class="wallpaper-grid" id="extraWallpaperGrid"></div>
             </div>
         </div>
 
@@ -326,7 +355,32 @@ Machine)</div>
             var notifOrder = [2, 3, 4, 2, 2, 3, 4, 2, 2, 3, 4, 2];
             var notifIndex = 0;
 
-            // ---------- NEW: fade-in control ----------
+            // ---------- Extra Wallpapers ----------
+            var showExtraWallpapers = false;
+            var selectedExtraWallpaperId = null;
+            var extraWallpapers = [
+                { title: 'Outpost', file: 'Outpost.png' },
+                { title: 'Factory', file: 'Factory.png' },
+                { title: 'Navigate', file: 'Navigate.png' },
+                { title: 'Courtyard', file: 'Courtyard.png' },
+                { title: 'Calamus and\nAlula', file: 'Calamus_and_Alula.png' },
+                { title: 'Catwalks', file: 'Catwalks.png' },
+                { title: 'Lamplighter', file: 'Lamplighter.png' },
+                { title: 'Café', file: 'Cafe.png' },
+                { title: 'Library Stroll', file: 'Library_Stroll.png' },
+                { title: 'Secret RAM\nClub', file: 'Secret_RAM_Club.png' },
+                { title: 'Tower', file: 'Tower.png' },
+                { title: 'Maize', file: 'Maize.png' },
+                { title: 'Prophets', file: 'Prophets.png' },
+                { title: 'Memory', file: 'Memory.png' },
+                { title: 'Reflection', file: 'Reflection.png' },
+                { title: 'From Niko', file: 'From_Niko.png' }
+            ];
+            var extraWallpaperThumbBase = 'https://raw.githubusercontent.com/GuruGitHubTheG/TWM/main/wallpapers/more/';
+            var extraWallpaperSubfolder = (getQueryParam('platform') === 'emery') ? 'emery' : 'basalt';
+            var extraWallpaperWatchBase = 'https://raw.githubusercontent.com/GuruGitHubTheG/TWM/main/wallpapers/' + extraWallpaperSubfolder + '/';
+
+            // ---------- fade-in control ----------
             var appShown = false;
             var showTimer = null;
             function showApp() {
@@ -479,6 +533,142 @@ Machine)</div>
             }
             function updateCustomPhotoSection() { document.getElementById('custom-photo-section').style.display = selectedWallpaperId === 8 ? 'block' : 'none'; }
 
+            function updateExtraDisplay() {
+                document.getElementById('extraDisplay').textContent = showExtraWallpapers ? 'ON' : 'OFF';
+                var win = document.getElementById('extra-wallpaper-window');
+                if (win) win.style.display = showExtraWallpapers ? 'block' : 'none';
+                if (showExtraWallpapers) buildExtraWallpaperGrid();
+                localStorage.setItem('twm_show_extra_wallpapers', showExtraWallpapers ? 'true' : 'false');
+            }
+
+            function buildExtraWallpaperGrid() {
+                var grid = document.getElementById('extraWallpaperGrid');
+                if (!grid) return;
+                grid.innerHTML = '';
+                extraWallpapers.forEach(function(ep) {
+                    var item = document.createElement('div');
+                    item.className = 'wallpaper-item extra-wallpaper-item two-liner';
+                    item.dataset.extraFile = ep.file;
+                    if (selectedExtraWallpaperId === ep.file) item.classList.add('selected');
+                    var wrapper = document.createElement('div'); wrapper.className = 'wallpaper-screenshot-wrapper';
+                    var shadow = document.createElement('div'); shadow.className = 'wallpaper-shadow';
+                    var thumbFile = ep.file.replace('.png', '_wallpaper.png');
+                    var img = document.createElement('img'); img.className = 'wallpaper-screenshot'; img.src = extraWallpaperThumbBase + thumbFile; img.alt = ep.title;
+                    wrapper.appendChild(shadow); wrapper.appendChild(img); item.appendChild(wrapper);
+                    var textWrapper = document.createElement('div'); textWrapper.className = 'wallpaper-text-wrapper';
+                    var lines = ep.title.split('\n');
+                    lines.forEach(function(line){ var span = document.createElement('span'); span.className = 'wallpaper-label'; span.textContent = line; textWrapper.appendChild(span); });
+                    item.appendChild(textWrapper);
+                    item.addEventListener('click', function() {
+                        selectExtraWallpaper(ep.file, ep.title);
+                    });
+                    grid.appendChild(item);
+                });
+            }
+
+            function selectExtraWallpaper(file, title) {
+                selectedWallpaperId = 8;
+                selectedExtraWallpaperId = file;
+                document.querySelectorAll('.wallpaper-item').forEach(function(el){ el.classList.remove('selected'); });
+                document.querySelectorAll('.extra-wallpaper-item').forEach(function(el){ el.classList.remove('selected'); });
+                var builtInCustom = document.querySelector('.wallpaper-item[data-id="8"]');
+                if (builtInCustom) builtInCustom.classList.add('selected');
+                var extraItem = document.querySelector('.extra-wallpaper-item[data-extra-file="' + file + '"]');
+                if (extraItem) extraItem.classList.add('selected');
+                updateCustomPhotoSection();
+                localStorage.setItem('twm_selected_extra_wallpaper', file);
+                var watchSuffix = (watchHeight === 228) ? '_228.png' : '_168.png';
+                var watchFile = file.replace('.png', watchSuffix);
+                var watchUrl = extraWallpaperWatchBase + watchFile;
+                var generation = beginPhotoLoad('Loading extra wallpaper: ' + title.replace('\n',' ') + '…');
+                var img = new Image();
+                img.crossOrigin = 'anonymous';
+                img.onerror = function() { failPhotoLoad(generation, 'Could not load extra wallpaper.'); };
+                img.onload = function() { prepareExtraWallpaper(img, generation, 'extra'); };
+                img.src = watchUrl;
+            }
+
+            // New: direct pack without scaling/dithering
+            function prepareExtraWallpaper(image, generation, sourceLabel) {
+                if (generation !== photoLoadGeneration) return;
+                try {
+                    var srcW = image.naturalWidth || image.width;
+                    var srcH = image.naturalHeight || image.height;
+                    if (srcW !== watchWidth || srcH !== watchHeight) {
+                        prepareImage(image, generation, sourceLabel);
+                        return;
+                    }
+                    var ctx = canvas.getContext('2d');
+                    ctx.fillStyle = '#000';
+                    ctx.fillRect(0, 0, watchWidth, watchHeight);
+                    ctx.imageSmoothingEnabled = false;
+                    ctx.drawImage(image, 0, 0);
+                    var imageData = ctx.getImageData(0, 0, watchWidth, watchHeight);
+                    var result = packColorNoDither(imageData.data, watchWidth, watchHeight);
+                    ctx.putImageData(imageData, 0, 0);
+                    canvas.style.display = 'block';
+                    var customThumb = document.querySelector('.wallpaper-item[data-id="8"] img');
+                    if (customThumb && image.src) customThumb.src = image.src;
+                    var binary = '';
+                    for (var i = 0; i < result.pixelData.length; i++) binary += String.fromCharCode(result.pixelData[i]);
+                    var base64 = btoa(binary);
+                    var compressed = LZString.compressToEncodedURIComponent(base64);
+                    customPhotoData = { compressed: compressed, palette: result.palette, color: true };
+                    setSubmitDisabled(false);
+                    setPhotoStatus('Ready: ' + watchWidth + '×' + watchHeight + ' extra wallpaper.', false);
+                    if (photoLoadTimer) { clearTimeout(photoLoadTimer); photoLoadTimer = null; }
+                } catch (e) {
+                    var detail = e && e.message ? e.message : String(e);
+                    var blocked = e && e.name === 'SecurityError';
+                    blocked = blocked || /cross-origin|cross origin|taint|insecure/i.test(detail);
+                    if (blocked) failPhotoLoad(generation, 'The image service returned data that the browser could not read.');
+                    else failPhotoLoad(generation, 'Extra wallpaper processing failed: ' + detail);
+                }
+            }
+
+            // Pack color without dithering (assumes exact watch dimensions)
+            function packColorNoDither(data, width, height) {
+                var rowBytes = Math.floor((width + 1) / 2);
+                var pixelData = new Uint8Array(rowBytes * height);
+                var uniqueMap = {};
+                var paletteList = [];
+                for (var i = 0; i < data.length; i += 4) {
+                    var r6 = Math.round(data[i] / 85);
+                    var g6 = Math.round(data[i + 1] / 85);
+                    var b6 = Math.round(data[i + 2] / 85);
+                    var id = (r6 << 4) | (g6 << 2) | b6;
+                    if (uniqueMap[id] === undefined) {
+                        uniqueMap[id] = paletteList.length;
+                        paletteList.push(id);
+                        if (paletteList.length >= 16) break;
+                    }
+                }
+                // If more than 16 unique colors, use median cut (no dither)
+                if (paletteList.length < 16) {
+                    while (paletteList.length < 16) paletteList.push(paletteList[0] || 0);
+                } else {
+                    paletteList = buildPalette(data);
+                }
+                var paletteBytes = new Uint8Array(16);
+                for (var p = 0; p < 16; p++) {
+                    var pid = paletteList[p] !== undefined ? paletteList[p] : 0;
+                    paletteBytes[p] = 0xC0 | (pid & 0x3F);
+                }
+                for (var y = 0; y < height; y++) {
+                    for (var x = 0; x < width; x++) {
+                        var idx = (y * width + x) * 4;
+                        var r = data[idx], g = data[idx + 1], b = data[idx + 2];
+                        var r6 = Math.round(r / 85), g6 = Math.round(g / 85), b6 = Math.round(b / 85);
+                        var id = (r6 << 4) | (g6 << 2) | b6;
+                        var pi = uniqueMap[id] !== undefined ? uniqueMap[id] : nearestPaletteIndex(r, g, b, paletteList);
+                        var byteIdx = y * rowBytes + Math.floor(x / 2);
+                        if ((x & 1) === 0) pixelData[byteIdx] = pi << 4;
+                        else pixelData[byteIdx] |= pi;
+                    }
+                }
+                return { pixelData: pixelData, palette: Array.from(paletteBytes), color: true };
+            }
+
             function saveConfig() {
                 var config = getConfig();
                 var json = JSON.stringify(config);
@@ -505,6 +695,10 @@ Machine)</div>
             document.getElementById('zerosRight').addEventListener('click', function(){ zerosOn = !zerosOn; updateDisplays(); });
             document.getElementById('ampmLeft').addEventListener('click', function(){ ampmOn = !ampmOn; updateDisplays(); });
             document.getElementById('ampmRight').addEventListener('click', function(){ ampmOn = !ampmOn; updateDisplays(); });
+            document.getElementById('extraLeft').addEventListener('click', function(){ showExtraWallpapers = !showExtraWallpapers; updateExtraDisplay(); });
+            document.getElementById('extraRight').addEventListener('click', function(){ showExtraWallpapers = !showExtraWallpapers; updateExtraDisplay(); });
+            document.getElementById('dismissBtnColor5').addEventListener('click', showAccessDeniedModal);
+            document.getElementById('closeBtnColor5').addEventListener('click', showAccessDeniedModal);
 
             function buildThemeGrid() {
                 var container = document.getElementById('themeGrid');
@@ -595,7 +789,13 @@ Machine)</div>
                         document.getElementById('topBarTitle').textContent = 'The World Machine';
                         updateDisplays();
 
-                        // ✅ Show the app immediately when settings are loaded
+                        // Extra wallpapers local-only settings
+                        var showExtra = localStorage.getItem('twm_show_extra_wallpapers');
+                        showExtraWallpapers = (showExtra === 'true');
+                        var selectedExtra = localStorage.getItem('twm_selected_extra_wallpaper');
+                        if (selectedExtra) selectedExtraWallpaperId = selectedExtra;
+                        updateExtraDisplay();
+
                         if(showTimer){ clearTimeout(showTimer); showTimer=null; }
                         showApp();
 
@@ -617,6 +817,7 @@ Machine)</div>
                     document.getElementById('topBarTitle').textContent = 'The World Machine';
                     updateDisplays();
                     updateCustomPhotoSection();
+                    updateExtraDisplay();
                     if (!showTimer) {
                         showTimer = setTimeout(function(){ showApp(); }, 1000);
                     }
@@ -639,7 +840,7 @@ Machine)</div>
                     var textWrapper = document.createElement('div'); textWrapper.className = 'wallpaper-text-wrapper';
                     lines.forEach(function(line){ var span = document.createElement('span'); span.className = 'wallpaper-label'; span.textContent = line; textWrapper.appendChild(span); });
                     item.appendChild(textWrapper);
-                    item.addEventListener('click', function(){ document.querySelectorAll('.wallpaper-item').forEach(function(el){ el.classList.remove('selected'); }); this.classList.add('selected'); selectedWallpaperId = wp.id; updateCustomPhotoSection(); });
+                    item.addEventListener('click', function(){ document.querySelectorAll('.wallpaper-item').forEach(function(el){ el.classList.remove('selected'); }); this.classList.add('selected'); selectedWallpaperId = wp.id; selectedExtraWallpaperId = null; document.querySelectorAll('.extra-wallpaper-item').forEach(function(el){ el.classList.remove('selected'); }); localStorage.removeItem('twm_selected_extra_wallpaper'); updateCustomPhotoSection(); });
                     grid.appendChild(item);
                 });
             }
