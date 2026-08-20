@@ -9,16 +9,13 @@
         * { margin:0; padding:0; box-sizing:border-box; }
         body { font-family:'Volter',sans-serif; background:#000; color:var(--primary,#aa55ff); padding:0; margin:0; min-height:100vh; }
 
-        #app { opacity: 0; transition: opacity 0.2s; }
-        #app.loaded { opacity: 1; }
+        #app { opacity: 1; }
 
         #topBar {
             position: fixed; top:0; left:0; right:0; z-index:100;
             background:#000; border-bottom:6px solid var(--primary,#aa55ff);
             padding:6px 18px 6px 6px; min-height:60px;
             display:flex; align-items:center;
-            opacity: 0;
-            transition: opacity 0.2s;
         }
         .topBar-left { display:flex; align-items:center; gap:12px; min-width:0; }
         .topBar-icon { width:48px; height:48px; flex-shrink:0; background-color:var(--primary,#aa55ff); -webkit-mask-image:url('https://raw.githubusercontent.com/GuruGitHubTheG/TWM/main/icons/oneshot.png'); mask-image:url('https://raw.githubusercontent.com/GuruGitHubTheG/TWM/main/icons/oneshot.png'); -webkit-mask-size:contain; mask-size:contain; -webkit-mask-repeat:no-repeat; mask-repeat:no-repeat; -webkit-mask-position:center; mask-position:center; }
@@ -76,9 +73,64 @@
         }
         .restore-defaults-btn:hover,
         .restore-defaults-btn:active {
+            border-color: var(--primary-variant, rgb(100,66,165));
+            color: var(--primary-variant, rgb(100,66,165));
+            background: transparent;
+        }
+
+        .custom-color-btn {
+            width: 100%;
+            height: 48px;
+            border: 3px solid var(--primary,#aa55ff);
+            background: transparent;
+            color: var(--primary,#aa55ff);
+            font-family: 'Volter', sans-serif;
+            font-size: 21px;
+            letter-spacing: 1px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0;
+        }
+        .custom-color-btn:hover,
+        .custom-color-btn:active {
+            border-color: var(--primary-variant, rgb(100,66,165));
+            color: var(--primary-variant, rgb(100,66,165));
+            background: transparent;
+        }
+
+        .custom-photo-btn {
+            width: 100%;
+            height: 48px;
+            border: 3px solid var(--primary);
+            background: transparent;
+            color: var(--primary);
+            font-family: 'Volter', sans-serif;
+            font-size: 21px;
+            letter-spacing: 1px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0;
+            margin-bottom: 10px;
+        }
+        .custom-photo-btn:hover,
+        .custom-photo-btn:active {
             border-color: var(--primary-variant);
             color: var(--primary-variant);
             background: transparent;
+        }
+
+        .photo-file-name {
+            font-family: 'Volter', sans-serif;
+            font-size: 21px;
+            letter-spacing: 0.5px;
+            color: var(--primary);
+            margin-bottom: 10px;
+            text-align: center;
+            word-break: break-all;
         }
 
         .wallpaper-grid, .theme-grid { display:flex; flex-wrap:wrap; gap:20px 12px; justify-content:flex-start; }
@@ -120,6 +172,10 @@
         select:focus { border-color:var(--primary,#aa55ff); box-shadow:0 0 0 2px rgba(170,85,255,0.2); }
         select option { background:#1a1a1a; color:var(--primary,#aa55ff); }
 
+        #themes-window .setting {
+            padding: 0;
+        }
+
         @media (max-width: 400px) { .container { padding:0 5px; padding-top:76px; } .window-content { padding:20px 12px 12px 12px; } .window { border-width:4px; } .window-divider { height:10px; } }
         ::-webkit-scrollbar { width:0; background:transparent; }
 
@@ -143,6 +199,61 @@
         }
         .modal-btn:hover, .modal-btn:active { color:var(--primary-variant, rgb(100,66,165)); border-color:var(--primary-variant, rgb(100,66,165)); background:transparent; }
         .modal-ok-buttons { display:flex; justify-content:center; margin:0; padding:0 12px; }
+
+        /* Custom photo modal */
+        #customPhotoModal .modal-box {
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+        #customPhotoModal .modal-text {
+            margin-bottom: 10px;
+        }
+        #customPhotoModal .custom-photo-controls {
+            margin: 0 18px 12px;
+            text-align: left;
+        }
+        .info-icon {
+            width: 42px;
+            height: 42px;
+            background-color: var(--primary);
+            -webkit-mask-image: url('https://raw.githubusercontent.com/GuruGitHubTheG/TWM/main/icons/info.png');
+            mask-image: url('https://raw.githubusercontent.com/GuruGitHubTheG/TWM/main/icons/info.png');
+            -webkit-mask-size: contain;
+            mask-size: contain;
+            -webkit-mask-repeat: no-repeat;
+            mask-repeat: no-repeat;
+            -webkit-mask-position: center;
+            mask-position: center;
+            flex-shrink: 0;
+        }
+
+        #photoUrl {
+            font-family: 'Volter', sans-serif;
+            font-size: 21px;
+            letter-spacing: 0.5px;
+            color: var(--primary);
+            background: transparent;
+            border: 3px solid var(--primary);
+            border-radius: 0;
+            height: 48px;
+            padding: 0 12px;
+            width: 100%;
+            box-sizing: border-box;
+            outline: none;
+            margin-bottom: 10px;
+        }
+        #photoUrl::placeholder {
+            color: var(--primary);
+            opacity: 0.45;
+        }
+        #photoUrl:focus {
+            border-color: var(--primary-variant);
+            color: var(--primary-variant);
+        }
+        #photoUrl:focus::placeholder {
+            color: var(--primary-variant);
+            opacity: 0.45;
+        }
     </style>
     <script src="https://cdn.jsdelivr.net/npm/lz-string@1.4.4/libs/lz-string.min.js"></script>
 </head>
@@ -229,16 +340,6 @@
             <div class="window-divider" style="background:var(--primary, #aa55ff);"></div>
             <div class="window-content">
                 <div class="wallpaper-grid" id="wallpaperGrid"></div>
-                <div class="setting" id="custom-photo-section" style="display:none; margin-top:24px;">
-                    <div class="setting-label">Custom Photo</div>
-                    <div class="setting-description">Upload or load a photo for your watch</div>
-                    <input type="file" id="photoFile" accept="image/*" style="display:block; width:100%; margin-bottom:10px;">
-                    <input type="url" id="photoUrl" placeholder="https://example.com/photo.jpg" style="display:block; width:100%; box-sizing:border-box; margin-bottom:10px;">
-                    <button id="loadUrlBtn" style="display:block; width:100%; padding:10px; margin-bottom:10px;">Load URL</button>
-                    <button id="photoProxyBtn" style="display:none; width:100%; padding:10px; margin-bottom:10px;">Retry via wsrv.nl</button>
-                    <canvas id="photoCanvas" style="display:none; max-width:100%; height:auto; margin:0 auto; border:1px solid #555; background:#000;"></canvas>
-                    <div id="photoStatus" style="color:#aaa; margin-top:8px;">Choose a photo to prepare it for your watch.</div>
-                </div>
             </div>
         </div>
 
@@ -280,18 +381,43 @@
             <div class="window-content">
                 <div class="setting">
                     <div class="theme-grid" id="themeGrid"></div>
-                    <div class="setting-label" style="margin-top:14px;">Custom Color</div>
-                    <div class="color-picker-wrapper">
-                        <input type="color" id="UI_Color" value="#9664ff">
-                        <span class="color-hex" id="colorHex">#9664ff</span>
+                    <div class="setting-row" style="margin-top:24px;">
+                        <div class="setting-label-centered" id="customColorLabel">Color: #9664ff</div>
+                        <button class="custom-color-btn" id="setCustomColorBtn">Set Custom Color</button>
                     </div>
-                    <div class="capability-note">The secondary color is automatically generated from your primary color.</div>
-                    <div class="setting-label" style="margin-top:10px;">Auto Secondary Color</div>
-                    <div class="color-picker-wrapper" style="opacity:0.6; pointer-events:none;">
-                        <input type="color" id="Secondary_Color" value="#6442a5" disabled>
-                        <span class="color-hex" id="secondaryColorHex">#6442a5</span>
-                    </div>
-                    <div class="capability-note">This color is used for hover and pressed states.</div>
+                    <input type="color" id="UI_Color" value="#9664ff" style="display:none;">
+                    <input type="color" id="Secondary_Color" value="#6442a5" style="display:none;">
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Custom Photo Modal -->
+    <div class="modal-overlay" id="customPhotoModal">
+        <div class="modal-box">
+            <div class="modal-content">
+                <div class="modal-image-row">
+                    <div class="info-icon" id="customPhotoInfoIcon"></div>
+                </div>
+                <div class="modal-line"></div>
+                <div class="modal-text" id="customPhotoModalText">Please select the image you would like to use.</div>
+
+                <div class="custom-photo-controls">
+                    <input type="file" id="photoFile" accept="image/*" style="display:none;">
+                    <button id="photoFileBtn" class="custom-photo-btn">Browse</button>
+                    <div id="photoFileName" class="photo-file-name">No file chosen</div>
+
+                    <input type="url" id="photoUrl" placeholder="https://example.com/photo.jpg" style="display:block; width:100%; box-sizing:border-box; margin-bottom:10px;">
+                    <button id="loadUrlBtn" class="custom-photo-btn">Load URL</button>
+                    <button id="photoProxyBtn" class="custom-photo-btn" style="display:none;">Retry via wsrv.nl</button>
+
+                    <canvas id="photoCanvas" style="display:none; max-width:100%; height:auto; margin:0 auto; border:1px solid #555; background:#000;"></canvas>
+                    <div id="photoStatus" style="color:#aaa; margin-top:8px;">Choose a photo to prepare it for your watch.</div>
+                </div>
+
+                <div class="modal-buttons" id="customPhotoButtons">
+                    <button class="modal-btn" id="customPhotoOkBtn">Ok</button>
+                    <button class="modal-btn" id="customPhotoCancelBtn">Cancel</button>
                 </div>
             </div>
         </div>
@@ -411,14 +537,12 @@ Machine)</div>
             var extraWallpaperSubfolder = (getQueryParam('platform') === 'emery') ? 'emery' : 'basalt';
             var extraWallpaperWatchBase = 'https://raw.githubusercontent.com/GuruGitHubTheG/TWM/main/wallpapers/more/' + extraWallpaperSubfolder + '/';
 
-            // ---------- fade-in control ----------
-            var appShown = false;
-            var showTimer = null;
-            function showApp() {
-                if (appShown) return;
-                appShown = true;
-                document.getElementById('topBar').style.opacity = '1';
-                document.getElementById('app').classList.add('loaded');
+            // ---------- Custom Photo Modal Helpers ----------
+            function showCustomPhotoModal() {
+                document.getElementById('customPhotoModal').classList.add('active');
+            }
+            function hideCustomPhotoModal() {
+                document.getElementById('customPhotoModal').classList.remove('active');
             }
 
             function playNotificationSound() {
@@ -463,7 +587,6 @@ Machine)</div>
                 document.querySelectorAll('.window-divider').forEach(function(el){ el.style.background = primaryColor; });
                 document.querySelectorAll('.setting-description').forEach(function(el){ el.style.color = primaryColor; el.style.opacity = '0.6'; });
                 document.querySelectorAll('.setting-middle').forEach(function(el){ el.style.borderTopColor = primaryColor; el.style.borderBottomColor = primaryColor; });
-                document.querySelectorAll('.color-picker-wrapper input[type="color"]').forEach(function(el){ el.style.borderColor = primaryColor; });
             }
 
             function stopRainbowTimer() { if (rainbowTimer) { clearInterval(rainbowTimer); rainbowTimer = null; } }
@@ -564,7 +687,7 @@ Machine)</div>
             }
             function updateCustomPhotoSection() {
                 var show = selectedWallpaperId === 8 && selectedExtraWallpaperId === null;
-                document.getElementById('custom-photo-section').style.display = show ? 'block' : 'none';
+                if (!show) hideCustomPhotoModal();
             }
 
             function updateExtraDisplay() {
@@ -617,6 +740,7 @@ Machine)</div>
                 var extraItem = document.querySelector('.extra-wallpaper-item[data-extra-file="' + file + '"]');
                 if (extraItem) extraItem.classList.add('selected');
                 updateCustomPhotoSection();
+                hideCustomPhotoModal();
 
                 var watchSuffix = (watchHeight === 228) ? '_228.png' : '_168.png';
 
@@ -748,6 +872,34 @@ Machine)</div>
             document.getElementById('dismissBtnColor5').addEventListener('click', showAccessDeniedModal);
             document.getElementById('closeBtnColor5').addEventListener('click', showAccessDeniedModal);
             document.getElementById('restoreDefaultsBtn').addEventListener('click', confirmRestoreDefaults);
+            document.getElementById('setCustomColorBtn').addEventListener('click', function() {
+                var tempInput = document.createElement('input');
+                tempInput.type = 'color';
+                tempInput.value = document.getElementById('UI_Color').value || '#9664ff';
+                tempInput.style.position = 'absolute';
+                tempInput.style.left = '-9999px';
+                tempInput.addEventListener('input', function() {
+                    rainbowActive = false;
+                    var c = tempInput.value;
+                    document.getElementById('UI_Color').value = c;
+                    document.getElementById('customColorLabel').textContent = 'Color: ' + c;
+                    var variant = calculateVariant(c);
+                    document.querySelectorAll('.theme-item').forEach(function(el){ el.classList.remove('selected'); });
+                    applyStyles(c, variant);
+                });
+                tempInput.addEventListener('change', function() {
+                    tempInput.remove();
+                });
+                document.body.appendChild(tempInput);
+                tempInput.click();
+            });
+
+            // Custom photo modal buttons
+            document.getElementById('customPhotoOkBtn').addEventListener('click', hideCustomPhotoModal);
+            document.getElementById('customPhotoCancelBtn').addEventListener('click', hideCustomPhotoModal);
+            document.getElementById('customPhotoModal').addEventListener('click', function(e) {
+                if (e.target === this) hideCustomPhotoModal();
+            });
 
             function toggleExtraWallpapers() {
                 if (!showExtraWallpapers) {
@@ -768,6 +920,16 @@ Machine)</div>
                 }
             }
 
+            function confirmRestoreDefaults() {
+                showModal(
+                    'Are you sure you would like to restore defaults?',
+                    function() {
+                        restoreDefaults();
+                    },
+                    null
+                );
+            }
+
             function restoreDefaults() {
                 timeIndex = 0;
                 zerosOn = false;
@@ -781,9 +943,7 @@ Machine)</div>
                 stopRainbowTimer();
                 applyStyles('#9664ff', '#6442a5');
                 document.getElementById('UI_Color').value = '#9664ff';
-                document.getElementById('colorHex').textContent = '#9664ff';
-                document.getElementById('Secondary_Color').value = '#6442a5';
-                document.getElementById('secondaryColorHex').textContent = '#6442a5';
+                document.getElementById('customColorLabel').textContent = 'Color: #9664ff';
 
                 localStorage.removeItem('twm_show_extra_wallpapers');
                 localStorage.removeItem('twm_selected_extra_wallpaper');
@@ -805,18 +965,9 @@ Machine)</div>
                 canvas.style.display = 'none';
                 setPhotoStatus('Choose a photo to prepare it for your watch.', false);
                 setSubmitDisabled(false);
+                hideCustomPhotoModal();
 
                 startRainbowAnimation();
-            }
-
-            function confirmRestoreDefaults() {
-                showModal(
-                    'Are you sure you would like to restore defaults?',
-                    function() {
-                        restoreDefaults();
-                    },
-                    null
-                );
             }
 
             function buildThemeGrid() {
@@ -855,25 +1006,12 @@ Machine)</div>
                         item.classList.add('selected');
                         rainbowActive = false;
                         document.getElementById('UI_Color').value = theme.primary;
-                        document.getElementById('colorHex').textContent = theme.primary;
-                        document.getElementById('Secondary_Color').value = theme.variant;
-                        document.getElementById('secondaryColorHex').textContent = theme.variant;
+                        document.getElementById('customColorLabel').textContent = 'Color: ' + theme.primary;
                         applyStyles(theme.primary, theme.variant);
                     });
                     container.appendChild(item);
                 });
             }
-
-            document.getElementById('UI_Color').addEventListener('input', function() {
-                rainbowActive = false;
-                var c = this.value;
-                document.getElementById('colorHex').textContent = c;
-                var variant = calculateVariant(c);
-                document.getElementById('Secondary_Color').value = variant;
-                document.getElementById('secondaryColorHex').textContent = variant;
-                document.querySelectorAll('.theme-item').forEach(function(el){ el.classList.remove('selected'); });
-                applyStyles(c, variant);
-            });
 
             function loadConfig(retries) {
                 retries = retries || 3;
@@ -895,14 +1033,12 @@ Machine)</div>
                                 rainbowActive = false;
                                 if (!c.startsWith('#')) c = '#' + c;
                                 document.getElementById('UI_Color').value = c;
-                                document.getElementById('colorHex').textContent = c;
+                                document.getElementById('customColorLabel').textContent = 'Color: ' + c;
                                 var variant = calculateVariant(c);
                                 var matched = false;
                                 themes.forEach(function(theme){ if(theme.primary.toLowerCase() === c.toLowerCase()){ matched = true; variant = theme.variant; } });
                                 if (!matched) document.querySelectorAll('.theme-item').forEach(function(el){ el.classList.remove('selected'); });
                                 else document.querySelectorAll('.theme-item').forEach(function(el){ if(el.dataset.primary.toLowerCase() === c.toLowerCase()) el.classList.add('selected'); else el.classList.remove('selected'); });
-                                document.getElementById('Secondary_Color').value = variant;
-                                document.getElementById('secondaryColorHex').textContent = variant;
                                 applyStyles(c, variant);
                             }
                         }
@@ -913,31 +1049,20 @@ Machine)</div>
                         showExtraWallpapers = (showExtra === 'true');
                         updateExtraDisplay();
 
-                        if(showTimer){ clearTimeout(showTimer); showTimer=null; }
-                        showApp();
-
                         return true;
                     } catch(e) { console.warn('Error loading config', e); }
                 }
                 if (retries > 0) {
                     setTimeout(function(){ loadConfig(retries-1); }, 500);
-                    if (!showTimer) {
-                        showTimer = setTimeout(function(){ showApp(); }, 1000);
-                    }
                     return false;
                 } else {
                     applyStyles('#9664ff','#6442a5');
                     document.getElementById('UI_Color').value = '#9664ff';
-                    document.getElementById('colorHex').textContent = '#9664ff';
-                    document.getElementById('Secondary_Color').value = '#6442a5';
-                    document.getElementById('secondaryColorHex').textContent = '#6442a5';
+                    document.getElementById('customColorLabel').textContent = 'Color: #9664ff';
                     document.getElementById('topBarTitle').textContent = 'The World Machine';
                     updateDisplays();
                     updateCustomPhotoSection();
                     updateExtraDisplay();
-                    if (!showTimer) {
-                        showTimer = setTimeout(function(){ showApp(); }, 1000);
-                    }
                     return false;
                 }
             }
@@ -957,7 +1082,20 @@ Machine)</div>
                     var textWrapper = document.createElement('div'); textWrapper.className = 'wallpaper-text-wrapper';
                     lines.forEach(function(line){ var span = document.createElement('span'); span.className = 'wallpaper-label'; span.textContent = line; textWrapper.appendChild(span); });
                     item.appendChild(textWrapper);
-                    item.addEventListener('click', function(){ document.querySelectorAll('.wallpaper-item').forEach(function(el){ el.classList.remove('selected'); }); this.classList.add('selected'); selectedWallpaperId = wp.id; selectedExtraWallpaperId = null; document.querySelectorAll('.extra-wallpaper-item').forEach(function(el){ el.classList.remove('selected'); }); localStorage.removeItem('twm_selected_extra_wallpaper'); updateCustomPhotoSection(); });
+                    item.addEventListener('click', function(){
+                        document.querySelectorAll('.wallpaper-item').forEach(function(el){ el.classList.remove('selected'); });
+                        this.classList.add('selected');
+                        selectedWallpaperId = wp.id;
+                        selectedExtraWallpaperId = null;
+                        document.querySelectorAll('.extra-wallpaper-item').forEach(function(el){ el.classList.remove('selected'); });
+                        localStorage.removeItem('twm_selected_extra_wallpaper');
+                        if (wp.id === 8) {
+                            showCustomPhotoModal();
+                        } else {
+                            hideCustomPhotoModal();
+                        }
+                        updateCustomPhotoSection();
+                    });
                     grid.appendChild(item);
                 });
             }
@@ -982,7 +1120,8 @@ Machine)</div>
             function nearestPaletteIndex(r,g,b,palette){ var bestIdx=0,bestDist=Number.MAX_VALUE; for(var i=0;i<palette.length;i++){ var dr=r-palette[i].r, dg=g-palette[i].g, db=b-palette[i].b; var dist=dr*dr+dg*dg+db*db; if(dist<bestDist){ bestDist=dist; bestIdx=i; } } return bestIdx; }
             function quantizeColorAndPack(imageData,width,height){ var paletteIds=buildPalette(imageData.data); var palette=paletteIds.map(function(id){ var c=colorFromId(id); return { id:id, r:c.r*85, g:c.g*85, b:c.b*85 }; }); var rowBytes=Math.floor((width+1)/2); var pixelData=new Uint8Array(rowBytes*height); var data=imageData.data; var curR=new Float32Array(width+2),curG=new Float32Array(width+2),curB=new Float32Array(width+2); var nextR=new Float32Array(width+2),nextG=new Float32Array(width+2),nextB=new Float32Array(width+2); for(var y=0;y<height;y++){ for(var x=0;x<width;x++){ var idx=(y*width+x)*4; var r=clamp(data[idx]+curR[x+1],0,255), g=clamp(data[idx+1]+curG[x+1],0,255), b=clamp(data[idx+2]+curB[x+1],0,255); var pi=nearestPaletteIndex(r,g,b,palette); var chosen=palette[pi]; data[idx]=chosen.r; data[idx+1]=chosen.g; data[idx+2]=chosen.b; data[idx+3]=255; var byteIdx=y*rowBytes+Math.floor(x/2); if((x&1)===0) pixelData[byteIdx]=pi<<4; else pixelData[byteIdx]|=pi; var er=r-chosen.r,eg=g-chosen.g,eb=b-chosen.b; curR[x+2]+=er*7/16; curG[x+2]+=eg*7/16; curB[x+2]+=eb*7/16; nextR[x]+=er*3/16; nextG[x]+=eg*3/16; nextB[x]+=eb*3/16; nextR[x+1]+=er*5/16; nextG[x+1]+=eg*5/16; nextB[x+1]+=eb*5/16; nextR[x+2]+=er/16; nextG[x+2]+=eg/16; nextB[x+2]+=eb/16; } var tr=curR,tg=curG,tb=curB; curR=nextR; curG=nextG; curB=nextB; nextR=tr; nextG=tg; nextB=tb; for(var c=0;c<width+2;c++){ nextR[c]=0; nextG[c]=0; nextB[c]=0; } } var paletteBytes=new Uint8Array(16); var fallback=paletteIds.length?paletteIds[0]:0; for(var p=0;p<16;p++){ var id=p<paletteIds.length?paletteIds[p]:fallback; paletteBytes[p]=0xC0|id; } return { pixelData:pixelData, palette:Array.from(paletteBytes), color:true }; }
             function prepareImage(image, generation, sourceLabel, blockedRetry){ if(generation!==photoLoadGeneration) return; try{ var srcW=image.naturalWidth||image.width, srcH=image.naturalHeight||image.height; var ctx=canvas.getContext('2d'); ctx.fillStyle='#000'; ctx.fillRect(0,0,watchWidth,watchHeight); ctx.imageSmoothingEnabled=true; if(typeof ctx.imageSmoothingQuality!=='undefined') ctx.imageSmoothingQuality='high'; var scale=Math.max(watchWidth/srcW, watchHeight/srcH); var cropW=watchWidth/scale, cropH=watchHeight/scale; var sx=(srcW-cropW)/2, sy=(srcH-cropH)/2; ctx.drawImage(image,sx,sy,cropW,cropH,0,0,watchWidth,watchHeight); var imageData=ctx.getImageData(0,0,watchWidth,watchHeight); var result=quantizeColorAndPack(imageData,watchWidth,watchHeight); ctx.putImageData(imageData,0,0); canvas.style.display='block'; var customThumb=document.querySelector('.wallpaper-item[data-id="8"] img'); if(customThumb && image.src) customThumb.src=image.src; var binary=''; for(var i=0;i<result.pixelData.length;i++) binary+=String.fromCharCode(result.pixelData[i]); var base64=btoa(binary); var compressed=LZString.compressToEncodedURIComponent(base64); customPhotoData={ compressed:compressed, palette:result.palette, color:true }; setSubmitDisabled(false); setPhotoStatus('Ready: '+watchWidth+'×'+watchHeight+' custom photo.', false); if(photoLoadTimer){ clearTimeout(photoLoadTimer); photoLoadTimer=null; } } catch(e){ var detail=e&&e.message?e.message:String(e); var blocked=e&&e.name==='SecurityError'; blocked=blocked||/cross-origin|cross origin|taint|insecure/i.test(detail); if(blocked && blockedRetry) blockedRetry(); else if(blocked) failPhotoLoad(generation,'The image service returned data that the browser could not read.'); else failPhotoLoad(generation,'Photo processing failed: '+detail); } }
-            document.getElementById('photoFile').addEventListener('change', function(){ var file=this.files&&this.files[0]; if(!file) return; var generation=beginPhotoLoad('Loading photo file…'); var reader=new FileReader(); reader.onerror=function(){ failPhotoLoad(generation,'The photo could not be read.'); }; reader.onload=function(e){ var img=new Image(); img.onerror=function(){ failPhotoLoad(generation,'The selected image could not be decoded.'); }; img.onload=function(){ prepareImage(img,generation,'file'); }; img.src=e.target.result; }; reader.readAsDataURL(file); });
+            document.getElementById('photoFileBtn').addEventListener('click', function() { document.getElementById('photoFile').click(); });
+            document.getElementById('photoFile').addEventListener('change', function(){ var file=this.files&&this.files[0]; var nameDisplay=document.getElementById('photoFileName'); if(nameDisplay) nameDisplay.textContent = file ? file.name : 'No file chosen'; if(!file) return; var generation=beginPhotoLoad('Loading photo file…'); var reader=new FileReader(); reader.onerror=function(){ failPhotoLoad(generation,'The photo could not be read.'); }; reader.onload=function(e){ var img=new Image(); img.onerror=function(){ failPhotoLoad(generation,'The selected image could not be decoded.'); }; img.onload=function(){ prepareImage(img,generation,'file'); }; img.src=e.target.result; }; reader.readAsDataURL(file); });
             document.getElementById('loadUrlBtn').addEventListener('click', function(){ loadImageUrl(false); });
             document.getElementById('photoProxyBtn').addEventListener('click', function(){ loadImageUrl(true); });
             function loadImageUrl(useProxy){ var url=document.getElementById('photoUrl').value.trim(); if(!url){ resetPhotoLoad('Enter a direct HTTPS image URL.', true); return; } var viaProxy=useProxy===true; var generation=beginPhotoLoad(viaProxy?'Loading via wsrv.nl…':'Loading image URL…', viaProxy?null:function(timedOutGen){ loadImageUrl(true); }); var img=new Image(); img.crossOrigin='anonymous'; if(typeof img.referrerPolicy!=='undefined') img.referrerPolicy='no-referrer'; img.onerror=function(){ if(viaProxy) failPhotoLoad(generation,'wsrv.nl could not fetch that image.'); else loadImageUrl(true); }; img.onload=function(){ prepareImage(img,generation,viaProxy?'URL via wsrv.nl':'URL', viaProxy?null:function(){ loadImageUrl(true); }); }; var finalUrl=viaProxy?'https://wsrv.nl/?url='+encodeURIComponent(url)+'&w='+watchWidth+'&h='+watchHeight+'&fit=cover&a=center&output=png':url; img.src=finalUrl; }
@@ -990,11 +1129,53 @@ Machine)</div>
             document.getElementById('photoUrl').addEventListener('keydown', function(e){ if(e.key==='Enter'||e.keyCode===13){ e.preventDefault(); loadImageUrl(false); } });
 
             // ---------- MODAL & RAINBOW ----------
-            function activateRainbowStandard(){ document.querySelectorAll('.theme-item').forEach(function(el){ el.classList.remove('selected'); }); var rainbowItem=document.querySelector('.theme-item[data-rainbow="true"]'); if(rainbowItem) rainbowItem.classList.add('selected'); rainbowActive=true; startRainbowAnimation(); document.getElementById('UI_Color').value='#ee6363'; document.getElementById('colorHex').textContent='Rainbow'; document.getElementById('Secondary_Color').value='#a00d0d'; document.getElementById('secondaryColorHex').textContent='Rainbow'; }
-            function activateRainbowPowerSaving(){ document.querySelectorAll('.theme-item').forEach(function(el){ el.classList.remove('selected'); }); var rainbowItem=document.querySelector('.theme-item[data-rainbow="true"]'); if(rainbowItem) rainbowItem.classList.add('selected'); rainbowActive=true; startPowerRainbowAnimation(); document.getElementById('UI_Color').value='#ee6363'; document.getElementById('colorHex').textContent='Rainbow (Power Saving)'; document.getElementById('Secondary_Color').value='#a00d0d'; document.getElementById('secondaryColorHex').textContent='Rainbow (Power Saving)'; }
-            function showModal(text, onYes, onNo, yesLabel, noLabel){ playNotificationSound(); document.getElementById('modalText').textContent=text; document.getElementById('questionIcon').style.display='block'; document.getElementById('warningIcon').style.display='none'; document.getElementById('yesNoButtons').style.display='flex'; document.getElementById('okButtonContainer').style.display='none'; document.getElementById('yesBtn').textContent = yesLabel || 'Yes'; document.getElementById('noBtn').textContent = noLabel || 'No'; window._modalYesCallback=onYes||null; window._modalNoCallback=onNo||null; document.getElementById('modalOverlay').classList.add('active'); }
-            function hideModal(){ document.getElementById('modalOverlay').classList.remove('active'); window._modalYesCallback=null; window._modalNoCallback=null; }
-            function showAccessDeniedModal(){ playNotificationSound(); document.getElementById('modalText').textContent='Access denied.'; document.getElementById('questionIcon').style.display='none'; document.getElementById('warningIcon').style.display='block'; document.getElementById('yesNoButtons').style.display='none'; document.getElementById('okButtonContainer').style.display='flex'; window._modalYesCallback=null; window._modalNoCallback=null; document.getElementById('modalOverlay').classList.add('active'); }
+            function activateRainbowStandard(){
+                document.querySelectorAll('.theme-item').forEach(function(el){ el.classList.remove('selected'); });
+                var rainbowItem=document.querySelector('.theme-item[data-rainbow="true"]');
+                if(rainbowItem) rainbowItem.classList.add('selected');
+                rainbowActive=true;
+                startRainbowAnimation();
+                document.getElementById('UI_Color').value='#ee6363';
+                document.getElementById('customColorLabel').textContent='Color: Rainbow';
+            }
+            function activateRainbowPowerSaving(){
+                document.querySelectorAll('.theme-item').forEach(function(el){ el.classList.remove('selected'); });
+                var rainbowItem=document.querySelector('.theme-item[data-rainbow="true"]');
+                if(rainbowItem) rainbowItem.classList.add('selected');
+                rainbowActive=true;
+                startPowerRainbowAnimation();
+                document.getElementById('UI_Color').value='#ee6363';
+                document.getElementById('customColorLabel').textContent='Color: Rainbow (Power-Saving)';
+            }
+            function showModal(text, onYes, onNo, yesLabel, noLabel){
+                playNotificationSound();
+                document.getElementById('modalText').textContent=text;
+                document.getElementById('questionIcon').style.display='block';
+                document.getElementById('warningIcon').style.display='none';
+                document.getElementById('yesNoButtons').style.display='flex';
+                document.getElementById('okButtonContainer').style.display='none';
+                document.getElementById('yesBtn').textContent = yesLabel || 'Yes';
+                document.getElementById('noBtn').textContent = noLabel || 'No';
+                window._modalYesCallback=onYes||null;
+                window._modalNoCallback=onNo||null;
+                document.getElementById('modalOverlay').classList.add('active');
+            }
+            function hideModal(){
+                document.getElementById('modalOverlay').classList.remove('active');
+                window._modalYesCallback=null;
+                window._modalNoCallback=null;
+            }
+            function showAccessDeniedModal(){
+                playNotificationSound();
+                document.getElementById('modalText').textContent='Access denied.';
+                document.getElementById('questionIcon').style.display='none';
+                document.getElementById('warningIcon').style.display='block';
+                document.getElementById('yesNoButtons').style.display='none';
+                document.getElementById('okButtonContainer').style.display='flex';
+                window._modalYesCallback=null;
+                window._modalNoCallback=null;
+                document.getElementById('modalOverlay').classList.add('active');
+            }
             document.getElementById('yesBtn').addEventListener('click', function(){ var cb=window._modalYesCallback; hideModal(); if(cb) cb(); });
             document.getElementById('noBtn').addEventListener('click', function(){ var cb=window._modalNoCallback; hideModal(); if(cb) cb(); });
             document.getElementById('okBtn').addEventListener('click', hideModal);
@@ -1002,7 +1183,15 @@ Machine)</div>
             function showRainbowConfirm(){ showModal('This mode uses a lot of power.\nWould you like to use\npower-saving mode?', activateRainbowPowerSaving, activateRainbowStandard); }
             window.showTWMConfirm = function(){ showModal('Change Language?\n(This will restart The World\nMachine)', null, null); };
 
-            function getConfig(){ var uiColor=document.getElementById('UI_Color').value.replace('#',''); if(rainbowActive){ uiColor=(rainbowMode==='power')?'rainbow_power':'rainbow'; } var config={ ClockMode:timeIndex, LeadingZeros:zerosOn, ShowAMPM:ampmOn, Wallpaper:selectedWallpaperId, UI_Color:uiColor }; if(selectedWallpaperId===8 && customPhotoData) config.CustomPhoto=customPhotoData; return config; }
+            function getConfig(){
+                var uiColor=document.getElementById('UI_Color').value.replace('#','');
+                if(rainbowActive){
+                    uiColor=(rainbowMode==='power')?'rainbow_power':'rainbow';
+                }
+                var config={ ClockMode:timeIndex, LeadingZeros:zerosOn, ShowAMPM:ampmOn, Wallpaper:selectedWallpaperId, UI_Color:uiColor };
+                if(selectedWallpaperId===8 && customPhotoData) config.CustomPhoto=customPhotoData;
+                return config;
+            }
 
             buildThemeGrid();
             buildGrid();
