@@ -531,10 +531,9 @@ Machine)</div>
                 document.getElementById('zerosDisplay').textContent = zerosOn ? 'ON' : 'OFF';
                 document.getElementById('ampmDisplay').textContent = ampmOn ? 'ON' : 'OFF';
             }
-            function updateCustomPhotoSection(){
+            function updateCustomPhotoSection() {
                 var show = selectedWallpaperId === 8 && selectedExtraWallpaperId === null;
-                document.getElementById('custom-photo-section').style.display =
-                    show ? 'block' : 'none';
+                document.getElementById('custom-photo-section').style.display = show ? 'block' : 'none';
             }
 
             function updateExtraDisplay() {
@@ -550,8 +549,8 @@ Machine)</div>
                 if (!grid) return;
                 grid.innerHTML = '';
                 extraWallpapers.forEach(function(ep) {
-                    var item = document.createElement('div');
                     var lines = ep.title.split('\n');
+                    var item = document.createElement('div');
                     item.className = 'wallpaper-item extra-wallpaper-item' + (lines.length === 1 ? ' one-liner' : ' two-liner');
                     item.dataset.extraFile = ep.file;
                     if (selectedExtraWallpaperId === ep.file) item.classList.add('selected');
@@ -575,6 +574,7 @@ Machine)</div>
                 selectedExtraWallpaperId = file;
                 document.querySelectorAll('.wallpaper-item').forEach(function(el){ el.classList.remove('selected'); });
                 document.querySelectorAll('.extra-wallpaper-item').forEach(function(el){ el.classList.remove('selected'); });
+                // Do NOT select built-in custom photo tile
                 var extraItem = document.querySelector('.extra-wallpaper-item[data-extra-file="' + file + '"]');
                 if (extraItem) extraItem.classList.add('selected');
                 updateCustomPhotoSection();
@@ -590,7 +590,6 @@ Machine)</div>
                 img.src = watchUrl;
             }
 
-            // New: direct pack without scaling/dithering
             function prepareExtraWallpaper(image, generation, sourceLabel) {
                 if (generation !== photoLoadGeneration) return;
                 try {
@@ -608,6 +607,7 @@ Machine)</div>
                     var imageData = ctx.getImageData(0, 0, watchWidth, watchHeight);
                     var result = packColorNoDither(imageData.data, watchWidth, watchHeight);
                     ctx.putImageData(imageData, 0, 0);
+                    // Do NOT show canvas preview or update custom photo thumbnail
                     var binary = '';
                     for (var i = 0; i < result.pixelData.length; i++) binary += String.fromCharCode(result.pixelData[i]);
                     var base64 = btoa(binary);
@@ -625,7 +625,6 @@ Machine)</div>
                 }
             }
 
-            // Pack color without dithering (assumes exact watch dimensions)
             function packColorNoDither(data, width, height) {
                 var rowBytes = Math.floor((width + 1) / 2);
                 var pixelData = new Uint8Array(rowBytes * height);
@@ -642,7 +641,6 @@ Machine)</div>
                         if (paletteList.length >= 16) break;
                     }
                 }
-                // If more than 16 unique colors, use median cut (no dither)
                 if (paletteList.length < 16) {
                     while (paletteList.length < 16) paletteList.push(paletteList[0] || 0);
                 } else {
@@ -694,10 +692,29 @@ Machine)</div>
             document.getElementById('zerosRight').addEventListener('click', function(){ zerosOn = !zerosOn; updateDisplays(); });
             document.getElementById('ampmLeft').addEventListener('click', function(){ ampmOn = !ampmOn; updateDisplays(); });
             document.getElementById('ampmRight').addEventListener('click', function(){ ampmOn = !ampmOn; updateDisplays(); });
-            document.getElementById('extraLeft').addEventListener('click', function(){ showExtraWallpapers = !showExtraWallpapers; updateExtraDisplay(); });
-            document.getElementById('extraRight').addEventListener('click', function(){ showExtraWallpapers = !showExtraWallpapers; updateExtraDisplay(); });
+            document.getElementById('extraLeft').addEventListener('click', toggleExtraWallpapers);
+            document.getElementById('extraRight').addEventListener('click', toggleExtraWallpapers);
             document.getElementById('dismissBtnColor5').addEventListener('click', showAccessDeniedModal);
             document.getElementById('closeBtnColor5').addEventListener('click', showAccessDeniedModal);
+
+            function toggleExtraWallpapers() {
+                if (!showExtraWallpapers) {
+                    showModal(
+                        'Enabling this option will show wallpapers which contain spoilers. Continue?',
+                        function() {
+                            showExtraWallpapers = true;
+                            updateExtraDisplay();
+                        },
+                        function() {
+                            showExtraWallpapers = false;
+                            updateExtraDisplay();
+                        }
+                    );
+                } else {
+                    showExtraWallpapers = false;
+                    updateExtraDisplay();
+                }
+            }
 
             function buildThemeGrid() {
                 var container = document.getElementById('themeGrid');
@@ -788,7 +805,6 @@ Machine)</div>
                         document.getElementById('topBarTitle').textContent = 'The World Machine';
                         updateDisplays();
 
-                        // Extra wallpapers local-only settings
                         var showExtra = localStorage.getItem('twm_show_extra_wallpapers');
                         showExtraWallpapers = (showExtra === 'true');
                         var selectedExtra = localStorage.getItem('twm_selected_extra_wallpaper');

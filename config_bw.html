@@ -345,8 +345,7 @@ Machine)</div>
             function updateDisplays(){ document.getElementById('timeDisplay').textContent=timeOptions[timeIndex]; document.getElementById('zerosDisplay').textContent=zerosOn?'ON':'OFF'; document.getElementById('ampmDisplay').textContent=ampmOn?'ON':'OFF'; }
             function updateCustomPhotoSection(){
                 var show = selectedWallpaperId === 8 && selectedExtraWallpaperId === null;
-                document.getElementById('custom-photo-section').style.display =
-                    show ? 'block' : 'none';
+                document.getElementById('custom-photo-section').style.display = show ? 'block' : 'none';
             }
 
             function updateExtraDisplay() {
@@ -362,8 +361,8 @@ Machine)</div>
                 if (!grid) return;
                 grid.innerHTML = '';
                 extraWallpapers.forEach(function(ep) {
-                    var item = document.createElement('div');
                     var lines = ep.title.split('\n');
+                    var item = document.createElement('div');
                     item.className = 'wallpaper-item extra-wallpaper-item' + (lines.length === 1 ? ' one-liner' : ' two-liner');
                     item.dataset.extraFile = ep.file;
                     if (selectedExtraWallpaperId === ep.file) item.classList.add('selected');
@@ -387,6 +386,7 @@ Machine)</div>
                 selectedExtraWallpaperId = file;
                 document.querySelectorAll('.wallpaper-item').forEach(function(el){ el.classList.remove('selected'); });
                 document.querySelectorAll('.extra-wallpaper-item').forEach(function(el){ el.classList.remove('selected'); });
+                // Do NOT select built-in custom photo tile
                 var extraItem = document.querySelector('.extra-wallpaper-item[data-extra-file="' + file + '"]');
                 if (extraItem) extraItem.classList.add('selected');
                 updateCustomPhotoSection();
@@ -402,14 +402,13 @@ Machine)</div>
                 img.src = watchUrl;
             }
 
-            // New: direct pack without scaling/dithering
+            // Direct pack without scaling/dithering
             function prepareExtraWallpaper(image, generation, sourceLabel) {
                 if (generation !== photoLoadGeneration) return;
                 try {
                     var srcW = image.naturalWidth || image.width;
                     var srcH = image.naturalHeight || image.height;
                     if (srcW !== watchWidth || srcH !== watchHeight) {
-                        // fallback to normal pipeline (should not happen for extra)
                         prepareImage(image, generation, sourceLabel);
                         return;
                     }
@@ -421,6 +420,7 @@ Machine)</div>
                     var imageData = ctx.getImageData(0, 0, watchWidth, watchHeight);
                     var result = packBWNoDither(imageData.data, watchWidth, watchHeight);
                     ctx.putImageData(imageData, 0, 0);
+                    // Do NOT show canvas preview or update custom photo thumbnail
                     var binary = '';
                     for (var i = 0; i < result.pixelData.length; i++) binary += String.fromCharCode(result.pixelData[i]);
                     var compressed = LZString.compressToEncodedURIComponent(btoa(binary));
@@ -466,10 +466,31 @@ Machine)</div>
             document.getElementById('ampmRight').addEventListener('click',function(){ampmOn=!ampmOn;updateDisplays();});
             document.getElementById('invertLeft').addEventListener('click',function(){applyInversion(!invertedOn);});
             document.getElementById('invertRight').addEventListener('click',function(){applyInversion(!invertedOn);});
-            document.getElementById('extraLeft').addEventListener('click',function(){ showExtraWallpapers = !showExtraWallpapers; updateExtraDisplay(); });
-            document.getElementById('extraRight').addEventListener('click',function(){ showExtraWallpapers = !showExtraWallpapers; updateExtraDisplay(); });
+            document.getElementById('extraLeft').addEventListener('click', toggleExtraWallpapers);
+            document.getElementById('extraRight').addEventListener('click', toggleExtraWallpapers);
             document.getElementById('dismissBtnBW5').addEventListener('click', showAccessDeniedModal);
             document.getElementById('closeBtnBW5').addEventListener('click', showAccessDeniedModal);
+
+            function toggleExtraWallpapers() {
+                if (!showExtraWallpapers) {
+                    // Turning ON requires confirmation
+                    showModal(
+                        'Enabling this option will show wallpapers which contain spoilers. Continue?',
+                        function() {
+                            showExtraWallpapers = true;
+                            updateExtraDisplay();
+                        },
+                        function() {
+                            showExtraWallpapers = false;
+                            updateExtraDisplay();
+                        }
+                    );
+                } else {
+                    // Turning OFF is allowed directly
+                    showExtraWallpapers = false;
+                    updateExtraDisplay();
+                }
+            }
 
             function loadConfig(retries){ retries=retries||3; var stored=localStorage.getItem('twm_config'); if(stored){ try{ var config=JSON.parse(stored); if(config.ClockMode!==undefined){var val=parseInt(config.ClockMode,10); if(val===0)timeIndex=0; else if(val===1)timeIndex=1; else if(val===2)timeIndex=2;} if(config.LeadingZeros!==undefined)zerosOn=config.LeadingZeros===true; if(config.ShowAMPM!==undefined)ampmOn=config.ShowAMPM!==false; if(config.Inverted!==undefined)applyInversion(config.Inverted===true); if(config.Wallpaper!==undefined){var wp=parseInt(config.Wallpaper,10); if(!isNaN(wp)){selectedWallpaperId=wp;document.querySelectorAll('.wallpaper-item').forEach(function(el){el.classList.toggle('selected',parseInt(el.dataset.id)===selectedWallpaperId);});updateCustomPhotoSection();}} if(config.CustomPhoto && selectedWallpaperId===8) decodeCustomPhotoToThumbnail(config.CustomPhoto); document.getElementById('topBarTitle').textContent='The World Machine'; updateDisplays();
 
