@@ -229,7 +229,7 @@
 
         .custom-photo-layout {
             display: flex;
-            gap: 12px;
+            gap: 24px;
             align-items: stretch;
         }
 
@@ -435,7 +435,7 @@
                             <input type="file" id="photoFile" accept="image/*" style="display:none;">
                             <input type="url" id="photoUrl" placeholder="https://example.com/photo.jpg">
                             <button id="loadUrlBtn" class="custom-photo-btn">Load URL</button>
-                            <button id="photoFileBtn" class="custom-photo-btn">Browse</button>
+                            <button id="photoFileBtn" class="custom-photo-btn">Browse...</button>
                             <button id="photoProxyBtn" class="custom-photo-btn" style="display:none;">Retry via wsrv.nl</button>
                         </div>
                     </div>
@@ -1070,7 +1070,10 @@ Machine)</div>
             document.getElementById('photoProxyBtn').addEventListener('click', function() { loadImageUrl(true); });
             function loadImageUrl(useProxy) {
                 var url = document.getElementById('photoUrl').value.trim();
-                if (!url) { resetPhotoLoad('Enter a direct HTTPS image URL.', true); return; }
+                if (!url) {
+                    showImageLoadFailedModal('Please enter a valid image URL.');
+                    return;
+                }
                 var viaProxy = useProxy === true;
                 var generation = beginPhotoLoad(viaProxy ? 'Loading via wsrv.nl…' : 'Loading image URL…', viaProxy ? null : function(timedOutGen) { loadImageUrl(true); });
                 var img = new Image();
@@ -1113,9 +1116,9 @@ Machine)</div>
                 window._modalNoCallback = null;
                 document.getElementById('modalOverlay').classList.add('active');
             }
-            function showImageLoadFailedModal() {
+            function showImageLoadFailedModal(message) {
                 playNotificationSound();
-                document.getElementById('modalText').textContent = 'Image load failed.';
+                document.getElementById('modalText').textContent = message || 'Image load failed.';
                 document.getElementById('questionIcon').style.display = 'none';
                 document.getElementById('warningIcon').style.display = 'block';
                 document.getElementById('yesNoButtons').style.display = 'none';

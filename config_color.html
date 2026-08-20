@@ -265,7 +265,7 @@
 
         .custom-photo-layout {
             display: flex;
-            gap: 12px;
+            gap: 24px;
             align-items: stretch;
         }
 
@@ -475,7 +475,7 @@
                             <input type="file" id="photoFile" accept="image/*" style="display:none;">
                             <input type="url" id="photoUrl" placeholder="https://example.com/photo.jpg">
                             <button id="loadUrlBtn" class="custom-photo-btn">Load URL</button>
-                            <button id="photoFileBtn" class="custom-photo-btn">Browse</button>
+                            <button id="photoFileBtn" class="custom-photo-btn">Browse...</button>
                             <button id="photoProxyBtn" class="custom-photo-btn" style="display:none;">Retry via wsrv.nl</button>
                         </div>
                     </div>
@@ -1291,7 +1291,7 @@ Machine)</div>
             document.getElementById('photoFile').addEventListener('change', function(){ var file=this.files&&this.files[0]; if(!file) return; var generation=beginPhotoLoad('Loading photo file…'); var reader=new FileReader(); reader.onerror=function(){ failPhotoLoad(generation,'The photo could not be read.'); }; reader.onload=function(e){ var img=new Image(); img.onerror=function(){ failPhotoLoad(generation,'The selected image could not be decoded.'); }; img.onload=function(){ prepareImage(img,generation,'file'); }; img.src=e.target.result; }; reader.readAsDataURL(file); });
             document.getElementById('loadUrlBtn').addEventListener('click', function(){ loadImageUrl(false); });
             document.getElementById('photoProxyBtn').addEventListener('click', function(){ loadImageUrl(true); });
-            function loadImageUrl(useProxy){ var url=document.getElementById('photoUrl').value.trim(); if(!url){ resetPhotoLoad('Enter a direct HTTPS image URL.', true); return; } var viaProxy=useProxy===true; var generation=beginPhotoLoad(viaProxy?'Loading via wsrv.nl…':'Loading image URL…', viaProxy?null:function(timedOutGen){ loadImageUrl(true); }); var img=new Image(); img.crossOrigin='anonymous'; if(typeof img.referrerPolicy!=='undefined') img.referrerPolicy='no-referrer'; img.onerror=function(){ if(viaProxy) failPhotoLoad(generation,'wsrv.nl could not fetch that image.'); else loadImageUrl(true); }; img.onload=function(){ prepareImage(img,generation,viaProxy?'URL via wsrv.nl':'URL', viaProxy?null:function(){ loadImageUrl(true); }); }; var finalUrl=viaProxy?'https://wsrv.nl/?url='+encodeURIComponent(url)+'&w='+watchWidth+'&h='+watchHeight+'&fit=cover&a=center&output=png':url; img.src=finalUrl; }
+            function loadImageUrl(useProxy){ var url=document.getElementById('photoUrl').value.trim(); if (!url){ showImageLoadFailedModal('Please enter a valid image URL.'); return; } var viaProxy=useProxy===true; var generation=beginPhotoLoad(viaProxy?'Loading via wsrv.nl…':'Loading image URL…', viaProxy?null:function(timedOutGen){ loadImageUrl(true); }); var img=new Image(); img.crossOrigin='anonymous'; if(typeof img.referrerPolicy!=='undefined') img.referrerPolicy='no-referrer'; img.onerror=function(){ if(viaProxy) failPhotoLoad(generation,'wsrv.nl could not fetch that image.'); else loadImageUrl(true); }; img.onload=function(){ prepareImage(img,generation,viaProxy?'URL via wsrv.nl':'URL', viaProxy?null:function(){ loadImageUrl(true); }); }; var finalUrl=viaProxy?'https://wsrv.nl/?url='+encodeURIComponent(url)+'&w='+watchWidth+'&h='+watchHeight+'&fit=cover&a=center&output=png':url; img.src=finalUrl; }
             document.getElementById('photoUrl').addEventListener('input', function(){ resetPhotoLoad('URL changed. Tap Load URL to prepare it.', false); });
             document.getElementById('photoUrl').addEventListener('keydown', function(e){ if(e.key==='Enter'||e.keyCode===13){ e.preventDefault(); loadImageUrl(false); } });
 
@@ -1343,15 +1343,15 @@ Machine)</div>
                 window._modalNoCallback=null;
                 document.getElementById('modalOverlay').classList.add('active');
             }
-            function showImageLoadFailedModal(){
+            function showImageLoadFailedModal(message) {
                 playNotificationSound();
-                document.getElementById('modalText').textContent='Image load failed.';
-                document.getElementById('questionIcon').style.display='none';
-                document.getElementById('warningIcon').style.display='block';
-                document.getElementById('yesNoButtons').style.display='none';
-                document.getElementById('okButtonContainer').style.display='flex';
-                window._modalYesCallback=null;
-                window._modalNoCallback=null;
+                document.getElementById('modalText').textContent = message || 'Image load failed.';
+                document.getElementById('questionIcon').style.display = 'none';
+                document.getElementById('warningIcon').style.display = 'block';
+                document.getElementById('yesNoButtons').style.display = 'none';
+                document.getElementById('okButtonContainer').style.display = 'flex';
+                window._modalYesCallback = null;
+                window._modalNoCallback = null;
                 document.getElementById('modalOverlay').classList.add('active');
             }
             document.getElementById('yesBtn').addEventListener('click', function(){ var cb=window._modalYesCallback; hideModal(); if(cb) cb(); });
