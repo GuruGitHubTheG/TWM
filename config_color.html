@@ -12,7 +12,14 @@
         #app { opacity: 0; transition: opacity 0.2s; }
         #app.loaded { opacity: 1; }
 
-        #topBar { position: fixed; top:0; left:0; right:0; z-index:100; background:#000; border-bottom:6px solid var(--primary,#aa55ff); padding:6px 18px 6px 6px; min-height:60px; display:flex; align-items:center; }
+        #topBar {
+            position: fixed; top:0; left:0; right:0; z-index:100;
+            background:#000; border-bottom:6px solid var(--primary,#aa55ff);
+            padding:6px 18px 6px 6px; min-height:60px;
+            display:flex; align-items:center;
+            opacity: 0; /* initially hidden */
+            transition: opacity 0.2s;
+        }
         .topBar-left { display:flex; align-items:center; gap:12px; min-width:0; }
         .topBar-icon { width:48px; height:48px; flex-shrink:0; background-color:var(--primary,#aa55ff); -webkit-mask-image:url('https://raw.githubusercontent.com/GuruGitHubTheG/TWM/main/icons/oneshot.png'); mask-image:url('https://raw.githubusercontent.com/GuruGitHubTheG/TWM/main/icons/oneshot.png'); -webkit-mask-size:contain; mask-size:contain; -webkit-mask-repeat:no-repeat; mask-repeat:no-repeat; -webkit-mask-position:center; mask-position:center; }
         #topBarTitle { font-size:clamp(12px,4vw,28px); font-weight:normal; letter-spacing:1px; line-height:1; color:var(--primary,#aa55ff); white-space:nowrap; overflow:hidden; text-overflow:clip; flex:0 1 auto; min-width:0; }
@@ -318,6 +325,17 @@ Machine)</div>
 
             var notifOrder = [2, 3, 4, 2, 2, 3, 4, 2, 2, 3, 4, 2];
             var notifIndex = 0;
+
+            // ---------- NEW: fade-in control ----------
+            var appShown = false;
+            var showTimer = null;
+            function showApp() {
+                if (appShown) return;
+                appShown = true;
+                document.getElementById('topBar').style.opacity = '1';
+                document.getElementById('app').classList.add('loaded');
+            }
+
             function playNotificationSound() {
                 var num = notifOrder[notifIndex];
                 var audio = document.getElementById('notif' + num);
@@ -478,7 +496,6 @@ Machine)</div>
             }
 
             document.getElementById('saveBtnTop').addEventListener('click', saveConfig);
-            // Window header dismiss/close now shows Access Denied
             document.querySelectorAll('[id^="dismissBtn"]').forEach(function(btn){ btn.addEventListener('click', showAccessDeniedModal); });
             document.querySelectorAll('[id^="closeBtn"]').forEach(function(btn){ btn.addEventListener('click', showAccessDeniedModal); });
 
@@ -579,13 +596,32 @@ Machine)</div>
                         updateDisplays();
 
                         // ✅ Show the app immediately when settings are loaded
-                        document.getElementById('app').classList.add('loaded');
+                        if(showTimer){ clearTimeout(showTimer); showTimer=null; }
+                        showApp();
 
                         return true;
                     } catch(e) { console.warn('Error loading config', e); }
                 }
-                if (retries > 0) { setTimeout(function(){ loadConfig(retries-1); }, 500); return false; }
-                else { applyStyles('#9664ff','#6442a5'); document.getElementById('UI_Color').value = '#9664ff'; document.getElementById('colorHex').textContent = '#9664ff'; document.getElementById('Secondary_Color').value = '#6442a5'; document.getElementById('secondaryColorHex').textContent = '#6442a5'; document.getElementById('topBarTitle').textContent = 'The World Machine'; updateDisplays(); updateCustomPhotoSection(); return false; }
+                if (retries > 0) {
+                    setTimeout(function(){ loadConfig(retries-1); }, 500);
+                    if (!showTimer) {
+                        showTimer = setTimeout(function(){ showApp(); }, 1000);
+                    }
+                    return false;
+                } else {
+                    applyStyles('#9664ff','#6442a5');
+                    document.getElementById('UI_Color').value = '#9664ff';
+                    document.getElementById('colorHex').textContent = '#9664ff';
+                    document.getElementById('Secondary_Color').value = '#6442a5';
+                    document.getElementById('secondaryColorHex').textContent = '#6442a5';
+                    document.getElementById('topBarTitle').textContent = 'The World Machine';
+                    updateDisplays();
+                    updateCustomPhotoSection();
+                    if (!showTimer) {
+                        showTimer = setTimeout(function(){ showApp(); }, 1000);
+                    }
+                    return false;
+                }
             }
 
             function buildGrid() {
@@ -659,13 +695,6 @@ Machine)</div>
             if (!rainbowTimer) {
                 startRainbowAnimation(); // smooth idle
             }
-
-            // ✅ Fallback: show the app after 1 second only if it hasn't already been shown
-            setTimeout(function(){
-                if (!document.getElementById('app').classList.contains('loaded')) {
-                    document.getElementById('app').classList.add('loaded');
-                }
-            }, 1000);
 
             var sfxClick=document.getElementById('sfxClick');
             var sfxUnclick=document.getElementById('sfxUnclick');
