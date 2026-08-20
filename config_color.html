@@ -721,9 +721,9 @@ Machine)</div>
                 applyRainbowColors(primaryHex, variantHex);
             }
 
-            // ---------- DECODE CUSTOM PHOTO THUMBNAIL (8-bit RGB332) ----------
+            // ---------- DECODE CUSTOM PHOTO THUMBNAIL (16-colour palette) ----------
             function decodeCustomPhotoToThumbnail(photoData) {
-                if (!photoData || !photoData.compressed) return;
+                if (!photoData || !photoData.compressed || !photoData.palette) return;
                 try {
                     var base64Pixel = LZString.decompressFromEncodedURIComponent(photoData.compressed);
                     if (!base64Pixel) return;
@@ -735,19 +735,19 @@ Machine)</div>
                     var ctx = tempCanvas.getContext('2d');
                     var imageData = ctx.createImageData(width, height);
                     if (photoData.color) {
-                        // 8-bit RGB332
-                        for (var y=0; y<height; y++) {
-                            for (var x=0; x<width; x++) {
-                                var byte = pixelData[y*width + x];
-                                var r = ((byte >> 4) & 3) * 85;
-                                var g = ((byte >> 2) & 3) * 85;
-                                var b = (byte & 3) * 85;
-                                var offset = (y*width + x) * 4;
-                                imageData.data[offset] = r; imageData.data[offset+1] = g; imageData.data[offset+2] = b; imageData.data[offset+3] = 255;
-                            }
+                        var palette = photoData.palette;
+                        var rowBytes = Math.floor((width+1)/2);
+                        for (var y=0; y<height; y++) for (var x=0; x<width; x++) {
+                            var byteIndex = y*rowBytes + Math.floor(x/2);
+                            var byte = pixelData[byteIndex];
+                            var index = (x%2===0) ? (byte>>4) : (byte&0x0F);
+                            var paletteEntry = palette[index];
+                            var id = paletteEntry & 0x3F;
+                            var r = (id>>4)&3, g = (id>>2)&3, b = id&3;
+                            var offset = (y*width+x)*4;
+                            imageData.data[offset] = r*85; imageData.data[offset+1] = g*85; imageData.data[offset+2] = b*85; imageData.data[offset+3] = 255;
                         }
                     } else {
-                        // 1-bit BW fallback
                         var palette = photoData.palette;
                         var rowBytes = Math.floor((width+7)/8);
                         for (var y=0; y<height; y++) for (var x=0; x<width; x++) {
@@ -852,7 +852,7 @@ Machine)</div>
                 loadExtraWallpaperUrl(watchUrl, title);
             }
 
-            // ---------- EXTRA WALLPAPER PACKING (8-bit RGB332) ----------
+            // ---------- EXTRA WALLPAPER PACKING (16-colour, no dither) ----------
             function prepareExtraWallpaper(image, generation, sourceLabel) {
                 if (generation !== photoLoadGeneration) return;
                 try {
@@ -868,12 +868,12 @@ Machine)</div>
                     ctx.imageSmoothingEnabled = false;
                     ctx.drawImage(image, 0, 0);
                     var imageData = ctx.getImageData(0, 0, watchWidth, watchHeight);
-                    var result = packRGB332(imageData.data, watchWidth, watchHeight);
+                    var result = packColorNoDither(imageData.data, watchWidth, watchHeight);
                     ctx.putImageData(imageData, 0, 0);
                     var binary = '';
                     for (var i = 0; i < result.pixelData.length; i++) binary += String.fromCharCode(result.pixelData[i]);
                     var compressed = LZString.compressToEncodedURIComponent(btoa(binary));
-                    customPhotoData = { compressed: compressed, palette: null, color: true };
+                    customPhotoData = { compressed: compressed, palette: result.palette, color: true };
                     setSubmitDisabled(false);
                     if (photoLoadTimer) { clearTimeout(photoLoadTimer); photoLoadTimer = null; }
                 } catch (e) {
@@ -885,15 +885,46 @@ Machine)</div>
                 }
             }
 
-            function packRGB332(data, width, height) {
-                var pixelData = new Uint8Array(width * height);
-                for (var i = 0, p = 0; i < data.length; i += 4, p++) {
-                    var r = data[i] >> 6;
-                    var g = data[i + 1] >> 6;
-                    var b = data[i + 2] >> 6;
-                    pixelData[p] = (r << 4) | (g << 2) | b;
+            // Fixed packColorNoDither: builds a proper 16‑colour palette and maps pixels correctly
+            function packColorNoDither(data, width, height) {
+                // Build 16-color palette (IDs)
+                var paletteIds = buildPalette(data);
+                while (paletteIds.length < 16) {
+                    paletteIds.push(paletteIds[0] || 0);
                 }
-                return { pixelData: pixelData, color: true, palette: null };
+
+                // Convert IDs to RGB objects for nearest matching
+                var paletteColors = paletteIds.map(function(id) {
+                    return {
+                        r: ((id >> 4) & 3) * 85,
+                        g: ((id >> 2) & 3) * 85,
+                        b: (id & 3) * 85
+                    };
+                });
+
+                var rowBytes = Math.floor((width + 1) / 2);
+                var pixelData = new Uint8Array(rowBytes * height);
+
+                for (var y = 0; y < height; y++) {
+                    for (var x = 0; x < width; x++) {
+                        var idx = (y * width + x) * 4;
+                        var r = data[idx], g = data[idx + 1], b = data[idx + 2];
+                        var pi = nearestPaletteIndex(r, g, b, paletteColors);
+                        var byteIdx = y * rowBytes + Math.floor(x / 2);
+                        if ((x & 1) === 0) {
+                            pixelData[byteIdx] = pi << 4;
+                        } else {
+                            pixelData[byteIdx] |= pi;
+                        }
+                    }
+                }
+
+                // Pack palette in watch format
+                var paletteBytes = new Uint8Array(16);
+                for (var p = 0; p < 16; p++) {
+                    paletteBytes[p] = 0xC0 | (paletteIds[p] & 0x3F);
+                }
+                return { pixelData: pixelData, palette: Array.from(paletteBytes), color: true };
             }
 
             // ---------- SAVE / DISMISS ----------
@@ -1108,7 +1139,7 @@ Machine)</div>
                         }
                         if (config.CustomPhoto && selectedWallpaperId === 8) {
                             decodeCustomPhotoToThumbnail(config.CustomPhoto);
-                            customPhotoData = config.CustomPhoto;
+                            customPhotoData = config.CustomPhoto;   // keep for later saves
                         }
                         if (config.UI_Color) {
                             var c = config.UI_Color;
@@ -1195,7 +1226,7 @@ Machine)</div>
                 });
             }
 
-            // ---------- CUSTOM PHOTO PROCESSING (8-bit RGB332) ----------
+            // ---------- CUSTOM PHOTO PROCESSING (16-colour) ----------
             function setPhotoStatus(msg, isError) { /* no visible status */ }
             function setSubmitDisabled(disabled) {
                 var btns = document.querySelectorAll('button[type="submit"], input[type="submit"], .save-btn');
@@ -1246,81 +1277,25 @@ Machine)</div>
                 failPhotoLoad(generation, message || 'Image load failed.');
             }
 
-            // 8-bit RGB332 conversion (no palette)
-            function quantizeColorAndPack(imageData, width, height) {
-                return packRGB332(imageData.data, width, height);
-            }
-
-            function prepareImage(image, generation, sourceLabel, blockedRetry) {
-                if (generation !== photoLoadGeneration) return;
-                try {
-                    var srcW = image.naturalWidth || image.width, srcH = image.naturalHeight || image.height;
-                    var ctx = canvas.getContext('2d');
-                    ctx.fillStyle = '#000';
-                    ctx.fillRect(0, 0, watchWidth, watchHeight);
-                    ctx.imageSmoothingEnabled = true;
-                    if (typeof ctx.imageSmoothingQuality !== 'undefined') ctx.imageSmoothingQuality = 'high';
-                    var scale = Math.max(watchWidth / srcW, watchHeight / srcH);
-                    var cropW = watchWidth / scale, cropH = watchHeight / scale;
-                    var sx = (srcW - cropW) / 2, sy = (srcH - cropH) / 2;
-                    ctx.drawImage(image, sx, sy, cropW, cropH, 0, 0, watchWidth, watchHeight);
-                    var imageData = ctx.getImageData(0, 0, watchWidth, watchHeight);
-                    var result = quantizeColorAndPack(imageData, watchWidth, watchHeight);
-                    ctx.putImageData(imageData, 0, 0);
-                    canvas.style.display = 'block';
-                    var binary = '';
-                    for (var i = 0; i < result.pixelData.length; i++) binary += String.fromCharCode(result.pixelData[i]);
-                    var compressed = LZString.compressToEncodedURIComponent(btoa(binary));
-                    pendingCustomPhotoData = { compressed: compressed, palette: null, color: true };
-                    pendingCustomThumbSrc = canvas.toDataURL('image/png');
-                    setSubmitDisabled(false);
-                    if (photoLoadTimer) { clearTimeout(photoLoadTimer); photoLoadTimer = null; }
-                } catch (e) {
-                    var detail = e && e.message ? e.message : String(e);
-                    var blocked = e && e.name === 'SecurityError';
-                    blocked = blocked || /cross-origin|cross origin|taint|insecure/i.test(detail);
-                    if (blocked && blockedRetry) blockedRetry();
-                    else if (blocked) failPhotoLoad(generation, 'The image service returned data that the browser could not read.');
-                    else failPhotoLoad(generation, 'Photo processing failed: ' + detail);
-                }
-            }
-
+            function colorId(r,g,b){ return (r<<4)|(g<<2)|b; }
+            function colorFromId(id){ return { r:(id>>4)&3, g:(id>>2)&3, b:id&3 }; }
+            function clamp(v,l,h){ return Math.max(l, Math.min(h, v)); }
+            function makeHistogram(pixelData){ var hist=new Array(64).fill(0); for(var i=0;i<pixelData.length;i+=4){ var r=clamp(Math.round(pixelData[i]/85),0,3), g=clamp(Math.round(pixelData[i+1]/85),0,3), b=clamp(Math.round(pixelData[i+2]/85),0,3); hist[colorId(r,g,b)]++; } var entries=[]; for(var i=0;i<hist.length;i++){ if(hist[i]===0) continue; var c=colorFromId(i); entries.push({id:i, red:c.r, green:c.g, blue:c.b, count:hist[i]}); } return entries; }
+            function boxStats(box){ var minR=3,minG=3,minB=3,maxR=0,maxG=0,maxB=0,total=0; for(var i=0;i<box.length;i++){ var e=box[i]; minR=Math.min(minR,e.red); minG=Math.min(minG,e.green); minB=Math.min(minB,e.blue); maxR=Math.max(maxR,e.red); maxG=Math.max(maxG,e.green); maxB=Math.max(maxB,e.blue); total+=e.count; } return { ranges:[maxR-minR, maxG-minG, maxB-minB], total:total }; }
+            function splitBox(box){ var stats=boxStats(box); var ch=0; if(stats.ranges[1]>stats.ranges[ch]) ch=1; if(stats.ranges[2]>stats.ranges[ch]) ch=2; var name=['red','green','blue'][ch]; var sorted=box.slice().sort(function(a,b){ if(a[name]!==b[name]) return a[name]-b[name]; return b.count-a.count; }); var half=stats.total/2; var acc=0, splitAt=1; for(var i=0;i<sorted.length-1;i++){ acc+=sorted[i].count; splitAt=i+1; if(acc>=half) break; } splitAt=clamp(splitAt,1,sorted.length-1); return [sorted.slice(0,splitAt), sorted.slice(splitAt)]; }
+            function representative(box){ var total=0,r=0,g=0,b=0; for(var i=0;i<box.length;i++){ total+=box[i].count; r+=box[i].red*box[i].count; g+=box[i].green*box[i].count; b+=box[i].blue*box[i].count; } r/=total; g/=total; b/=total; var best=box[0], bestDist=Number.MAX_VALUE; for(var i=0;i<box.length;i++){ var dr=box[i].red-r, dg=box[i].green-g, db=box[i].blue-b; var dist=dr*dr+dg*dg+db*db; if(dist<bestDist || (dist===bestDist && box[i].count>best.count)){ best=box[i]; bestDist=dist; } } return best.id; }
+            function buildPalette(pixelData){ var entries=makeHistogram(pixelData); if(entries.length<=16){ entries.sort(function(a,b){ return b.count-a.count; }); return entries.map(function(e){ return e.id; }); } var boxes=[entries]; while(boxes.length<16){ var bestIndex=-1,bestScore=-1; for(var i=0;i<boxes.length;i++){ if(boxes[i].length<2) continue; var stats=boxStats(boxes[i]); var range=Math.max(stats.ranges[0],stats.ranges[1],stats.ranges[2]); var score=range*stats.total; if(score>bestScore){ bestScore=score; bestIndex=i; } } if(bestIndex<0) break; var halves=splitBox(boxes[bestIndex]); boxes.splice(bestIndex,1,halves[0],halves[1]); } return boxes.map(representative); }
+            function nearestPaletteIndex(r,g,b,palette){ var bestIdx=0,bestDist=Number.MAX_VALUE; for(var i=0;i<palette.length;i++){ var dr=r-palette[i].r, dg=g-palette[i].g, db=b-palette[i].b; var dist=dr*dr+dg*dg+db*db; if(dist<bestDist){ bestDist=dist; bestIdx=i; } } return bestIdx; }
+            function quantizeColorAndPack(imageData,width,height){ var paletteIds=buildPalette(imageData.data); var palette=paletteIds.map(function(id){ var c=colorFromId(id); return { id:id, r:c.r*85, g:c.g*85, b:c.b*85 }; }); var rowBytes=Math.floor((width+1)/2); var pixelData=new Uint8Array(rowBytes*height); var data=imageData.data; var curR=new Float32Array(width+2),curG=new Float32Array(width+2),curB=new Float32Array(width+2); var nextR=new Float32Array(width+2),nextG=new Float32Array(width+2),nextB=new Float32Array(width+2); for(var y=0;y<height;y++){ for(var x=0;x<width;x++){ var idx=(y*width+x)*4; var r=clamp(data[idx]+curR[x+1],0,255), g=clamp(data[idx+1]+curG[x+1],0,255), b=clamp(data[idx+2]+curB[x+1],0,255); var pi=nearestPaletteIndex(r,g,b,palette); var chosen=palette[pi]; data[idx]=chosen.r; data[idx+1]=chosen.g; data[idx+2]=chosen.b; data[idx+3]=255; var byteIdx=y*rowBytes+Math.floor(x/2); if((x&1)===0) pixelData[byteIdx]=pi<<4; else pixelData[byteIdx]|=pi; var er=r-chosen.r,eg=g-chosen.g,eb=b-chosen.b; curR[x+2]+=er*7/16; curG[x+2]+=eg*7/16; curB[x+2]+=eb*7/16; nextR[x]+=er*3/16; nextG[x]+=eg*3/16; nextB[x]+=eb*3/16; nextR[x+1]+=er*5/16; nextG[x+1]+=eg*5/16; nextB[x+1]+=eb*5/16; nextR[x+2]+=er/16; nextG[x+2]+=eg/16; nextB[x+2]+=eb/16; } var tr=curR,tg=curG,tb=curB; curR=nextR; curG=nextG; curB=nextB; nextR=tr; nextG=tg; nextB=tb; for(var c=0;c<width+2;c++){ nextR[c]=0; nextG[c]=0; nextB[c]=0; } } var paletteBytes=new Uint8Array(16); var fallback=paletteIds.length?paletteIds[0]:0; for(var p=0;p<16;p++){ var id=p<paletteIds.length?paletteIds[p]:fallback; paletteBytes[p]=0xC0|id; } return { pixelData:pixelData, palette:Array.from(paletteBytes), color:true }; }
+            function prepareImage(image, generation, sourceLabel, blockedRetry){ if(generation!==photoLoadGeneration) return; try{ var srcW=image.naturalWidth||image.width, srcH=image.naturalHeight||image.height; var ctx=canvas.getContext('2d'); ctx.fillStyle='#000'; ctx.fillRect(0,0,watchWidth,watchHeight); ctx.imageSmoothingEnabled=true; if(typeof ctx.imageSmoothingQuality!=='undefined') ctx.imageSmoothingQuality='high'; var scale=Math.max(watchWidth/srcW, watchHeight/srcH); var cropW=watchWidth/scale, cropH=watchHeight/scale; var sx=(srcW-cropW)/2, sy=(srcH-cropH)/2; ctx.drawImage(image,sx,sy,cropW,cropH,0,0,watchWidth,watchHeight); var imageData=ctx.getImageData(0,0,watchWidth,watchHeight); var result=quantizeColorAndPack(imageData,watchWidth,watchHeight); ctx.putImageData(imageData,0,0); canvas.style.display='block'; var binary=''; for(var i=0;i<result.pixelData.length;i++) binary+=String.fromCharCode(result.pixelData[i]); var compressed=LZString.compressToEncodedURIComponent(btoa(binary)); pendingCustomPhotoData={ compressed:compressed, palette:result.palette, color:true }; pendingCustomThumbSrc=canvas.toDataURL('image/png'); setSubmitDisabled(false); if(photoLoadTimer){ clearTimeout(photoLoadTimer); photoLoadTimer=null; } } catch(e){ var detail=e&&e.message?e.message:String(e); var blocked=e&&e.name==='SecurityError'; blocked=blocked||/cross-origin|cross origin|taint|insecure/i.test(detail); if(blocked&&blockedRetry) blockedRetry(); else if(blocked) failPhotoLoad(generation,'The image service returned data that the browser could not read.'); else failPhotoLoad(generation,'Photo processing failed: '+detail); } }
             // ---------- FILE & URL INPUT HANDLERS ----------
             document.getElementById('photoFileBtn').addEventListener('click', function() { document.getElementById('photoFile').click(); });
-            document.getElementById('photoFile').addEventListener('change', function() {
-                var file = this.files && this.files[0];
-                if (!file) return;
-                var generation = beginPhotoLoad('Loading photo file…');
-                var reader = new FileReader();
-                reader.onerror = function() { failPhotoLoad(generation, 'The photo could not be read.'); };
-                reader.onload = function(e) {
-                    var img = new Image();
-                    img.onerror = function() { failPhotoLoad(generation, 'The selected image could not be decoded.'); };
-                    img.onload = function() { prepareImage(img, generation, 'file'); };
-                    img.src = e.target.result;
-                };
-                reader.readAsDataURL(file);
-            });
-            document.getElementById('loadUrlBtn').addEventListener('click', function() { loadImageUrl(false); });
-            document.getElementById('photoProxyBtn').addEventListener('click', function() { loadImageUrl(true); });
-            function loadImageUrl(useProxy) {
-                var url = document.getElementById('photoUrl').value.trim();
-                if (!url) {
-                    showImageLoadFailedModal('Please enter a valid image URL.');
-                    return;
-                }
-                var viaProxy = useProxy === true;
-                var generation = beginPhotoLoad(viaProxy ? 'Loading via wsrv.nl…' : 'Loading image URL…', viaProxy ? null : function(timedOutGen) { loadImageUrl(true); });
-                var img = new Image();
-                img.crossOrigin = 'anonymous';
-                if (typeof img.referrerPolicy !== 'undefined') img.referrerPolicy = 'no-referrer';
-                img.onerror = function() { if (viaProxy) failPhotoLoad(generation, 'wsrv.nl could not fetch that image.'); else loadImageUrl(true); };
-                img.onload = function() { prepareImage(img, generation, viaProxy ? 'URL via wsrv.nl' : 'URL', viaProxy ? null : function() { loadImageUrl(true); }); };
-                var finalUrl = viaProxy ? 'https://wsrv.nl/?url=' + encodeURIComponent(url) + '&w=' + watchWidth + '&h=' + watchHeight + '&fit=cover&a=center&output=png' : url;
-                img.src = finalUrl;
-            }
-            document.getElementById('photoUrl').addEventListener('input', function() { resetPhotoLoad('URL changed. Tap Load URL to prepare it.', false); });
-            document.getElementById('photoUrl').addEventListener('keydown', function(e) { if (e.key === 'Enter' || e.keyCode === 13) { e.preventDefault(); loadImageUrl(false); } });
+            document.getElementById('photoFile').addEventListener('change', function(){ var file=this.files&&this.files[0]; if(!file) return; var generation=beginPhotoLoad('Loading photo file…'); var reader=new FileReader(); reader.onerror=function(){ failPhotoLoad(generation,'The photo could not be read.'); }; reader.onload=function(e){ var img=new Image(); img.onerror=function(){ failPhotoLoad(generation,'The selected image could not be decoded.'); }; img.onload=function(){ prepareImage(img,generation,'file'); }; img.src=e.target.result; }; reader.readAsDataURL(file); });
+            document.getElementById('loadUrlBtn').addEventListener('click', function(){ loadImageUrl(false); });
+            document.getElementById('photoProxyBtn').addEventListener('click', function(){ loadImageUrl(true); });
+            function loadImageUrl(useProxy){ var url=document.getElementById('photoUrl').value.trim(); if(!url){ showImageLoadFailedModal('Please enter a valid image URL.'); return; } var viaProxy=useProxy===true; var generation=beginPhotoLoad(viaProxy?'Loading via wsrv.nl…':'Loading image URL…', viaProxy?null:function(timedOutGen){ loadImageUrl(true); }); var img=new Image(); img.crossOrigin='anonymous'; if(typeof img.referrerPolicy!=='undefined') img.referrerPolicy='no-referrer'; img.onerror=function(){ if(viaProxy) failPhotoLoad(generation,'wsrv.nl could not fetch that image.'); else loadImageUrl(true); }; img.onload=function(){ prepareImage(img,generation,viaProxy?'URL via wsrv.nl':'URL', viaProxy?null:function(){ loadImageUrl(true); }); }; var finalUrl=viaProxy?'https://wsrv.nl/?url='+encodeURIComponent(url)+'&w='+watchWidth+'&h='+watchHeight+'&fit=cover&a=center&output=png':url; img.src=finalUrl; }
+            document.getElementById('photoUrl').addEventListener('input', function(){ resetPhotoLoad('URL changed. Tap Load URL to prepare it.', false); });
+            document.getElementById('photoUrl').addEventListener('keydown', function(e){ if(e.key==='Enter'||e.keyCode===13){ e.preventDefault(); loadImageUrl(false); } });
 
             // ---------- MODAL & RAINBOW ----------
             function activateRainbowStandard(){
