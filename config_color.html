@@ -378,7 +378,7 @@ Machine)</div>
             ];
             var extraWallpaperThumbBase = 'https://raw.githubusercontent.com/GuruGitHubTheG/TWM/main/wallpapers/more/';
             var extraWallpaperSubfolder = (getQueryParam('platform') === 'emery') ? 'emery' : 'basalt';
-            var extraWallpaperWatchBase = 'https://raw.githubusercontent.com/GuruGitHubTheG/TWM/main/wallpapers/' + extraWallpaperSubfolder + '/';
+            var extraWallpaperWatchBase = 'https://raw.githubusercontent.com/GuruGitHubTheG/TWM/main/wallpapers/more/' + extraWallpaperSubfolder + '/';
 
             // ---------- fade-in control ----------
             var appShown = false;
@@ -531,7 +531,11 @@ Machine)</div>
                 document.getElementById('zerosDisplay').textContent = zerosOn ? 'ON' : 'OFF';
                 document.getElementById('ampmDisplay').textContent = ampmOn ? 'ON' : 'OFF';
             }
-            function updateCustomPhotoSection() { document.getElementById('custom-photo-section').style.display = selectedWallpaperId === 8 ? 'block' : 'none'; }
+            function updateCustomPhotoSection(){
+                var show = selectedWallpaperId === 8 && selectedExtraWallpaperId === null;
+                document.getElementById('custom-photo-section').style.display =
+                    show ? 'block' : 'none';
+            }
 
             function updateExtraDisplay() {
                 document.getElementById('extraDisplay').textContent = showExtraWallpapers ? 'ON' : 'OFF';
@@ -547,7 +551,8 @@ Machine)</div>
                 grid.innerHTML = '';
                 extraWallpapers.forEach(function(ep) {
                     var item = document.createElement('div');
-                    item.className = 'wallpaper-item extra-wallpaper-item two-liner';
+                    var lines = ep.title.split('\n');
+                    item.className = 'wallpaper-item extra-wallpaper-item' + (lines.length === 1 ? ' one-liner' : ' two-liner');
                     item.dataset.extraFile = ep.file;
                     if (selectedExtraWallpaperId === ep.file) item.classList.add('selected');
                     var wrapper = document.createElement('div'); wrapper.className = 'wallpaper-screenshot-wrapper';
@@ -556,7 +561,6 @@ Machine)</div>
                     var img = document.createElement('img'); img.className = 'wallpaper-screenshot'; img.src = extraWallpaperThumbBase + thumbFile; img.alt = ep.title;
                     wrapper.appendChild(shadow); wrapper.appendChild(img); item.appendChild(wrapper);
                     var textWrapper = document.createElement('div'); textWrapper.className = 'wallpaper-text-wrapper';
-                    var lines = ep.title.split('\n');
                     lines.forEach(function(line){ var span = document.createElement('span'); span.className = 'wallpaper-label'; span.textContent = line; textWrapper.appendChild(span); });
                     item.appendChild(textWrapper);
                     item.addEventListener('click', function() {
@@ -571,8 +575,6 @@ Machine)</div>
                 selectedExtraWallpaperId = file;
                 document.querySelectorAll('.wallpaper-item').forEach(function(el){ el.classList.remove('selected'); });
                 document.querySelectorAll('.extra-wallpaper-item').forEach(function(el){ el.classList.remove('selected'); });
-                var builtInCustom = document.querySelector('.wallpaper-item[data-id="8"]');
-                if (builtInCustom) builtInCustom.classList.add('selected');
                 var extraItem = document.querySelector('.extra-wallpaper-item[data-extra-file="' + file + '"]');
                 if (extraItem) extraItem.classList.add('selected');
                 updateCustomPhotoSection();
@@ -606,9 +608,6 @@ Machine)</div>
                     var imageData = ctx.getImageData(0, 0, watchWidth, watchHeight);
                     var result = packColorNoDither(imageData.data, watchWidth, watchHeight);
                     ctx.putImageData(imageData, 0, 0);
-                    canvas.style.display = 'block';
-                    var customThumb = document.querySelector('.wallpaper-item[data-id="8"] img');
-                    if (customThumb && image.src) customThumb.src = image.src;
                     var binary = '';
                     for (var i = 0; i < result.pixelData.length; i++) binary += String.fromCharCode(result.pixelData[i]);
                     var base64 = btoa(binary);
