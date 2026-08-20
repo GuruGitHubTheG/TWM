@@ -1138,7 +1138,10 @@ Machine)</div>
                                 updateCustomPhotoSection();
                             }
                         }
-                        if (config.CustomPhoto && selectedWallpaperId === 8) decodeCustomPhotoToThumbnail(config.CustomPhoto);
+                        if (config.CustomPhoto && selectedWallpaperId === 8) {
+                            decodeCustomPhotoToThumbnail(config.CustomPhoto);
+                            customPhotoData = config.CustomPhoto;   // <-- add this
+                        }
                         if (config.UI_Color) {
                             var c = config.UI_Color;
                             if (c === 'rainbow') activateRainbowStandard();

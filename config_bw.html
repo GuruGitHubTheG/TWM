@@ -838,7 +838,10 @@ Machine)</div>
                                 updateCustomPhotoSection();
                             }
                         }
-                        if (config.CustomPhoto && selectedWallpaperId === 8) decodeCustomPhotoToThumbnail(config.CustomPhoto);
+                        if (config.CustomPhoto && selectedWallpaperId === 8) {
+                            decodeCustomPhotoToThumbnail(config.CustomPhoto);
+                            customPhotoData = config.CustomPhoto;   // <-- add this
+                        }
                         document.getElementById('topBarTitle').textContent = 'The World Machine';
                         updateDisplays();
 
