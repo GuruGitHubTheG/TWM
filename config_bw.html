@@ -240,7 +240,7 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            border: 2px solid var(--primary);
+            border: 3px solid var(--primary);
             background: #000;
             box-sizing: border-box;
             overflow: hidden;
@@ -503,8 +503,8 @@ Machine)</div>
             var selectedWallpaperId = 1;
             var timeOptions = ['System', '12-Hour', '24-Hour'];
             var timeIndex = 0;
-            var zerosOn = false;
-            var ampmOn = true;
+            var zerosMode = 2;   // 0=OFF, 1=ON, 2=Auto
+            var ampmMode = 2;    // 0=OFF, 1=ON, 2=Auto
             var invertedOn = false;
 
             var customPhotoData = null;
@@ -577,8 +577,12 @@ Machine)</div>
             }
             function updateDisplays() {
                 document.getElementById('timeDisplay').textContent = timeOptions[timeIndex];
-                document.getElementById('zerosDisplay').textContent = zerosOn ? 'ON' : 'OFF';
-                document.getElementById('ampmDisplay').textContent = ampmOn ? 'ON' : 'OFF';
+                // Leading Zeros display
+                var zeroLabels = ['OFF', 'ON', 'Auto'];
+                document.getElementById('zerosDisplay').textContent = zeroLabels[zerosMode];
+                // AM/PM display
+                var ampmLabels = ['OFF', 'ON', 'Auto'];
+                document.getElementById('ampmDisplay').textContent = ampmLabels[ampmMode];
             }
             function updateCustomPhotoSection() {
                 var show = selectedWallpaperId === 8 && selectedExtraWallpaperId === null;
@@ -726,10 +730,25 @@ Machine)</div>
 
             document.getElementById('timeLeft').addEventListener('click', function() { timeIndex = (timeIndex - 1 + timeOptions.length) % timeOptions.length; updateDisplays(); });
             document.getElementById('timeRight').addEventListener('click', function() { timeIndex = (timeIndex + 1) % timeOptions.length; updateDisplays(); });
-            document.getElementById('zerosLeft').addEventListener('click', function() { zerosOn = !zerosOn; updateDisplays(); });
-            document.getElementById('zerosRight').addEventListener('click', function() { zerosOn = !zerosOn; updateDisplays(); });
-            document.getElementById('ampmLeft').addEventListener('click', function() { ampmOn = !ampmOn; updateDisplays(); });
-            document.getElementById('ampmRight').addEventListener('click', function() { ampmOn = !ampmOn; updateDisplays(); });
+            // For Leading Zeros
+            document.getElementById('zerosLeft').addEventListener('click', function() {
+                zerosMode = (zerosMode - 1 + 3) % 3;
+                updateDisplays();
+            });
+            document.getElementById('zerosRight').addEventListener('click', function() {
+                zerosMode = (zerosMode + 1) % 3;
+                updateDisplays();
+            });
+
+            // For Show AM/PM (similarly)
+            document.getElementById('ampmLeft').addEventListener('click', function() {
+                ampmMode = (ampmMode - 1 + 3) % 3;
+                updateDisplays();
+            });
+            document.getElementById('ampmRight').addEventListener('click', function() {
+                ampmMode = (ampmMode + 1) % 3;
+                updateDisplays();
+            });
             document.getElementById('invertLeft').addEventListener('click', function() { applyInversion(!invertedOn); });
             document.getElementById('invertRight').addEventListener('click', function() { applyInversion(!invertedOn); });
             document.getElementById('extraLeft').addEventListener('click', toggleExtraWallpapers);
@@ -790,8 +809,8 @@ Machine)</div>
             }
             function restoreDefaults() {
                 timeIndex = 0;
-                zerosOn = false;
-                ampmOn = true;
+                zerosMode = 2;
+                ampmMode = 2;
                 invertedOn = false;
                 selectedWallpaperId = 1;
                 selectedExtraWallpaperId = null;
@@ -1139,8 +1158,8 @@ Machine)</div>
             function getConfig() {
                 var config = {
                     ClockMode: timeIndex,
-                    LeadingZeros: zerosOn,
-                    ShowAMPM: ampmOn,
+                    LeadingZeros: zerosMode,   // now integer 0,1,2
+                    ShowAMPM: ampmMode,        // now integer
                     Wallpaper: selectedWallpaperId,
                     Inverted: invertedOn
                 };
