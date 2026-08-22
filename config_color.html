@@ -385,6 +385,22 @@
                     </div>
                 </div>
                 <div class="setting-row">
+                    <div class="setting-label-centered">Flick Window</div>
+                    <div class="setting-rect">
+                        <button class="btn-left" id="flickWindowLeft"><img src="https://raw.githubusercontent.com/GuruGitHubTheG/TWM/main/icons/left.png" alt="<"></button>
+                        <div class="setting-middle"><span class="setting-value" id="flickWindowDisplay">OneShot</span></div>
+                        <button class="btn-right" id="flickWindowRight"><img src="https://raw.githubusercontent.com/GuruGitHubTheG/TWM/main/icons/right.png" alt=">"></button>
+                    </div>
+                </div>
+                <div class="setting-row">
+                    <div class="setting-label-centered">Flick Duration</div>
+                    <div class="setting-rect">
+                        <button class="btn-left" id="flickDurationLeft"><img src="https://raw.githubusercontent.com/GuruGitHubTheG/TWM/main/icons/left.png" alt="<"></button>
+                        <div class="setting-middle"><span class="setting-value" id="flickDurationDisplay">10 Seconds</span></div>
+                        <button class="btn-right" id="flickDurationRight"><img src="https://raw.githubusercontent.com/GuruGitHubTheG/TWM/main/icons/right.png" alt=">"></button>
+                    </div>
+                </div>
+                <div class="setting-row">
                     <button class="restore-defaults-btn" id="restoreDefaultsBtn">Restore Defaults</button>
                 </div>
             </div>
@@ -613,6 +629,11 @@ Machine)</div>
             var extraWallpaperSubfolder = (getQueryParam('platform') === 'emery') ? 'emery' : 'basalt';
             var extraWallpaperWatchBase = 'https://raw.githubusercontent.com/GuruGitHubTheG/TWM/main/wallpapers/more/' + extraWallpaperSubfolder + '/';
 
+            var flickWindowIndex = 1;   // 0=None, 1=OneShot, 2=Timer
+            var flickDurationIndex = 2; // 0=Toggle, 1=5s, 2=10s, 3=15s, 4=30s, 5=60s
+            var flickWindowOptions = ['None', 'OneShot', 'Timer'];
+            var flickDurationOptions = ['Toggle', '5 Seconds', '10 Seconds', '15 Seconds', '30 Seconds', '60 Seconds'];
+
             // ---------- FADE-IN CONTROL ----------
             var appShown = false;
             var showTimer = null;
@@ -782,6 +803,8 @@ Machine)</div>
                 // AM/PM display
                 var ampmLabels = ['OFF', 'ON', 'Auto'];
                 document.getElementById('ampmDisplay').textContent = ampmLabels[ampmMode];
+                document.getElementById('flickWindowDisplay').textContent = flickWindowOptions[flickWindowIndex];
+                document.getElementById('flickDurationDisplay').textContent = flickDurationOptions[flickDurationIndex];
             }
             function updateCustomPhotoSection() {
                 var show = selectedWallpaperId === 8 && selectedExtraWallpaperId === null;
@@ -961,7 +984,6 @@ Machine)</div>
 
             document.getElementById('timeLeft').addEventListener('click', function(){ timeIndex = (timeIndex-1+timeOptions.length)%timeOptions.length; updateDisplays(); });
             document.getElementById('timeRight').addEventListener('click', function(){ timeIndex = (timeIndex+1)%timeOptions.length; updateDisplays(); });
-            // For Leading Zeros
             document.getElementById('zerosLeft').addEventListener('click', function() {
                 zerosMode = (zerosMode - 1 + 3) % 3;
                 updateDisplays();
@@ -970,8 +992,6 @@ Machine)</div>
                 zerosMode = (zerosMode + 1) % 3;
                 updateDisplays();
             });
-
-            // For Show AM/PM (similarly)
             document.getElementById('ampmLeft').addEventListener('click', function() {
                 ampmMode = (ampmMode - 1 + 3) % 3;
                 updateDisplays();
@@ -1019,7 +1039,8 @@ Machine)</div>
                 }
                 hideCustomPhotoModal();
             });
-            document.getElementById('customPhotoCancelBtn').addEventListener('click', function() {
+
+            function cancelCustomPhotoModal() {
                 pendingCustomPhotoData = null;
                 pendingCustomThumbSrc = null;
                 canvas.style.display = 'none';
@@ -1038,8 +1059,10 @@ Machine)</div>
                 }
                 hideCustomPhotoModal();
                 updateCustomPhotoSection();
-            });
-            document.getElementById('customPhotoModal').addEventListener('click', function(e) { if (e.target === this) hideCustomPhotoModal(); });
+            }
+
+            document.getElementById('customPhotoCancelBtn').addEventListener('click', cancelCustomPhotoModal);
+            document.getElementById('customPhotoModal').addEventListener('click', function(e) { if (e.target === this) cancelCustomPhotoModal(); });
 
             // ---------- TOGGLE EXTRA WALLPAPERS ----------
             function toggleExtraWallpapers() {
@@ -1055,6 +1078,23 @@ Machine)</div>
                 }
             }
 
+            document.getElementById('flickWindowLeft').addEventListener('click', function() {
+                flickWindowIndex = (flickWindowIndex - 1 + flickWindowOptions.length) % flickWindowOptions.length;
+                updateDisplays();
+            });
+            document.getElementById('flickWindowRight').addEventListener('click', function() {
+                flickWindowIndex = (flickWindowIndex + 1) % flickWindowOptions.length;
+                updateDisplays();
+            });
+            document.getElementById('flickDurationLeft').addEventListener('click', function() {
+                flickDurationIndex = (flickDurationIndex - 1 + flickDurationOptions.length) % flickDurationOptions.length;
+                updateDisplays();
+            });
+            document.getElementById('flickDurationRight').addEventListener('click', function() {
+                flickDurationIndex = (flickDurationIndex + 1) % flickDurationOptions.length;
+                updateDisplays();
+            });
+
             // ---------- RESTORE DEFAULTS ----------
             function confirmRestoreDefaults() {
                 showModal('Are you sure you would like to restore defaults?', function() { restoreDefaults(); }, null);
@@ -1069,6 +1109,8 @@ Machine)</div>
                 showExtraWallpapers = false;
                 pendingCustomPhotoData = null;
                 pendingCustomThumbSrc = null;
+                flickWindowIndex = 1;   // OneShot
+                flickDurationIndex = 2; // 10 Seconds
 
                 rainbowActive = false;
                 stopRainbowTimer();
@@ -1183,6 +1225,18 @@ Machine)</div>
                             }
                         }
 
+                        // Flick Window
+                        if (config.FlickWindow !== undefined) {
+                            var fw = parseInt(config.FlickWindow, 10);
+                            if (!isNaN(fw) && fw >= 0 && fw <= 2) flickWindowIndex = fw;
+                        }
+
+                        // Flick Duration
+                        if (config.FlickDuration !== undefined) {
+                            var fd = parseInt(config.FlickDuration, 10);
+                            if (!isNaN(fd) && fd >= 0 && fd <= 5) flickDurationIndex = fd;
+                        }
+
                         // Wallpaper
                         if (config.Wallpaper !== undefined) {
                             var wp = parseInt(config.Wallpaper, 10);
@@ -1283,6 +1337,8 @@ Machine)</div>
                     document.getElementById('UI_Color').value = '#9664ff';
                     document.getElementById('customColorLabel').textContent = 'Color: #9664ff';
                     document.getElementById('topBarTitle').textContent = 'The World Machine';
+                    flickWindowIndex = 1;
+                    flickDurationIndex = 2;
                     updateDisplays();
                     updateCustomPhotoSection();
                     updateExtraDisplay();
@@ -1390,6 +1446,7 @@ Machine)</div>
             function nearestPaletteIndex(r,g,b,palette){ var bestIdx=0,bestDist=Number.MAX_VALUE; for(var i=0;i<palette.length;i++){ var dr=r-palette[i].r, dg=g-palette[i].g, db=b-palette[i].b; var dist=dr*dr+dg*dg+db*db; if(dist<bestDist){ bestDist=dist; bestIdx=i; } } return bestIdx; }
             function quantizeColorAndPack(imageData,width,height){ var paletteIds=buildPalette(imageData.data); var palette=paletteIds.map(function(id){ var c=colorFromId(id); return { id:id, r:c.r*85, g:c.g*85, b:c.b*85 }; }); var rowBytes=Math.floor((width+1)/2); var pixelData=new Uint8Array(rowBytes*height); var data=imageData.data; var curR=new Float32Array(width+2),curG=new Float32Array(width+2),curB=new Float32Array(width+2); var nextR=new Float32Array(width+2),nextG=new Float32Array(width+2),nextB=new Float32Array(width+2); for(var y=0;y<height;y++){ for(var x=0;x<width;x++){ var idx=(y*width+x)*4; var r=clamp(data[idx]+curR[x+1],0,255), g=clamp(data[idx+1]+curG[x+1],0,255), b=clamp(data[idx+2]+curB[x+1],0,255); var pi=nearestPaletteIndex(r,g,b,palette); var chosen=palette[pi]; data[idx]=chosen.r; data[idx+1]=chosen.g; data[idx+2]=chosen.b; data[idx+3]=255; var byteIdx=y*rowBytes+Math.floor(x/2); if((x&1)===0) pixelData[byteIdx]=pi<<4; else pixelData[byteIdx]|=pi; var er=r-chosen.r,eg=g-chosen.g,eb=b-chosen.b; curR[x+2]+=er*7/16; curG[x+2]+=eg*7/16; curB[x+2]+=eb*7/16; nextR[x]+=er*3/16; nextG[x]+=eg*3/16; nextB[x]+=eb*3/16; nextR[x+1]+=er*5/16; nextG[x+1]+=eg*5/16; nextB[x+1]+=eb*5/16; nextR[x+2]+=er/16; nextG[x+2]+=eg/16; nextB[x+2]+=eb/16; } var tr=curR,tg=curG,tb=curB; curR=nextR; curG=nextG; curB=nextB; nextR=tr; nextG=tg; nextB=tb; for(var c=0;c<width+2;c++){ nextR[c]=0; nextG[c]=0; nextB[c]=0; } } var paletteBytes=new Uint8Array(16); var fallback=paletteIds.length?paletteIds[0]:0; for(var p=0;p<16;p++){ var id=p<paletteIds.length?paletteIds[p]:fallback; paletteBytes[p]=0xC0|id; } return { pixelData:pixelData, palette:Array.from(paletteBytes), color:true }; }
             function prepareImage(image, generation, sourceLabel, blockedRetry){ if(generation!==photoLoadGeneration) return; try{ var srcW=image.naturalWidth||image.width, srcH=image.naturalHeight||image.height; var ctx=canvas.getContext('2d'); ctx.fillStyle='#000'; ctx.fillRect(0,0,watchWidth,watchHeight); ctx.imageSmoothingEnabled=true; if(typeof ctx.imageSmoothingQuality!=='undefined') ctx.imageSmoothingQuality='high'; var scale=Math.max(watchWidth/srcW, watchHeight/srcH); var cropW=watchWidth/scale, cropH=watchHeight/scale; var sx=(srcW-cropW)/2, sy=(srcH-cropH)/2; ctx.drawImage(image,sx,sy,cropW,cropH,0,0,watchWidth,watchHeight); var imageData=ctx.getImageData(0,0,watchWidth,watchHeight); var result=quantizeColorAndPack(imageData,watchWidth,watchHeight); ctx.putImageData(imageData,0,0); canvas.style.display='block'; var binary=''; for(var i=0;i<result.pixelData.length;i++) binary+=String.fromCharCode(result.pixelData[i]); var compressed=LZString.compressToEncodedURIComponent(btoa(binary)); pendingCustomPhotoData={ compressed:compressed, palette:result.palette, color:true }; pendingCustomThumbSrc=canvas.toDataURL('image/png'); setSubmitDisabled(false); if(photoLoadTimer){ clearTimeout(photoLoadTimer); photoLoadTimer=null; } } catch(e){ var detail=e&&e.message?e.message:String(e); var blocked=e&&e.name==='SecurityError'; blocked=blocked||/cross-origin|cross origin|taint|insecure/i.test(detail); if(blocked&&blockedRetry) blockedRetry(); else if(blocked) failPhotoLoad(generation,'The image service returned data that the browser could not read.'); else failPhotoLoad(generation,'Photo processing failed: '+detail); } }
+
             // ---------- FILE & URL INPUT HANDLERS ----------
             document.getElementById('photoFileBtn').addEventListener('click', function() { document.getElementById('photoFile').click(); });
             document.getElementById('photoFile').addEventListener('change', function(){ var file=this.files&&this.files[0]; if(!file) return; var generation=beginPhotoLoad('Loading photo file…'); var reader=new FileReader(); reader.onerror=function(){ failPhotoLoad(generation,'The photo could not be read.'); }; reader.onload=function(e){ var img=new Image(); img.onerror=function(){ failPhotoLoad(generation,'The selected image could not be decoded.'); }; img.onload=function(){ prepareImage(img,generation,'file'); }; img.src=e.target.result; }; reader.readAsDataURL(file); });
@@ -1479,7 +1536,9 @@ Machine)</div>
                     ShowAMPM: ampmMode,
                     Wallpaper: selectedWallpaperId,
                     Inverted: invertedOn,
-                    UI_Color: uiColor
+                    UI_Color: uiColor,
+                    FlickWindow: flickWindowIndex,
+                    FlickDuration: flickDurationIndex
                 };
                 if (selectedWallpaperId === 8 && customPhotoData) config.CustomPhoto = customPhotoData;
                 return config;

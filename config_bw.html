@@ -8,11 +8,14 @@
         :root {
             --primary: #ffffff;
             --primary-variant: #808080;
+            --selected-border: rgba(128,128,128,0.5);
+            --selected-bg: rgba(128,128,128,0.25);
+            --hover-border: rgba(128,128,128,0.333);
+            --hover-bg: rgba(128,128,128,0.167);
         }
         @font-face { font-family: 'Volter'; src: url('https://raw.githubusercontent.com/GuruGitHubTheG/TWM/main/Volter.ttf') format('truetype'); }
         * { margin:0; padding:0; box-sizing:border-box; }
         body { font-family:'Volter',sans-serif; background:#000; color:#fff; padding:0; margin:0; min-height:100vh; }
-        :root { --primary: #ffffff; --primary-variant: #808080; --selected-border: rgba(128,128,128,0.5); --selected-bg: rgba(128,128,128,0.25); --hover-border: rgba(128,128,128,0.333); --hover-bg: rgba(128,128,128,0.167); }
         body.inverted { --primary: #000000; --primary-variant: #7f7f7f; --selected-border: rgba(127,127,127,0.5); --selected-bg: rgba(127,127,127,0.25); --hover-border: rgba(127,127,127,0.333); --hover-bg: rgba(127,127,127,0.167); }
         body { color: var(--primary); background: #000; }
         body.inverted { background: #fff; }
@@ -348,6 +351,22 @@
                     </div>
                 </div>
                 <div class="setting-row">
+                    <div class="setting-label-centered">Flick Window</div>
+                    <div class="setting-rect">
+                        <button class="btn-left" id="flickWindowLeft"><img src="https://raw.githubusercontent.com/GuruGitHubTheG/TWM/main/icons/left.png" alt="<"></button>
+                        <div class="setting-middle"><span class="setting-value" id="flickWindowDisplay">OneShot</span></div>
+                        <button class="btn-right" id="flickWindowRight"><img src="https://raw.githubusercontent.com/GuruGitHubTheG/TWM/main/icons/right.png" alt=">"></button>
+                    </div>
+                </div>
+                <div class="setting-row">
+                    <div class="setting-label-centered">Flick Duration</div>
+                    <div class="setting-rect">
+                        <button class="btn-left" id="flickDurationLeft"><img src="https://raw.githubusercontent.com/GuruGitHubTheG/TWM/main/icons/left.png" alt="<"></button>
+                        <div class="setting-middle"><span class="setting-value" id="flickDurationDisplay">10 Seconds</span></div>
+                        <button class="btn-right" id="flickDurationRight"><img src="https://raw.githubusercontent.com/GuruGitHubTheG/TWM/main/icons/right.png" alt=">"></button>
+                    </div>
+                </div>
+                <div class="setting-row">
                     <button class="restore-defaults-btn" id="restoreDefaultsBtn">Restore Defaults</button>
                 </div>
             </div>
@@ -546,6 +565,11 @@ Machine)</div>
             var extraWallpaperThumbBase = 'https://raw.githubusercontent.com/GuruGitHubTheG/TWM/main/wallpapers/more/';
             var extraWallpaperWatchBase = 'https://raw.githubusercontent.com/GuruGitHubTheG/TWM/main/wallpapers/more/bw/';
 
+            var flickWindowIndex = 1;   // 0=None, 1=OneShot, 2=Timer
+            var flickDurationIndex = 2; // 0=Toggle, 1=5s, 2=10s, 3=15s, 4=30s, 5=60s
+            var flickWindowOptions = ['None', 'OneShot', 'Timer'];
+            var flickDurationOptions = ['Toggle', '5 Seconds', '10 Seconds', '15 Seconds', '30 Seconds', '60 Seconds'];
+
             // Fade-in control
             var appShown = false;
             var showTimer = null;
@@ -587,6 +611,8 @@ Machine)</div>
                 // AM/PM display
                 var ampmLabels = ['OFF', 'ON', 'Auto'];
                 document.getElementById('ampmDisplay').textContent = ampmLabels[ampmMode];
+                document.getElementById('flickWindowDisplay').textContent = flickWindowOptions[flickWindowIndex];
+                document.getElementById('flickDurationDisplay').textContent = flickDurationOptions[flickDurationIndex];
             }
             function updateCustomPhotoSection() {
                 var show = selectedWallpaperId === 8 && selectedExtraWallpaperId === null;
@@ -773,7 +799,8 @@ Machine)</div>
                 }
                 hideCustomPhotoModal();
             });
-            document.getElementById('customPhotoCancelBtn').addEventListener('click', function() {
+
+            function cancelCustomPhotoModal() {
                 pendingCustomPhotoData = null;
                 pendingCustomThumbSrc = null;
                 canvas.style.display = 'none';
@@ -792,8 +819,10 @@ Machine)</div>
                 }
                 hideCustomPhotoModal();
                 updateCustomPhotoSection();
-            });
-            document.getElementById('customPhotoModal').addEventListener('click', function(e) { if (e.target === this) hideCustomPhotoModal(); });
+            }
+
+            document.getElementById('customPhotoCancelBtn').addEventListener('click', cancelCustomPhotoModal);
+            document.getElementById('customPhotoModal').addEventListener('click', function(e) { if (e.target === this) cancelCustomPhotoModal(); });
 
             function toggleExtraWallpapers() {
                 if (!showExtraWallpapers) {
@@ -807,6 +836,23 @@ Machine)</div>
                     updateExtraDisplay();
                 }
             }
+
+            document.getElementById('flickWindowLeft').addEventListener('click', function() {
+                flickWindowIndex = (flickWindowIndex - 1 + flickWindowOptions.length) % flickWindowOptions.length;
+                updateDisplays();
+            });
+            document.getElementById('flickWindowRight').addEventListener('click', function() {
+                flickWindowIndex = (flickWindowIndex + 1) % flickWindowOptions.length;
+                updateDisplays();
+            });
+            document.getElementById('flickDurationLeft').addEventListener('click', function() {
+                flickDurationIndex = (flickDurationIndex - 1 + flickDurationOptions.length) % flickDurationOptions.length;
+                updateDisplays();
+            });
+            document.getElementById('flickDurationRight').addEventListener('click', function() {
+                flickDurationIndex = (flickDurationIndex + 1) % flickDurationOptions.length;
+                updateDisplays();
+            });
 
             function confirmRestoreDefaults() {
                 showModal('Are you sure you would like to restore defaults?', function() { restoreDefaults(); }, null);
@@ -822,6 +868,8 @@ Machine)</div>
                 showExtraWallpapers = false;
                 pendingCustomPhotoData = null;
                 pendingCustomThumbSrc = null;
+                flickWindowIndex = 1;   // OneShot
+                flickDurationIndex = 2; // 10 Seconds
 
                 localStorage.removeItem('twm_show_extra_wallpapers');
                 localStorage.removeItem('twm_selected_extra_wallpaper');
@@ -878,6 +926,18 @@ Machine)</div>
                             }
                         }
 
+                        // Flick Window
+                        if (config.FlickWindow !== undefined) {
+                            var fw = parseInt(config.FlickWindow, 10);
+                            if (!isNaN(fw) && fw >= 0 && fw <= 2) flickWindowIndex = fw;
+                        }
+
+                        // Flick Duration
+                        if (config.FlickDuration !== undefined) {
+                            var fd = parseInt(config.FlickDuration, 10);
+                            if (!isNaN(fd) && fd >= 0 && fd <= 5) flickDurationIndex = fd;
+                        }
+
                         // Inverted
                         if (config.Inverted !== undefined) {
                             invertedOn = config.Inverted === true;
@@ -928,6 +988,8 @@ Machine)</div>
                     // FALLBACK: explicitly set Auto
                     zerosMode = 2;
                     ampmMode = 2;
+                    flickWindowIndex = 1;
+                    flickDurationIndex = 2;
                     document.getElementById('topBarTitle').textContent = 'The World Machine';
                     updateDisplays();
                     updateCustomPhotoSection();
@@ -1206,10 +1268,12 @@ Machine)</div>
             function getConfig() {
                 var config = {
                     ClockMode: timeIndex,
-                    LeadingZeros: zerosMode,   // now integer 0,1,2
-                    ShowAMPM: ampmMode,        // now integer
+                    LeadingZeros: zerosMode,
+                    ShowAMPM: ampmMode,
                     Wallpaper: selectedWallpaperId,
-                    Inverted: invertedOn
+                    Inverted: invertedOn,
+                    FlickWindow: flickWindowIndex,
+                    FlickDuration: flickDurationIndex
                 };
                 if (selectedWallpaperId === 8 && customPhotoData) config.CustomPhoto = customPhotoData;
                 return config;
