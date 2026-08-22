@@ -580,6 +580,7 @@ Machine)</div>
             ];
             var primaryColor = '#9664ff';
             var primaryVariant = '#6442a5';
+            var savedUiColor = '#9664ff';
             var rainbowActive = false;
             var rainbowTimer = null;
             var rainbowMode = 'smooth';
@@ -995,6 +996,7 @@ Machine)</div>
                     var c = tempInput.value;
                     document.getElementById('UI_Color').value = c;
                     document.getElementById('customColorLabel').textContent = 'Color: ' + c;
+                    savedUiColor = c;
                     var variant = calculateVariant(c);
                     document.querySelectorAll('.theme-item').forEach(function(el){ el.classList.remove('selected'); });
                     applyStyles(c, variant);
@@ -1071,6 +1073,7 @@ Machine)</div>
                 rainbowActive = false;
                 stopRainbowTimer();
                 applyStyles('#9664ff', '#6442a5');
+                savedUiColor = '#9664ff';
                 document.getElementById('UI_Color').value = '#9664ff';
                 document.getElementById('customColorLabel').textContent = 'Color: #9664ff';
 
@@ -1136,6 +1139,7 @@ Machine)</div>
                         rainbowActive = false;
                         document.getElementById('UI_Color').value = theme.primary;
                         document.getElementById('customColorLabel').textContent = 'Color: ' + theme.primary;
+                        savedUiColor = theme.primary;
                         applyStyles(theme.primary, theme.variant);
                     });
                     container.appendChild(item);
@@ -1201,12 +1205,15 @@ Machine)</div>
                         if (config.UI_Color) {
                             var c = config.UI_Color;
                             if (c === 'rainbow') {
+                                savedUiColor = 'rainbow';
                                 activateRainbowStandard();
                             } else if (c === 'rainbow_power') {
+                                savedUiColor = 'rainbow_power';
                                 activateRainbowPowerSaving();
                             } else {
                                 rainbowActive = false;
                                 if (!c.startsWith('#')) c = '#' + c;
+                                savedUiColor = c;
                                 document.getElementById('UI_Color').value = c;
                                 document.getElementById('customColorLabel').textContent = 'Color: ' + c;
                                 var variant = calculateVariant(c);
@@ -1234,6 +1241,7 @@ Machine)</div>
                             rainbowActive = false;
                             stopRainbowTimer();
                             applyStyles('#9664ff', '#6442a5');
+                            savedUiColor = '#9664ff';
                             document.getElementById('UI_Color').value = '#9664ff';
                             document.getElementById('customColorLabel').textContent = 'Color: #9664ff';
 
@@ -1271,6 +1279,7 @@ Machine)</div>
                     zerosMode = 2;
                     ampmMode = 2;
                     applyStyles('#9664ff', '#6442a5');
+                    savedUiColor = '#9664ff';
                     document.getElementById('UI_Color').value = '#9664ff';
                     document.getElementById('customColorLabel').textContent = 'Color: #9664ff';
                     document.getElementById('topBarTitle').textContent = 'The World Machine';
@@ -1397,6 +1406,7 @@ Machine)</div>
                 if(rainbowItem) rainbowItem.classList.add('selected');
                 rainbowActive=true;
                 startRainbowAnimation();
+                savedUiColor = 'rainbow';
                 document.getElementById('UI_Color').value='#ee6363';
                 document.getElementById('customColorLabel').textContent='Color: Rainbow';
             }
@@ -1406,6 +1416,7 @@ Machine)</div>
                 if(rainbowItem) rainbowItem.classList.add('selected');
                 rainbowActive=true;
                 startPowerRainbowAnimation();
+                savedUiColor = 'rainbow_power';
                 document.getElementById('UI_Color').value='#ee6363';
                 document.getElementById('customColorLabel').textContent='Color: Rainbow (Power-Saving)';
             }
@@ -1460,10 +1471,11 @@ Machine)</div>
             function getConfig() {
                 var config = {
                     ClockMode: timeIndex,
-                    LeadingZeros: zerosMode,   // now integer 0,1,2
-                    ShowAMPM: ampmMode,        // now integer
+                    LeadingZeros: zerosMode,
+                    ShowAMPM: ampmMode,
                     Wallpaper: selectedWallpaperId,
-                    Inverted: invertedOn
+                    Inverted: invertedOn,
+                    UI_Color: savedUiColor
                 };
                 if (selectedWallpaperId === 8 && customPhotoData) config.CustomPhoto = customPhotoData;
                 return config;
