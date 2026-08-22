@@ -595,12 +595,11 @@ Machine)</div>
             }
             function updateDisplays() {
                 document.getElementById('timeDisplay').textContent = timeOptions[timeIndex];
-                // Leading Zeros display
                 var zeroLabels = ['OFF', 'ON', 'Auto'];
                 document.getElementById('zerosDisplay').textContent = zeroLabels[zerosMode];
-                // AM/PM display
                 var ampmLabels = ['OFF', 'ON', 'Auto'];
                 document.getElementById('ampmDisplay').textContent = ampmLabels[ampmMode];
+                document.getElementById('flickWindowDisplay').textContent = flickWindowOptions[flickWindowIndex];
             }
             function updateCustomPhotoSection() {
                 var show = selectedWallpaperId === 8 && selectedExtraWallpaperId === null;
@@ -962,7 +961,6 @@ Machine)</div>
                     zerosMode = 2;
                     ampmMode = 2;
                     flickWindowIndex = 1;
-                    flickDurationIndex = 2;
                     document.getElementById('topBarTitle').textContent = 'The World Machine';
                     updateDisplays();
                     updateCustomPhotoSection();
