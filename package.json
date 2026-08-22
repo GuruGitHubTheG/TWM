@@ -1,0 +1,279 @@
+{
+    "author": "DEVELARPER",
+    "dependencies": {},
+    "keywords": [],
+    "name": "the-world-machine",
+    "pebble": {
+        "capabilities": [
+            "configurable"
+        ],
+        "displayName": "The World Machine",
+        "enableMultiJS": true,
+        "messageKeys": [
+            "Inverted",
+            "Wallpaper",
+            "ClockMode",
+            "LeadingZeros",
+            "ShowAMPM",
+            "UI_Color",
+            "RequestConfig"
+        ],
+        "projectType": "native",
+        "resources": {
+            "media": [
+                {
+                    "file": "images/oneshot-window.png",
+                    "name": "ONESHOT_WINDOW",
+                    "targetPlatforms": [
+                        "aplite",
+                        "basalt",
+                        "diorite",
+                        "emery",
+                        "flint"
+                    ],
+                    "type": "bitmap"
+                },
+                {
+                    "file": "images/taskbar.png",
+                    "name": "TASKBAR",
+                    "targetPlatforms": null,
+                    "type": "bitmap"
+                },
+                {
+                    "file": "fonts/subset.ttf",
+                    "name": "VOLTER_9",
+                    "targetPlatforms": null,
+                    "type": "font"
+                },
+                {
+                    "file": "images/showdesktop.png",
+                    "name": "SHOW_DESKTOP",
+                    "targetPlatforms": null,
+                    "type": "bitmap"
+                },
+                {
+                    "file": "images/lightbulb.png",
+                    "name": "LIGHTBULB",
+                    "targetPlatforms": null,
+                    "type": "bitmap"
+                },
+                {
+                    "file": "images/lightbulb-inverted.png",
+                    "name": "LIGHTBULB_INVERTED",
+                    "targetPlatforms": [
+                        "aplite",
+                        "diorite",
+                        "flint"
+                    ],
+                    "type": "bitmap"
+                },
+                {
+                    "file": "images/showdesktop-inverted.png",
+                    "name": "SHOW_DESKTOP_INVERTED",
+                    "targetPlatforms": null,
+                    "type": "bitmap"
+                },
+                {
+                    "file": "images/icon.png",
+                    "menuIcon": true,
+                    "name": "ICON",
+                    "targetPlatforms": null,
+                    "type": "bitmap"
+                },
+                {
+                    "file": "images/Asteroid_168.png",
+                    "name": "ASTEROID",
+                    "targetPlatforms": [
+                        "aplite",
+                        "basalt",
+                        "diorite",
+                        "emery",
+                        "flint"
+                    ],
+                    "type": "bitmap"
+                },
+                {
+                    "file": "images/Barrens_Craters_168.png",
+                    "name": "BARRENS_CRATERS",
+                    "targetPlatforms": [
+                        "aplite",
+                        "basalt",
+                        "diorite",
+                        "emery",
+                        "flint"
+                    ],
+                    "type": "bitmap"
+                },
+                {
+                    "file": "images/Glen_Shoreline_168.png",
+                    "name": "GLEN_SHORELINE",
+                    "targetPlatforms": [
+                        "aplite",
+                        "basalt",
+                        "diorite",
+                        "emery",
+                        "flint"
+                    ],
+                    "type": "bitmap"
+                },
+                {
+                    "file": "images/Messiah_168.png",
+                    "name": "MESSIAH",
+                    "targetPlatforms": [
+                        "aplite",
+                        "basalt",
+                        "diorite",
+                        "emery",
+                        "flint"
+                    ],
+                    "type": "bitmap"
+                },
+                {
+                    "file": "images/My_Burden_is_Light_168.png",
+                    "name": "MY_BURDEN_IS_LIGHT",
+                    "targetPlatforms": [
+                        "aplite",
+                        "basalt",
+                        "diorite",
+                        "emery",
+                        "flint"
+                    ],
+                    "type": "bitmap"
+                },
+                {
+                    "file": "images/Refuge_Cityscape_168.png",
+                    "name": "REFUGE_CITYSCAPE",
+                    "targetPlatforms": [
+                        "aplite",
+                        "basalt",
+                        "diorite",
+                        "emery",
+                        "flint"
+                    ],
+                    "type": "bitmap"
+                },
+                {
+                    "file": "images/The_World_Machine_168.png",
+                    "name": "THE_WORLD_MACHINE",
+                    "targetPlatforms": [
+                        "aplite",
+                        "basalt",
+                        "diorite",
+                        "emery",
+                        "flint"
+                    ],
+                    "type": "bitmap"
+                },
+                {
+                    "file": "images/oneshot-window-icon.png",
+                    "name": "ONESHOT_WINDOW_ICON",
+                    "targetPlatforms": null,
+                    "type": "bitmap"
+                },
+                {
+                    "file": "images/oneshot-window-icon-inverted.png",
+                    "name": "ONESHOT_WINDOW_ICON_INVERTED",
+                    "targetPlatforms": [
+                        "aplite",
+                        "diorite",
+                        "flint"
+                    ],
+                    "type": "bitmap"
+                },
+                {
+                    "file": "images/folder-window-icon.png",
+                    "name": "FOLDER_WINDOW_ICON",
+                    "targetPlatforms": null,
+                    "type": "bitmap"
+                },
+                {
+                    "file": "images/folder-window-icon-inverted.png",
+                    "name": "FOLDER_WINDOW_ICON_INVERTED",
+                    "targetPlatforms": [
+                        "aplite",
+                        "diorite",
+                        "flint"
+                    ],
+                    "type": "bitmap"
+                },
+                {
+                    "file": "images/close_button_inverted.png",
+                    "name": "CLOSE_BUTTON_INVERTED",
+                    "targetPlatforms": [
+                        "aplite",
+                        "basalt",
+                        "diorite"
+                    ],
+                    "type": "bitmap"
+                },
+                {
+                    "file": "images/minimize_button.png",
+                    "name": "MINIMIZE_BUTTON",
+                    "targetPlatforms": [
+                        "emery"
+                    ],
+                    "type": "bitmap"
+                },
+                {
+                    "file": "images/close_button.png",
+                    "name": "CLOSE_BUTTON",
+                    "targetPlatforms": null,
+                    "type": "bitmap"
+                },
+                {
+                    "file": "images/maximize_button.png",
+                    "name": "MAXIMIZE_BUTTON",
+                    "targetPlatforms": [
+                        "emery"
+                    ],
+                    "type": "bitmap"
+                },
+                {
+                    "file": "images/question-button.png",
+                    "name": "QUESTION_BUTTON",
+                    "targetPlatforms": null,
+                    "type": "bitmap"
+                },
+                {
+                    "file": "images/question-button-inverted",
+                    "name": "QUESTION_BUTTON_INVERTED",
+                    "targetPlatforms": [
+                        "aplite",
+                        "emery",
+                        "flint"
+                    ],
+                    "type": "bitmap"
+                },
+                {
+                    "file": "images/timer-window-icon.png",
+                    "name": "TIMER_WINDOW_ICON",
+                    "targetPlatforms": null,
+                    "type": "bitmap"
+                },
+                {
+                    "file": "images/timer-window-icon-inverted.png",
+                    "name": "TIMER_WINDOW_ICON_INVERTED",
+                    "targetPlatforms": [
+                        "aplite",
+                        "diorite",
+                        "flint"
+                    ],
+                    "type": "bitmap"
+                }
+            ]
+        },
+        "sdkVersion": "3",
+        "targetPlatforms": [
+            "aplite",
+            "basalt",
+            "diorite",
+            "emery",
+            "flint"
+        ],
+        "uuid": "41793405-627b-49e0-b52a-4c1427f91d18",
+        "watchapp": {
+            "watchface": true
+        }
+    },
+    "version": "1.0.0"
+}
