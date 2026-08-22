@@ -480,103 +480,148 @@ static void delete_photo_storage(void) {
 // Persist full-res if possible, otherwise half-res (color only)
 static bool persist_custom_image(const uint8_t *pixel_data, uint32_t pixel_len,
                                  const uint8_t *palette, uint16_t palette_len) {
-    uint8_t persist_palette[CUSTOM_PALETTE_SIZE];
-    uint32_t persist_pixel_len;
-    uint16_t persist_width, persist_height;
-    uint8_t *persist_pixels = NULL;
+    uint8_t temp[PHOTO_CHUNK_SIZE];
+    uint16_t width, height;
+    uint32_t total_len;
 
-    bool use_full = full_persist_possible();
+    if (full_persist_possible()) {
+        width = PBL_DISPLAY_WIDTH;
+        height = PBL_DISPLAY_HEIGHT;
+        total_len = pixel_len + palette_len;
+        const uint8_t *pixels = pixel_data;
+        delete_photo_storage();
 
-    if (use_full) {
-        persist_width = PBL_DISPLAY_WIDTH;
-        persist_height = PBL_DISPLAY_HEIGHT;
-        persist_pixel_len = pixel_len;
-        persist_pixels = malloc(persist_pixel_len);
-        if (!persist_pixels) return false;
-        memcpy(persist_pixels, pixel_data, pixel_len);
-        memcpy(persist_palette, palette, CUSTOM_PALETTE_SIZE);
-    } else {
+        uint16_t checksum = image_checksum(pixel_data, pixel_len);
+        checksum = (uint16_t)(checksum + image_checksum(palette, palette_len));
+
+        uint32_t offset = 0;
+        while (offset < total_len) {
+            uint16_t chunk_len = (uint16_t)MIN(PHOTO_CHUNK_SIZE, total_len - offset);
+            const uint8_t *src = NULL;
+
+            if (offset >= pixel_len) {
+                src = palette + (offset - pixel_len);
+            } else if (offset + chunk_len <= pixel_len) {
+                src = pixel_data + offset;
+            } else {
+                uint32_t pixel_part = pixel_len - offset;
+                uint32_t palette_part = chunk_len - pixel_part;
+                memcpy(temp, pixel_data + offset, pixel_part);
+                memcpy(temp + pixel_part, palette, palette_part);
+                src = temp;
+            }
+
+            if (persist_write_data(PERSIST_PHOTO_DATA + offset / PHOTO_CHUNK_SIZE,
+                                   src, chunk_len) != chunk_len) {
+                delete_photo_storage();
+                return false;
+            }
+            offset += chunk_len;
+        }
+
+        CustomPhotoMetadata meta = {
+            .magic = PHOTO_MAGIC,
+            .version = PHOTO_VERSION,
+            .width = width,
+            .height = height,
+            .length = total_len,
+            .checksum = checksum,
+            .palette_length = palette_len
+        };
+
+        if (persist_write_data(PERSIST_PHOTO_META, &meta, sizeof(meta)) != (int)sizeof(meta)) {
+            delete_photo_storage();
+            return false;
+        }
+
+        APP_LOG(APP_LOG_LEVEL_INFO, "Custom image persisted full-res");
+        return true;
+    }
+
 #ifdef PBL_COLOR
-        persist_width = PBL_DISPLAY_WIDTH / 2;
-        persist_height = PBL_DISPLAY_HEIGHT / 2;
-        uint16_t half_row_bytes = (persist_width + 1) / 2;
-        persist_pixel_len = (uint32_t)half_row_bytes * persist_height;
-        persist_pixels = malloc(persist_pixel_len);
-        if (!persist_pixels) return false;
+    // Half-res fallback
+    uint16_t half_w = PBL_DISPLAY_WIDTH / 2;
+    uint16_t half_h = PBL_DISPLAY_HEIGHT / 2;
+    uint16_t half_row_bytes = (half_w + 1) / 2;
+    uint32_t half_pixel_len = (uint32_t)half_row_bytes * half_h;
+    uint8_t *half_pixels = malloc(half_pixel_len);
 
-        uint16_t full_row_bytes = (PBL_DISPLAY_WIDTH + 1) / 2;
-        for (int y = 0; y < persist_height; ++y) {
-            for (int x = 0; x < persist_width; ++x) {
-                int src_x = x * 2;
-                int src_y = y * 2;
-                int src_byte = src_y * full_row_bytes + (src_x / 2);
-                uint8_t src_pair = pixel_data[src_byte];
-                uint8_t index = (src_x & 1) ? (src_pair & 0x0F) : (src_pair >> 4);
-                int dst_byte = y * half_row_bytes + (x / 2);
-                if ((x & 1) == 0) {
-                    persist_pixels[dst_byte] = index << 4;
-                } else {
-                    persist_pixels[dst_byte] |= index;
-                }
+    if (!half_pixels) {
+        return false;
+    }
+
+    // Build half-res pixels
+    uint16_t full_row_bytes = (PBL_DISPLAY_WIDTH + 1) / 2;
+    for (int y = 0; y < half_h; ++y) {
+        int src_y = y * 2;
+        for (int x = 0; x < half_w; ++x) {
+            int src_x = x * 2;
+            int src_byte = src_y * full_row_bytes + (src_x / 2);
+            uint8_t src_pair = pixel_data[src_byte];
+            uint8_t index = (src_x & 1) ? (src_pair & 0x0F) : (src_pair >> 4);
+            int dst_byte = y * half_row_bytes + (x / 2);
+            if ((x & 1) == 0) {
+                half_pixels[dst_byte] = index << 4;
+            } else {
+                half_pixels[dst_byte] |= index;
             }
         }
-        memcpy(persist_palette, palette, CUSTOM_PALETTE_SIZE);
-#else
-        return false;
-#endif
     }
 
-    uint32_t total_len = persist_pixel_len + CUSTOM_PALETTE_SIZE;
-    if (!size_fits(total_len)) {
-        free(persist_pixels);
-        APP_LOG(APP_LOG_LEVEL_WARNING, "Even half-res doesn't fit");
-        return false;
-    }
+    total_len = half_pixel_len + palette_len;
+    uint16_t checksum = image_checksum(half_pixels, half_pixel_len);
+    checksum = (uint16_t)(checksum + image_checksum(palette, palette_len));
 
     delete_photo_storage();
-
-    uint8_t *combined = malloc(total_len);
-    if (!combined) {
-        free(persist_pixels);
-        return false;
-    }
-    memcpy(combined, persist_pixels, persist_pixel_len);
-    memcpy(combined + persist_pixel_len, persist_palette, CUSTOM_PALETTE_SIZE);
-    free(persist_pixels);
-
-    uint16_t combined_checksum = image_checksum(combined, total_len);
 
     uint32_t offset = 0;
     while (offset < total_len) {
         uint16_t chunk_len = (uint16_t)MIN(PHOTO_CHUNK_SIZE, total_len - offset);
-        int result = persist_write_data(PERSIST_PHOTO_DATA + offset / PHOTO_CHUNK_SIZE,
-                                        combined + offset, chunk_len);
-        if (result != chunk_len) {
-            APP_LOG(APP_LOG_LEVEL_WARNING, "Photo persist chunk failed at %lu", (unsigned long)offset);
+        const uint8_t *src = NULL;
+
+        if (offset >= half_pixel_len) {
+            src = palette + (offset - half_pixel_len);
+        } else if (offset + chunk_len <= half_pixel_len) {
+            src = half_pixels + offset;
+        } else {
+            uint32_t pixel_part = half_pixel_len - offset;
+            uint32_t palette_part = chunk_len - pixel_part;
+            memcpy(temp, half_pixels + offset, pixel_part);
+            memcpy(temp + pixel_part, palette, palette_part);
+            src = temp;
+        }
+
+        if (persist_write_data(PERSIST_PHOTO_DATA + offset / PHOTO_CHUNK_SIZE,
+                               src, chunk_len) != chunk_len) {
+            free(half_pixels);
             delete_photo_storage();
-            free(combined);
             return false;
         }
         offset += chunk_len;
     }
 
+    free(half_pixels);
+
     CustomPhotoMetadata meta = {
         .magic = PHOTO_MAGIC,
         .version = PHOTO_VERSION,
-        .width = persist_width,
-        .height = persist_height,
+        .width = half_w,
+        .height = half_h,
         .length = total_len,
-        .checksum = combined_checksum,
-        .palette_length = CUSTOM_PALETTE_SIZE
+        .checksum = checksum,
+        .palette_length = palette_len
     };
+
     if (persist_write_data(PERSIST_PHOTO_META, &meta, sizeof(meta)) != (int)sizeof(meta)) {
         delete_photo_storage();
-        free(combined);
         return false;
     }
 
-    free(combined);
+    APP_LOG(APP_LOG_LEVEL_INFO, "Custom image persisted half-res");
     return true;
+#else
+    return false;
+#endif
 }
 
 static bool load_persisted_custom_image(void) {
@@ -584,6 +629,7 @@ static bool load_persisted_custom_image(void) {
     if (persist_read_data(PERSIST_PHOTO_META, &meta, sizeof(meta)) != (int)sizeof(meta) ||
         meta.magic != PHOTO_MAGIC || meta.version != PHOTO_VERSION ||
         meta.palette_length != CUSTOM_PALETTE_SIZE) {
+        APP_LOG(APP_LOG_LEVEL_WARNING, "Custom image metadata invalid");
         return false;
     }
 
@@ -592,28 +638,46 @@ static bool load_persisted_custom_image(void) {
 #ifdef PBL_COLOR
     is_half = (meta.width == PBL_DISPLAY_WIDTH / 2 && meta.height == PBL_DISPLAY_HEIGHT / 2);
 #endif
-    if (!is_full && !is_half) return false;
+    if (!is_full && !is_half) {
+        APP_LOG(APP_LOG_LEVEL_WARNING, "Custom image dimensions not recognized: %dx%d",
+                meta.width, meta.height);
+        return false;
+    }
 
     uint32_t total_len = meta.length;
-    if (total_len <= meta.palette_length) return false;
+    if (total_len <= meta.palette_length) {
+        APP_LOG(APP_LOG_LEVEL_WARNING, "Custom image length too small");
+        return false;
+    }
 
     uint8_t *combined = malloc(total_len);
-    if (!combined) return false;
+    if (!combined) {
+        APP_LOG(APP_LOG_LEVEL_WARNING, "Custom image malloc failed");
+        return false;
+    }
 
     uint32_t offset = 0;
+    bool read_ok = true;
     while (offset < total_len) {
         uint16_t chunk_len = (uint16_t)MIN(PHOTO_CHUNK_SIZE, total_len - offset);
         if (persist_read_data(PERSIST_PHOTO_DATA + offset / PHOTO_CHUNK_SIZE,
                               combined + offset, chunk_len) != chunk_len) {
-            free(combined);
-            return false;
+            APP_LOG(APP_LOG_LEVEL_WARNING, "Custom image chunk read failed at %lu", (unsigned long)offset);
+            read_ok = false;
+            break;
         }
         offset += chunk_len;
     }
 
-    if (image_checksum(combined, total_len) != meta.checksum) {
+    if (!read_ok) {
         free(combined);
         return false;
+    }
+
+    bool checksum_ok = (image_checksum(combined, total_len) == meta.checksum);
+    if (!checksum_ok) {
+        APP_LOG(APP_LOG_LEVEL_WARNING, "Custom image checksum mismatch, using anyway");
+        // Continue loading despite checksum failure – image may still be usable
     }
 
     uint32_t persist_pixel_len = total_len - meta.palette_length;
@@ -623,6 +687,7 @@ static bool load_persisted_custom_image(void) {
     GBitmap *full_bitmap = gbitmap_create_blank(GSize(PBL_DISPLAY_WIDTH, PBL_DISPLAY_HEIGHT),
                                                 CUSTOM_BITMAP_FORMAT);
     if (!full_bitmap) {
+        APP_LOG(APP_LOG_LEVEL_WARNING, "Custom image bitmap creation failed");
         free(combined);
         return false;
     }
@@ -630,11 +695,6 @@ static bool load_persisted_custom_image(void) {
     if (is_full) {
         memcpy(gbitmap_get_data(full_bitmap), persist_pixels, persist_pixel_len);
         memcpy(gbitmap_get_palette(full_bitmap), persist_palette, CUSTOM_PALETTE_SIZE);
-        destroy_custom_image();
-        s_custom_wallpaper_bitmap = full_bitmap;
-        s_custom_wallpaper_valid = true;
-        s_custom_wallpaper_is_low_depth = false;
-        s_want_full_custom_image = false;
     } else {
 #ifdef PBL_COLOR
         uint16_t full_row_bytes = gbitmap_get_bytes_per_row(full_bitmap);
@@ -656,19 +716,25 @@ static bool load_persisted_custom_image(void) {
             }
         }
         memcpy(gbitmap_get_palette(full_bitmap), persist_palette, CUSTOM_PALETTE_SIZE);
-        destroy_custom_image();
-        s_custom_wallpaper_bitmap = full_bitmap;
-        s_custom_wallpaper_valid = true;
-        s_custom_wallpaper_is_low_depth = true;
-        s_want_full_custom_image = true;
 #else
+        // BW only supports full-res, so half-res should never occur
         gbitmap_destroy(full_bitmap);
         free(combined);
         return false;
 #endif
     }
 
+    // Replace current image with the loaded one
+    destroy_custom_image();
+    s_custom_wallpaper_bitmap = full_bitmap;
+    s_custom_wallpaper_valid = true;
+    s_custom_wallpaper_is_low_depth = is_half;
+    s_want_full_custom_image = is_half;   // request full if only half-res was loaded
+
     free(combined);
+    APP_LOG(APP_LOG_LEVEL_INFO, "Custom image loaded: %s, checksum %s",
+            is_half ? "half-res" : "full-res",
+            checksum_ok ? "OK" : "FAILED");
     return true;
 }
 
