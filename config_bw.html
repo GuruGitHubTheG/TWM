@@ -1237,13 +1237,18 @@ Machine)</div>
             window.showTWMConfirm = function() { showModal('Change Language?\n(This will restart The World\nMachine)', null, null); };
 
             function getConfig() {
+                var uiColor = savedUiColor;
+                if (uiColor !== 'rainbow' && uiColor !== 'rainbow_power') {
+                    uiColor = uiColor.replace('#', '');
+                }
+
                 var config = {
                     ClockMode: timeIndex,
-                    LeadingZeros: zerosMode,       // or zerosOn for BW
-                    ShowAMPM: ampmMode,            // or ampmOn for BW
+                    LeadingZeros: zerosMode,
+                    ShowAMPM: ampmMode,
                     Wallpaper: selectedWallpaperId,
                     Inverted: invertedOn,
-                    UI_Color: uiColor,
+                    UI_Color: uiColor,        // ✅ now sends "9664ff"
                     FlickWindow: flickWindowIndex
                 };
                 if (selectedWallpaperId === 8 && customPhotoData) config.CustomPhoto = customPhotoData;
