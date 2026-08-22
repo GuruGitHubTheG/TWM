@@ -5,9 +5,13 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>The World Machine Settings</title>
     <style>
+        :root {
+            --primary: #aa55ff;
+            --primary-variant: #6442a5;
+        }
         @font-face { font-family: 'Volter'; src: url('https://raw.githubusercontent.com/GuruGitHubTheG/TWM/main/Volter.ttf') format('truetype'); }
         * { margin:0; padding:0; box-sizing:border-box; }
-        body { font-family:'Volter',sans-serif; background:#000; color:var(--primary,#aa55ff); padding:0; margin:0; min-height:100vh; }
+        body { font-family:'Volter',sans-serif; background:#000; color:var(--primary,#9664ff); padding:0; margin:0; min-height:100vh; }
 
         #app { opacity: 0; transition: opacity 0.2s; }
         #app.loaded { opacity: 1; }
@@ -21,49 +25,49 @@
             transition: opacity 0.2s;
         }
         .topBar-left { display:flex; align-items:center; gap:12px; min-width:0; }
-        .topBar-icon { width:48px; height:48px; flex-shrink:0; background-color:var(--primary,#aa55ff); -webkit-mask-image:url('https://raw.githubusercontent.com/GuruGitHubTheG/TWM/main/icons/oneshot.png'); mask-image:url('https://raw.githubusercontent.com/GuruGitHubTheG/TWM/main/icons/oneshot.png'); -webkit-mask-size:contain; mask-size:contain; -webkit-mask-repeat:no-repeat; mask-repeat:no-repeat; -webkit-mask-position:center; mask-position:center; }
-        #topBarTitle { font-size:clamp(12px,4vw,28px); font-weight:normal; letter-spacing:1px; line-height:1; color:var(--primary,#aa55ff); white-space:nowrap; overflow:hidden; text-overflow:clip; flex:0 1 auto; min-width:0; }
+        .topBar-icon { width:48px; height:48px; flex-shrink:0; background-color:var(--primary,#9664ff); -webkit-mask-image:url('https://raw.githubusercontent.com/GuruGitHubTheG/TWM/main/icons/oneshot.png'); mask-image:url('https://raw.githubusercontent.com/GuruGitHubTheG/TWM/main/icons/oneshot.png'); -webkit-mask-size:contain; mask-size:contain; -webkit-mask-repeat:no-repeat; mask-repeat:no-repeat; -webkit-mask-position:center; mask-position:center; }
+        #topBarTitle { font-size:clamp(12px,4vw,28px); font-weight:normal; letter-spacing:1px; line-height:1; color:var(--primary,#9664ff); white-space:nowrap; overflow:hidden; text-overflow:clip; flex:0 1 auto; min-width:0; }
         #topBar .header-icons { position:absolute; right:6px; top:6px; bottom:6px; display:flex; align-items:center; gap:6px; }
-        .header-icon-btn { width:48px; height:48px; padding:0; border:none; background:var(--primary,#aa55ff); cursor:pointer; display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+        .header-icon-btn { width:48px; height:48px; padding:0; border:none; background:var(--primary,#9664ff); cursor:pointer; display:flex; align-items:center; justify-content:center; flex-shrink:0; }
         .header-icon-btn img { width:48px; height:48px; object-fit:contain; display:block; }
         .header-icon-btn:hover, .header-icon-btn:active { background:var(--primary-variant, rgb(100,66,165)); }
 
         .container { width:100%; max-width:1200px; padding:0 10px; padding-top:82px; padding-bottom:40px; margin:0 auto; }
 
-        .window { background:#000; border:6px solid var(--primary,#aa55ff); border-radius:0; margin-bottom:16px; overflow:hidden; }
+        .window { background:#000; border:6px solid var(--primary,#9664ff); border-radius:0; margin-bottom:16px; overflow:hidden; }
         .window-header-wrapper { padding:0; position:relative; }
-        .window-header { display:flex; align-items:center; background:#000; color:var(--primary,#aa55ff); min-height:60px; padding-left:18px; padding-right:18px; }
+        .window-header { display:flex; align-items:center; background:#000; color:var(--primary,#9664ff); min-height:60px; padding-left:18px; padding-right:18px; }
         #customize-window .window-header { padding-top:9px; padding-bottom:9px; }
         #wallpaper-window .window-header { padding-top:12px; padding-bottom:12px; }
         #themes-window .window-header { padding-top:12px; padding-bottom:12px; }
         .window-header-left { display:flex; align-items:center; gap:15px; min-width:0; }
-        .window-header-icon { flex-shrink:0; background-color:var(--primary,#aa55ff); -webkit-mask-size:contain; mask-size:contain; -webkit-mask-repeat:no-repeat; mask-repeat:no-repeat; -webkit-mask-position:center; mask-position:center; }
+        .window-header-icon { flex-shrink:0; background-color:var(--primary,#9664ff); -webkit-mask-size:contain; mask-size:contain; -webkit-mask-repeat:no-repeat; mask-repeat:no-repeat; -webkit-mask-position:center; mask-position:center; }
         #customizeIcon { width:42px; height:42px; -webkit-mask-image:url('https://raw.githubusercontent.com/GuruGitHubTheG/TWM/main/icons/gear.png'); mask-image:url('https://raw.githubusercontent.com/GuruGitHubTheG/TWM/main/icons/gear.png'); }
         #wallpaperIcon { width:42px; height:36px; -webkit-mask-image:url('https://raw.githubusercontent.com/GuruGitHubTheG/TWM/main/icons/folder.png'); mask-image:url('https://raw.githubusercontent.com/GuruGitHubTheG/TWM/main/icons/folder.png'); }
         #themesIcon { width:42px; height:36px; -webkit-mask-image:url('https://raw.githubusercontent.com/GuruGitHubTheG/TWM/main/icons/folder.png'); mask-image:url('https://raw.githubusercontent.com/GuruGitHubTheG/TWM/main/icons/folder.png'); }
         #extraWallpaperIcon { width:42px; height:36px; -webkit-mask-image:url('https://raw.githubusercontent.com/GuruGitHubTheG/TWM/main/icons/folder.png'); mask-image:url('https://raw.githubusercontent.com/GuruGitHubTheG/TWM/main/icons/folder.png'); }
         .window-header-title { font-size:clamp(12px,4vw,28px); font-weight:normal; letter-spacing:1px; line-height:1; white-space:nowrap; overflow:hidden; text-overflow:clip; flex:0 1 auto; min-width:0; }
         .window-header-wrapper .header-icons { position:absolute; right:6px; top:6px; bottom:6px; display:flex; align-items:center; gap:6px; }
-        .window-divider { height:12px; background:var(--primary,#aa55ff); }
+        .window-divider { height:12px; background:var(--primary,#9664ff); }
         .window-content { padding:24px 18px 18px 18px; background:#000; }
 
         /* ---- SETTING STYLES ---- */
         .setting-row { margin:0; padding:0; }
         .setting-row + .setting-row { margin-top:24px; }
-        .setting-label-centered { font-size:21px; font-weight:normal; color:var(--primary,#aa55ff); letter-spacing:0.5px; text-align:center; margin-bottom:21px; }
+        .setting-label-centered { font-size:21px; font-weight:normal; color:var(--primary,#9664ff); letter-spacing:0.5px; text-align:center; margin-bottom:21px; }
         .setting-rect { display:flex; align-items:center; height:48px; margin:0 -6px; }
-        .btn-left, .btn-right { width:48px; height:48px; padding:0; border:none; background:var(--primary,#aa55ff); cursor:pointer; display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+        .btn-left, .btn-right { width:48px; height:48px; padding:0; border:none; background:var(--primary,#9664ff); cursor:pointer; display:flex; align-items:center; justify-content:center; flex-shrink:0; }
         .btn-left img, .btn-right img { width:48px; height:48px; object-fit:contain; display:block; }
         .btn-left:hover, .btn-left:active, .btn-right:hover, .btn-right:active { background:var(--primary-variant, rgb(100,66,165)); }
-        .setting-middle { flex:1; height:48px; display:flex; align-items:center; justify-content:center; border-top:3px solid var(--primary,#aa55ff); border-bottom:3px solid var(--primary,#aa55ff); margin:0; }
-        .setting-value { font-size:21px; line-height:21px; height:21px; font-weight:normal; color:var(--primary,#aa55ff); letter-spacing:1px; text-align:center; padding:0 8px; white-space:nowrap; }
+        .setting-middle { flex:1; height:48px; display:flex; align-items:center; justify-content:center; border-top:3px solid var(--primary,#9664ff); border-bottom:3px solid var(--primary,#9664ff); margin:0; }
+        .setting-value { font-size:21px; line-height:21px; height:21px; font-weight:normal; color:var(--primary,#9664ff); letter-spacing:1px; text-align:center; padding:0 8px; white-space:nowrap; }
 
         .restore-defaults-btn {
             width: 100%;
             height: 48px;
-            border: 3px solid var(--primary,#aa55ff);
+            border: 3px solid var(--primary,#9664ff);
             background: transparent;
-            color: var(--primary,#aa55ff);
+            color: var(--primary,#9664ff);
             font-family: 'Volter', sans-serif;
             font-size: 21px;
             letter-spacing: 1px;
@@ -84,9 +88,9 @@
         .custom-color-btn {
             width: 100%;
             height: 48px;
-            border: 3px solid var(--primary,#aa55ff);
+            border: 3px solid var(--primary,#9664ff);
             background: transparent;
-            color: var(--primary,#aa55ff);
+            color: var(--primary,#9664ff);
             font-family: 'Volter', sans-serif;
             font-size: 21px;
             letter-spacing: 1px;
@@ -146,7 +150,7 @@
         .wallpaper-shadow { position:absolute; top:3px; left:3px; width:100%; height:100%; background:#000; z-index:1; }
         .wallpaper-screenshot { position:relative; width:100%; height:100%; object-fit:cover; z-index:2; display:block; background:#1a1a1a; }
         .wallpaper-text-wrapper { position:absolute; top:111px; left:51px; width:126px; height:auto; min-height:33px; z-index:3; display:flex; flex-direction:column; align-items:center; justify-content:flex-start; pointer-events:none; gap:0; }
-        .wallpaper-label { font-size:26px; line-height:1; color:var(--primary,#aa55ff); text-align:center; letter-spacing:0.3px; display:inline-block; background:#000; padding:6px 6px 9px 3px; border-radius:0; white-space:pre; word-wrap:break-word; }
+        .wallpaper-label { font-size:26px; line-height:1; color:var(--primary,#9664ff); text-align:center; letter-spacing:0.3px; display:inline-block; background:#000; padding:6px 6px 9px 3px; border-radius:0; white-space:pre; word-wrap:break-word; }
 
         .theme-item { width:240px; cursor:pointer; border:6px solid transparent; background:transparent; padding:0; position:relative; display:flex; flex-direction:column; align-items:flex-start; justify-content:flex-start; overflow:hidden; flex-shrink:0; }
         .theme-item.one-liner { height:173px; }
@@ -157,23 +161,23 @@
         .theme-icon-color { position:absolute; top:0; left:0; width:100%; height:100%; background-color:var(--theme-color, #ffffff); -webkit-mask-image:url('https://raw.githubusercontent.com/GuruGitHubTheG/TWM/main/icons/paintbucket.png'); mask-image:url('https://raw.githubusercontent.com/GuruGitHubTheG/TWM/main/icons/paintbucket.png'); -webkit-mask-size:contain; mask-size:contain; -webkit-mask-repeat:no-repeat; mask-repeat:no-repeat; -webkit-mask-position:center; mask-position:center; z-index:2; }
         .theme-icon-outline { position:absolute; inset:0; background-image:url('https://raw.githubusercontent.com/GuruGitHubTheG/TWM/main/icons/paintbucket.png'); background-size:contain; background-repeat:no-repeat; background-position:center; mix-blend-mode:multiply; z-index:3; }
         .theme-text-wrapper { position:absolute; top:111px; left:51px; width:126px; height:auto; min-height:33px; z-index:3; display:flex; flex-direction:column; align-items:center; justify-content:flex-start; pointer-events:none; gap:0; }
-        .theme-name { font-size:26px; line-height:1; color:var(--theme-primary, var(--primary, #aa55ff)); text-align:center; letter-spacing:0.3px; display:inline-block; background:#000; padding:6px 6px 9px 3px; border-radius:0; white-space:pre; word-wrap:break-word; }
+        .theme-name { font-size:26px; line-height:1; color:var(--theme-primary, var(--primary, #9664ff)); text-align:center; letter-spacing:0.3px; display:inline-block; background:#000; padding:6px 6px 9px 3px; border-radius:0; white-space:pre; word-wrap:break-word; }
         .theme-icon-color.rainbow { background-color: #ee6363; }
         .theme-name.rainbow-text { color: #ee6363; }
 
         .setting { padding:10px 0; }
         .setting + .setting { border-top:1px solid rgba(255,255,255,0.08); padding-top:14px; }
-        .setting-label { font-size:14px; font-weight:normal; margin-bottom:6px; color:var(--primary,#aa55ff); letter-spacing:0.5px; }
-        .setting-description { font-size:11px; color:var(--primary,#aa55ff); opacity:0.6; margin-bottom:8px; }
+        .setting-label { font-size:14px; font-weight:normal; margin-bottom:6px; color:var(--primary,#9664ff); letter-spacing:0.5px; }
+        .setting-description { font-size:11px; color:var(--primary,#9664ff); opacity:0.6; margin-bottom:8px; }
         .color-picker-wrapper { display:flex; align-items:center; gap:14px; }
-        .color-picker-wrapper input[type="color"] { width:60px; height:44px; padding:4px; cursor:pointer; border:1px solid var(--primary,#aa55ff); background:transparent; flex-shrink:0; }
-        .color-hex { font-size:14px; font-weight:normal; color:var(--primary,#aa55ff); font-family:'Volter',monospace; letter-spacing:0.5px; }
-        .save-btn { font-family:'Volter',sans-serif; width:100%; padding:16px; font-size:16px; font-weight:normal; letter-spacing:2px; text-transform:uppercase; color:#000; background:var(--primary,#aa55ff); border:6px solid var(--primary,#aa55ff); border-radius:0; cursor:pointer; margin-top:8px; }
+        .color-picker-wrapper input[type="color"] { width:60px; height:44px; padding:4px; cursor:pointer; border:1px solid var(--primary,#9664ff); background:transparent; flex-shrink:0; }
+        .color-hex { font-size:14px; font-weight:normal; color:var(--primary,#9664ff); font-family:'Volter',monospace; letter-spacing:0.5px; }
+        .save-btn { font-family:'Volter',sans-serif; width:100%; padding:16px; font-size:16px; font-weight:normal; letter-spacing:2px; text-transform:uppercase; color:#000; background:var(--primary,#9664ff); border:6px solid var(--primary,#9664ff); border-radius:0; cursor:pointer; margin-top:8px; }
         .save-btn:hover, .save-btn:active { background:var(--primary-variant, rgb(100,66,165)); }
-        .capability-note { font-size:10px; color:var(--primary,#aa55ff); opacity:0.4; margin-top:6px; letter-spacing:0.3px; }
-        select { font-family:'Volter',sans-serif; font-size:14px; padding:8px 35px 8px 12px; border:1px solid var(--primary,#aa55ff); border-radius:0; background:#000; color:var(--primary,#aa55ff); width:100%; max-width:300px; appearance:none; -webkit-appearance:none; background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%23aa55ff' stroke-width='1.5' fill='none'/%3E%3C/svg%3E"); background-repeat:no-repeat; background-position:right 12px center; background-size:12px 8px; cursor:pointer; outline:none; }
-        select:focus { border-color:var(--primary,#aa55ff); box-shadow:0 0 0 2px rgba(170,85,255,0.2); }
-        select option { background:#1a1a1a; color:var(--primary,#aa55ff); }
+        .capability-note { font-size:10px; color:var(--primary,#9664ff); opacity:0.4; margin-top:6px; letter-spacing:0.3px; }
+        select { font-family:'Volter',sans-serif; font-size:14px; padding:8px 35px 8px 12px; border:1px solid var(--primary,#9664ff); border-radius:0; background:#000; color:var(--primary,#9664ff); width:100%; max-width:300px; appearance:none; -webkit-appearance:none; background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%239664ff' stroke-width='1.5' fill='none'/%3E%3C/svg%3E"); background-repeat:no-repeat; background-position:right 12px center; background-size:12px 8px; cursor:pointer; outline:none; }
+        select:focus { border-color:var(--primary,#9664ff); box-shadow:0 0 0 2px rgba(170,85,255,0.2); }
+        select option { background:#1a1a1a; color:var(--primary,#9664ff); }
 
         #themes-window .setting {
             padding: 0;
@@ -185,16 +189,16 @@
         /* Modal */
         .modal-overlay { position: fixed; inset:0; background:rgba(0,0,0,0.5); display:none; align-items:center; justify-content:center; z-index:1000; }
         .modal-overlay.active { display:flex; }
-        .modal-box { background:#000; border:6px solid var(--primary,#aa55ff); width:492px; max-width:90vw; box-sizing:border-box; color:var(--primary,#aa55ff); }
+        .modal-box { background:#000; border:6px solid var(--primary,#9664ff); width:492px; max-width:90vw; box-sizing:border-box; color:var(--primary,#9664ff); }
         .modal-content { padding:9px 0 12px; }
         .modal-image-row { display:flex; align-items:center; margin-left:9px; margin-right:9px; margin-bottom:9px; }
-        .modal-question-icon, .modal-warning-icon { width:42px; height:42px; background-color:var(--primary,#aa55ff); -webkit-mask-size:contain; mask-size:contain; -webkit-mask-repeat:no-repeat; mask-repeat:no-repeat; -webkit-mask-position:center; mask-position:center; flex-shrink:0; }
+        .modal-question-icon, .modal-warning-icon { width:42px; height:42px; background-color:var(--primary,#9664ff); -webkit-mask-size:contain; mask-size:contain; -webkit-mask-repeat:no-repeat; mask-repeat:no-repeat; -webkit-mask-position:center; mask-position:center; flex-shrink:0; }
         .modal-question-icon { -webkit-mask-image:url('https://raw.githubusercontent.com/GuruGitHubTheG/TWM/main/icons/question.png'); mask-image:url('https://raw.githubusercontent.com/GuruGitHubTheG/TWM/main/icons/question.png'); }
         .modal-warning-icon { -webkit-mask-image:url('https://raw.githubusercontent.com/GuruGitHubTheG/TWM/main/icons/warning.png'); mask-image:url('https://raw.githubusercontent.com/GuruGitHubTheG/TWM/main/icons/warning.png'); display:none; }
-        .modal-line { height:12px; background:var(--primary,#aa55ff); margin:0 0 21px; width:100%; }
+        .modal-line { height:12px; background:var(--primary,#9664ff); margin:0 0 21px; width:100%; }
         .modal-text { margin:0 30px 15px; font-size:26px; line-height:32px; text-align:center; white-space:pre-line; }
         .modal-buttons { display:flex; align-items:center; justify-content:center; gap:24px; margin:0; padding:0 12px; }
-        .modal-btn { flex:0 1 168px; min-width:0; height:48px; padding:0 20px; border:3px solid var(--primary,#aa55ff); background:transparent; color:var(--primary,#aa55ff); font-family:'Volter',sans-serif; font-size:26px; letter-spacing:1px; cursor:pointer; display:flex; align-items:center; justify-content:center; white-space:nowrap; box-sizing:border-box; }
+        .modal-btn { flex:0 1 168px; min-width:0; height:48px; padding:0 20px; border:3px solid var(--primary,#9664ff); background:transparent; color:var(--primary,#9664ff); font-family:'Volter',sans-serif; font-size:26px; letter-spacing:1px; cursor:pointer; display:flex; align-items:center; justify-content:center; white-space:nowrap; box-sizing:border-box; }
         #yesNoButtons .modal-btn {
             flex: 1 1 0;
             min-width: 0;
@@ -346,7 +350,7 @@
                     </div>
                 </div>
             </div>
-            <div class="window-divider" style="background:var(--primary, #aa55ff);"></div>
+            <div class="window-divider" style="background:var(--primary, #9664ff);"></div>
             <div class="window-content">
                 <div class="setting-row">
                     <div class="setting-label-centered">Time Format</div>
@@ -360,7 +364,7 @@
                     <div class="setting-label-centered">Leading Zeros</div>
                     <div class="setting-rect">
                         <button class="btn-left" id="zerosLeft"><img src="https://raw.githubusercontent.com/GuruGitHubTheG/TWM/main/icons/left.png" alt="<"></button>
-                        <div class="setting-middle"><span class="setting-value" id="zerosDisplay">OFF</span></div>
+                        <div class="setting-middle"><span class="setting-value" id="zerosDisplay">Auto</span></div>
                         <button class="btn-right" id="zerosRight"><img src="https://raw.githubusercontent.com/GuruGitHubTheG/TWM/main/icons/right.png" alt=">"></button>
                     </div>
                 </div>
@@ -368,7 +372,7 @@
                     <div class="setting-label-centered">Show AM/PM</div>
                     <div class="setting-rect">
                         <button class="btn-left" id="ampmLeft"><img src="https://raw.githubusercontent.com/GuruGitHubTheG/TWM/main/icons/left.png" alt="<"></button>
-                        <div class="setting-middle"><span class="setting-value" id="ampmDisplay">ON</span></div>
+                        <div class="setting-middle"><span class="setting-value" id="ampmDisplay">Auto</span></div>
                         <button class="btn-right" id="ampmRight"><img src="https://raw.githubusercontent.com/GuruGitHubTheG/TWM/main/icons/right.png" alt=">"></button>
                     </div>
                 </div>
@@ -400,7 +404,7 @@
                     </div>
                 </div>
             </div>
-            <div class="window-divider" style="background:var(--primary, #aa55ff);"></div>
+            <div class="window-divider" style="background:var(--primary, #9664ff);"></div>
             <div class="window-content">
                 <div class="wallpaper-grid" id="wallpaperGrid"></div>
             </div>
@@ -420,7 +424,7 @@
                     </div>
                 </div>
             </div>
-            <div class="window-divider" style="background:var(--primary, #aa55ff);"></div>
+            <div class="window-divider" style="background:var(--primary, #9664ff);"></div>
             <div class="window-content">
                 <div class="wallpaper-grid" id="extraWallpaperGrid"></div>
             </div>
@@ -440,7 +444,7 @@
                     </div>
                 </div>
             </div>
-            <div class="window-divider" style="background:var(--primary, #aa55ff);"></div>
+            <div class="window-divider" style="background:var(--primary, #9664ff);"></div>
             <div class="window-content">
                 <div class="setting">
                     <div class="theme-grid" id="themeGrid"></div>
@@ -546,6 +550,7 @@ Machine)</div>
             var timeIndex = 0;
             var zerosMode = 2;   // 0=OFF, 1=ON, 2=Auto
             var ampmMode = 2;    // 0=OFF, 1=ON, 2=Auto
+            var invertedOn = false;
 
             var customPhotoData = null;
             var photoLoadGeneration = 0;
@@ -1054,8 +1059,8 @@ Machine)</div>
             }
             function restoreDefaults() {
                 timeIndex = 0;
-                zerosMode = 2;
-                ampmMode = 2;
+                zerosMode = 2;          // Auto
+                ampmMode = 2;           // Auto
                 selectedWallpaperId = 1;
                 selectedExtraWallpaperId = null;
                 customPhotoData = null;
@@ -1076,11 +1081,11 @@ Machine)</div>
                 updateCustomPhotoSection();
                 updateExtraDisplay();
 
-                document.querySelectorAll('.wallpaper-item').forEach(function(el){ el.classList.remove('selected'); });
+                document.querySelectorAll('.wallpaper-item').forEach(function(el) { el.classList.remove('selected'); });
                 var defaultWallpaper = document.querySelector('.wallpaper-item[data-id="1"]');
                 if (defaultWallpaper) defaultWallpaper.classList.add('selected');
 
-                document.querySelectorAll('.theme-item').forEach(function(el){ el.classList.remove('selected'); });
+                document.querySelectorAll('.theme-item').forEach(function(el) { el.classList.remove('selected'); });
                 var defaultTheme = document.querySelector('.theme-item[data-primary="#9664ff"]');
                 if (defaultTheme) defaultTheme.classList.add('selected');
 
@@ -1145,38 +1150,100 @@ Machine)</div>
                 if (stored) {
                     try {
                         var config = JSON.parse(stored);
-                        if (config.ClockMode !== undefined) { var val = parseInt(config.ClockMode,10); if(val===0) timeIndex=0; else if(val===1) timeIndex=1; else if(val===2) timeIndex=2; }
-                        if (config.LeadingZeros !== undefined) zerosOn = config.LeadingZeros === true;
-                        if (config.ShowAMPM !== undefined) ampmOn = config.ShowAMPM !== false;
+
+                        // Clock Mode
+                        if (config.ClockMode !== undefined) {
+                            var val = parseInt(config.ClockMode, 10);
+                            if (val === 0) timeIndex = 0;
+                            else if (val === 1) timeIndex = 1;
+                            else if (val === 2) timeIndex = 2;
+                        }
+
+                        // Leading Zeros – read integer, fallback to boolean
+                        if (config.LeadingZeros !== undefined) {
+                            var lz = parseInt(config.LeadingZeros, 10);
+                            if (!isNaN(lz) && lz >= 0 && lz <= 2) {
+                                zerosMode = lz;
+                            } else if (typeof config.LeadingZeros === 'boolean') {
+                                zerosMode = config.LeadingZeros ? 1 : 0;
+                            }
+                        }
+
+                        // Show AM/PM – read integer, fallback to boolean
+                        if (config.ShowAMPM !== undefined) {
+                            var ap = parseInt(config.ShowAMPM, 10);
+                            if (!isNaN(ap) && ap >= 0 && ap <= 2) {
+                                ampmMode = ap;
+                            } else if (typeof config.ShowAMPM === 'boolean') {
+                                ampmMode = config.ShowAMPM ? 1 : 0;
+                            }
+                        }
+
+                        // Wallpaper
                         if (config.Wallpaper !== undefined) {
-                            var wp = parseInt(config.Wallpaper,10);
-                            if(!isNaN(wp)) {
+                            var wp = parseInt(config.Wallpaper, 10);
+                            if (!isNaN(wp)) {
                                 selectedWallpaperId = wp;
-                                document.querySelectorAll('.wallpaper-item').forEach(function(el){ el.classList.toggle('selected', parseInt(el.dataset.id) === selectedWallpaperId); });
+                                document.querySelectorAll('.wallpaper-item').forEach(function(el) {
+                                    el.classList.toggle('selected', parseInt(el.dataset.id) === selectedWallpaperId);
+                                });
                                 updateCustomPhotoSection();
                             }
                         }
+
+                        // Custom Photo
                         if (config.CustomPhoto && selectedWallpaperId === 8) {
                             decodeCustomPhotoToThumbnail(config.CustomPhoto);
-                            customPhotoData = config.CustomPhoto;   // keep for later saves
+                            customPhotoData = config.CustomPhoto;
                         }
+
+                        // UI Color (including rainbow)
                         if (config.UI_Color) {
                             var c = config.UI_Color;
-                            if (c === 'rainbow') activateRainbowStandard();
-                            else if (c === 'rainbow_power') activateRainbowPowerSaving();
-                            else {
+                            if (c === 'rainbow') {
+                                activateRainbowStandard();
+                            } else if (c === 'rainbow_power') {
+                                activateRainbowPowerSaving();
+                            } else {
                                 rainbowActive = false;
                                 if (!c.startsWith('#')) c = '#' + c;
                                 document.getElementById('UI_Color').value = c;
                                 document.getElementById('customColorLabel').textContent = 'Color: ' + c;
                                 var variant = calculateVariant(c);
                                 var matched = false;
-                                themes.forEach(function(theme){ if(theme.primary.toLowerCase() === c.toLowerCase()){ matched = true; variant = theme.variant; } });
-                                if (!matched) document.querySelectorAll('.theme-item').forEach(function(el){ el.classList.remove('selected'); });
-                                else document.querySelectorAll('.theme-item').forEach(function(el){ if(el.dataset.primary.toLowerCase() === c.toLowerCase()) el.classList.add('selected'); else el.classList.remove('selected'); });
+                                themes.forEach(function(theme) {
+                                    if (theme.primary.toLowerCase() === c.toLowerCase()) {
+                                        matched = true;
+                                        variant = theme.variant;
+                                    }
+                                });
+                                if (!matched) {
+                                    document.querySelectorAll('.theme-item').forEach(function(el) { el.classList.remove('selected'); });
+                                } else {
+                                    document.querySelectorAll('.theme-item').forEach(function(el) {
+                                        if (el.dataset.primary.toLowerCase() === c.toLowerCase()) {
+                                            el.classList.add('selected');
+                                        } else {
+                                            el.classList.remove('selected');
+                                        }
+                                    });
+                                }
                                 applyStyles(c, variant);
                             }
+                        } else {
+                            rainbowActive = false;
+                            stopRainbowTimer();
+                            applyStyles('#9664ff', '#6442a5');
+                            document.getElementById('UI_Color').value = '#9664ff';
+                            document.getElementById('customColorLabel').textContent = 'Color: #9664ff';
+
+                            document.querySelectorAll('.theme-item').forEach(function(el) {
+                                el.classList.remove('selected');
+                            });
+                            var defaultTheme = document.querySelector('.theme-item[data-primary="#9664ff"]');
+                            if (defaultTheme) defaultTheme.classList.add('selected');
                         }
+
                         document.getElementById('topBarTitle').textContent = 'The World Machine';
                         updateDisplays();
 
@@ -1187,16 +1254,23 @@ Machine)</div>
                         if (showTimer) { clearTimeout(showTimer); showTimer = null; }
                         showApp();
                         return true;
-                    } catch(e) { console.warn('Error loading config', e); }
+                    } catch (e) {
+                        console.warn('Error loading config', e);
+                    }
                 }
+
+                // Retry logic
                 if (retries > 0) {
-                    setTimeout(function(){ loadConfig(retries-1); }, 500);
+                    setTimeout(function() { loadConfig(retries - 1); }, 500);
                     if (!showTimer) {
-                        showTimer = setTimeout(function(){ showApp(); }, 1000);
+                        showTimer = setTimeout(function() { showApp(); }, 1000);
                     }
                     return false;
                 } else {
-                    applyStyles('#9664ff','#6442a5');
+                    // FALLBACK: explicitly set Auto
+                    zerosMode = 2;
+                    ampmMode = 2;
+                    applyStyles('#9664ff', '#6442a5');
                     document.getElementById('UI_Color').value = '#9664ff';
                     document.getElementById('customColorLabel').textContent = 'Color: #9664ff';
                     document.getElementById('topBarTitle').textContent = 'The World Machine';
@@ -1204,7 +1278,7 @@ Machine)</div>
                     updateCustomPhotoSection();
                     updateExtraDisplay();
                     if (!showTimer) {
-                        showTimer = setTimeout(function(){ showApp(); }, 1000);
+                        showTimer = setTimeout(function() { showApp(); }, 1000);
                     }
                     return false;
                 }
@@ -1398,6 +1472,7 @@ Machine)</div>
             // ---------- INIT ----------
             buildThemeGrid();
             buildGrid();
+            updateDisplays();
             loadConfig(5);
             updateCustomPhotoSection();
 

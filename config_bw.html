@@ -5,6 +5,10 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>The World Machine Settings</title>
     <style>
+        :root {
+            --primary: #ffffff;
+            --primary-variant: #808080;
+        }
         @font-face { font-family: 'Volter'; src: url('https://raw.githubusercontent.com/GuruGitHubTheG/TWM/main/Volter.ttf') format('truetype'); }
         * { margin:0; padding:0; box-sizing:border-box; }
         body { font-family:'Volter',sans-serif; background:#000; color:#fff; padding:0; margin:0; min-height:100vh; }
@@ -323,7 +327,7 @@
                     <div class="setting-label-centered">Leading Zeros</div>
                     <div class="setting-rect">
                         <button class="btn-left" id="zerosLeft"><img src="https://raw.githubusercontent.com/GuruGitHubTheG/TWM/main/icons/left.png" alt="<"></button>
-                        <div class="setting-middle"><span class="setting-value" id="zerosDisplay">OFF</span></div>
+                        <div class="setting-middle"><span class="setting-value" id="zerosDisplay">Auto</span></div>
                         <button class="btn-right" id="zerosRight"><img src="https://raw.githubusercontent.com/GuruGitHubTheG/TWM/main/icons/right.png" alt=">"></button>
                     </div>
                 </div>
@@ -331,7 +335,7 @@
                     <div class="setting-label-centered">Show AM/PM</div>
                     <div class="setting-rect">
                         <button class="btn-left" id="ampmLeft"><img src="https://raw.githubusercontent.com/GuruGitHubTheG/TWM/main/icons/left.png" alt="<"></button>
-                        <div class="setting-middle"><span class="setting-value" id="ampmDisplay">ON</span></div>
+                        <div class="setting-middle"><span class="setting-value" id="ampmDisplay">Auto</span></div>
                         <button class="btn-right" id="ampmRight"><img src="https://raw.githubusercontent.com/GuruGitHubTheG/TWM/main/icons/right.png" alt=">"></button>
                     </div>
                 </div>
@@ -809,8 +813,8 @@ Machine)</div>
             }
             function restoreDefaults() {
                 timeIndex = 0;
-                zerosMode = 2;
-                ampmMode = 2;
+                zerosMode = 2;          // Auto
+                ampmMode = 2;           // Auto
                 invertedOn = false;
                 selectedWallpaperId = 1;
                 selectedExtraWallpaperId = null;
@@ -845,22 +849,59 @@ Machine)</div>
                 if (stored) {
                     try {
                         var config = JSON.parse(stored);
-                        if (config.ClockMode !== undefined) { var val = parseInt(config.ClockMode, 10); if (val === 0) timeIndex = 0; else if (val === 1) timeIndex = 1; else if (val === 2) timeIndex = 2; }
-                        if (config.LeadingZeros !== undefined) zerosOn = config.LeadingZeros === true;
-                        if (config.ShowAMPM !== undefined) ampmOn = config.ShowAMPM !== false;
-                        if (config.Inverted !== undefined) applyInversion(config.Inverted === true);
+
+                        // Clock Mode
+                        if (config.ClockMode !== undefined) {
+                            var val = parseInt(config.ClockMode, 10);
+                            if (val === 0) timeIndex = 0;
+                            else if (val === 1) timeIndex = 1;
+                            else if (val === 2) timeIndex = 2;
+                        }
+
+                        // Leading Zeros – read integer, fallback to boolean
+                        if (config.LeadingZeros !== undefined) {
+                            var lz = parseInt(config.LeadingZeros, 10);
+                            if (!isNaN(lz) && lz >= 0 && lz <= 2) {
+                                zerosMode = lz;
+                            } else if (typeof config.LeadingZeros === 'boolean') {
+                                zerosMode = config.LeadingZeros ? 1 : 0;
+                            }
+                        }
+
+                        // Show AM/PM – read integer, fallback to boolean
+                        if (config.ShowAMPM !== undefined) {
+                            var ap = parseInt(config.ShowAMPM, 10);
+                            if (!isNaN(ap) && ap >= 0 && ap <= 2) {
+                                ampmMode = ap;
+                            } else if (typeof config.ShowAMPM === 'boolean') {
+                                ampmMode = config.ShowAMPM ? 1 : 0;
+                            }
+                        }
+
+                        // Inverted
+                        if (config.Inverted !== undefined) {
+                            invertedOn = config.Inverted === true;
+                            applyInversion(invertedOn);
+                        }
+
+                        // Wallpaper
                         if (config.Wallpaper !== undefined) {
                             var wp = parseInt(config.Wallpaper, 10);
                             if (!isNaN(wp)) {
                                 selectedWallpaperId = wp;
-                                document.querySelectorAll('.wallpaper-item').forEach(function(el) { el.classList.toggle('selected', parseInt(el.dataset.id) === selectedWallpaperId); });
+                                document.querySelectorAll('.wallpaper-item').forEach(function(el) {
+                                    el.classList.toggle('selected', parseInt(el.dataset.id) === selectedWallpaperId);
+                                });
                                 updateCustomPhotoSection();
                             }
                         }
+
+                        // Custom Photo
                         if (config.CustomPhoto && selectedWallpaperId === 8) {
                             decodeCustomPhotoToThumbnail(config.CustomPhoto);
                             customPhotoData = config.CustomPhoto;
                         }
+
                         document.getElementById('topBarTitle').textContent = 'The World Machine';
                         updateDisplays();
 
@@ -871,8 +912,12 @@ Machine)</div>
                         if (showTimer) { clearTimeout(showTimer); showTimer = null; }
                         showApp();
                         return true;
-                    } catch (e) { console.warn('Error loading config', e); }
+                    } catch (e) {
+                        console.warn('Error loading config', e);
+                    }
                 }
+
+                // Retry logic
                 if (retries > 0) {
                     setTimeout(function() { loadConfig(retries - 1); }, 500);
                     if (!showTimer) {
@@ -880,6 +925,9 @@ Machine)</div>
                     }
                     return false;
                 } else {
+                    // FALLBACK: explicitly set Auto
+                    zerosMode = 2;
+                    ampmMode = 2;
                     document.getElementById('topBarTitle').textContent = 'The World Machine';
                     updateDisplays();
                     updateCustomPhotoSection();
@@ -1168,6 +1216,7 @@ Machine)</div>
             }
 
             buildGrid();
+            updateDisplays();
             loadConfig(5);
             updateCustomPhotoSection();
 
