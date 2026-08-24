@@ -531,7 +531,6 @@ Machine)</div>
 
     <script>
         (function() {
-            // ---------- QUERY PARAMETERS ----------
             function getQueryParam(param) {
                 var urlParams = new URLSearchParams(window.location.search);
                 return urlParams.get(param);
@@ -540,7 +539,6 @@ Machine)</div>
             var watchWidth = parseInt(getQueryParam('width'), 10) || 144;
             var watchHeight = parseInt(getQueryParam('height'), 10) || 168;
 
-            // ---------- WALLPAPERS ----------
             var wallpapers = [
                 { id: 1, label: 'The World\nMachine', image: 'https://raw.githubusercontent.com/GuruGitHubTheG/TWM/main/wallpapers/The_World_Machine_wallpaper.png' },
                 { id: 2, label: 'Barrens\nCraters', image: 'https://raw.githubusercontent.com/GuruGitHubTheG/TWM/main/wallpapers/Barrens_Craters_wallpaper.png' },
@@ -556,8 +554,8 @@ Machine)</div>
             var selectedWallpaperId = 1;
             var timeOptions = ['System', '12-Hour', '24-Hour'];
             var timeIndex = 0;
-            var zerosMode = 2;   // 0=OFF, 1=ON, 2=Auto
-            var ampmMode = 2;    // 0=OFF, 1=ON, 2=Auto
+            var zerosMode = 2;
+            var ampmMode = 2;
             var invertedOn = false;
 
             var customPhotoData = null;
@@ -567,13 +565,11 @@ Machine)</div>
             canvas.width = watchWidth;
             canvas.height = watchHeight;
 
-            // ---------- PENDING CUSTOM PHOTO ----------
             var pendingCustomPhotoData = null;
             var pendingCustomThumbSrc = null;
             var customPhotoModalPreviousWallpaperId = null;
             var customPhotoModalPreviousExtraWallpaperId = null;
 
-            // ---------- THEMES ----------
             var themes = [
                 { name: 'Purple', primary: '#9664ff', variant: '#6442a5' },
                 { name: 'Blue',   primary: '#746be6', variant: '#3a358c' },
@@ -596,7 +592,6 @@ Machine)</div>
             var POWER_RAINBOW_HUES = [0, 30, 60, 120, 180, 240, 270, 300];
             var rainbowStartTime = null;
 
-            // ---------- EXTRA WALLPAPERS ----------
             var showExtraWallpapers = false;
             var selectedExtraWallpaperId = null;
             var extraWallpapers = [
@@ -621,10 +616,41 @@ Machine)</div>
             var extraWallpaperSubfolder = (getQueryParam('platform') === 'emery') ? 'emery' : 'basalt';
             var extraWallpaperWatchBase = 'https://raw.githubusercontent.com/GuruGitHubTheG/TWM/main/wallpapers/more/' + extraWallpaperSubfolder + '/';
 
-            var flickWindowIndex = 1;   // 0=Never, 1=On Flick, 2=Always
+            var flickWindowIndex = 1;
             var flickWindowOptions = ['Never', 'On Flick', 'Always'];
 
-            // ---------- FADE-IN CONTROL ----------
+            var watchVersion = '1.0.0';
+
+            function parseVersion(v) {
+                var parts = String(v).split('.');
+                return {
+                    major: parseInt(parts[0], 10) || 0,
+                    minor: parseInt(parts[1], 10) || 0,
+                    patch: parseInt(parts[2], 10) || 0
+                };
+            }
+
+            function isVersionAtLeast(actual, required) {
+                var a = parseVersion(actual);
+                var r = parseVersion(required);
+                if (a.major !== r.major) return a.major > r.major;
+                if (a.minor !== r.minor) return a.minor > r.minor;
+                return a.patch >= r.patch;
+            }
+
+            function applyVersionGating() {
+                var elements = document.querySelectorAll('[data-min-version]');
+                elements.forEach(function(el) {
+                    var minVer = el.getAttribute('data-min-version');
+                    if (!minVer) return;
+                    if (!isVersionAtLeast(watchVersion, minVer)) {
+                        el.style.display = 'none';
+                    } else {
+                        el.style.display = '';
+                    }
+                });
+            }
+
             var appShown = false;
             var showTimer = null;
             function showApp() {
@@ -634,7 +660,6 @@ Machine)</div>
                 document.getElementById('app').classList.add('loaded');
             }
 
-            // ---------- CUSTOM PHOTO MODAL HELPERS ----------
             function showCustomPhotoModal() {
                 playNotificationSound();
                 document.getElementById('customPhotoModal').classList.add('active');
@@ -643,7 +668,6 @@ Machine)</div>
                 document.getElementById('customPhotoModal').classList.remove('active');
             }
 
-            // ---------- NOTIFICATIONS ----------
             var notifOrder = [2, 3, 4, 2, 2, 3, 4, 2, 2, 3, 4, 2];
             var notifIndex = 0;
             function playNotificationSound() {
@@ -653,7 +677,6 @@ Machine)</div>
                 notifIndex = (notifIndex + 1) % notifOrder.length;
             }
 
-            // ---------- COLOR HELPERS ----------
             function hexToRgb(hex) { hex = hex.replace('#',''); return { r:parseInt(hex.substring(0,2),16), g:parseInt(hex.substring(2,4),16), b:parseInt(hex.substring(4,6),16) }; }
             function rgbToHex(r,g,b) { return '#' + [r,g,b].map(x => Math.round(x).toString(16).padStart(2,'0')).join(''); }
             function hslToHex(h, s, l) {
@@ -691,7 +714,6 @@ Machine)</div>
                 document.querySelectorAll('.setting-middle').forEach(function(el){ el.style.borderTopColor = primaryColor; el.style.borderBottomColor = primaryColor; });
             }
 
-            // ---------- RAINBOW ----------
             function stopRainbowTimer() { if (rainbowTimer) { clearInterval(rainbowTimer); rainbowTimer = null; } }
             function startRainbowAnimation() {
                 stopRainbowTimer();
@@ -738,7 +760,6 @@ Machine)</div>
                 applyRainbowColors(primaryHex, variantHex);
             }
 
-            // ---------- DECODE CUSTOM PHOTO THUMBNAIL (16-colour palette) ----------
             function decodeCustomPhotoToThumbnail(photoData) {
                 if (!photoData || !photoData.compressed || !photoData.palette) return;
                 try {
@@ -784,7 +805,6 @@ Machine)</div>
                 } catch(e) { console.log('Failed to decode custom photo thumbnail: ' + e.message); }
             }
 
-            // ---------- UPDATE DISPLAYS ----------
             function updateDisplays() {
                 document.getElementById('timeDisplay').textContent = timeOptions[timeIndex];
                 var zeroLabels = ['OFF', 'ON', 'Auto'];
@@ -798,7 +818,6 @@ Machine)</div>
                 if (!show) hideCustomPhotoModal();
             }
 
-            // ---------- EXTRA WALLPAPERS DISPLAY ----------
             function updateExtraDisplay() {
                 document.getElementById('extraDisplay').textContent = showExtraWallpapers ? 'ON' : 'OFF';
                 var win = document.getElementById('extra-wallpaper-window');
@@ -872,7 +891,6 @@ Machine)</div>
                 loadExtraWallpaperUrl(watchUrl, title);
             }
 
-            // ---------- EXTRA WALLPAPER PACKING (16-colour, no dither) ----------
             function prepareExtraWallpaper(image, generation, sourceLabel) {
                 if (generation !== photoLoadGeneration) return;
                 try {
@@ -905,15 +923,12 @@ Machine)</div>
                 }
             }
 
-            // Fixed packColorNoDither: builds a proper 16‑colour palette and maps pixels correctly
             function packColorNoDither(data, width, height) {
-                // Build 16-color palette (IDs)
                 var paletteIds = buildPalette(data);
                 while (paletteIds.length < 16) {
                     paletteIds.push(paletteIds[0] || 0);
                 }
 
-                // Convert IDs to RGB objects for nearest matching
                 var paletteColors = paletteIds.map(function(id) {
                     return {
                         r: ((id >> 4) & 3) * 85,
@@ -939,7 +954,6 @@ Machine)</div>
                     }
                 }
 
-                // Pack palette in watch format
                 var paletteBytes = new Uint8Array(16);
                 for (var p = 0; p < 16; p++) {
                     paletteBytes[p] = 0xC0 | (paletteIds[p] & 0x3F);
@@ -947,7 +961,6 @@ Machine)</div>
                 return { pixelData: pixelData, palette: Array.from(paletteBytes), color: true };
             }
 
-            // ---------- SAVE / DISMISS ----------
             function saveConfig() {
                 var config = getConfig();
                 var json = JSON.stringify(config);
@@ -964,7 +977,6 @@ Machine)</div>
                 else window.location = 'pebblejs://close';
             }
 
-            // ---------- EVENT LISTENERS ----------
             document.getElementById('saveBtnTop').addEventListener('click', saveConfig);
             document.querySelectorAll('[id^="dismissBtn"]').forEach(function(btn){ btn.addEventListener('click', showAccessDeniedModal); });
             document.querySelectorAll('[id^="closeBtn"]').forEach(function(btn){ btn.addEventListener('click', showAccessDeniedModal); });
@@ -979,6 +991,7 @@ Machine)</div>
                 zerosMode = (zerosMode + 1) % 3;
                 updateDisplays();
             });
+
             document.getElementById('ampmLeft').addEventListener('click', function() {
                 ampmMode = (ampmMode - 1 + 3) % 3;
                 updateDisplays();
@@ -996,8 +1009,13 @@ Machine)</div>
                 var tempInput = document.createElement('input');
                 tempInput.type = 'color';
                 tempInput.value = document.getElementById('UI_Color').value || '#9664ff';
-                tempInput.style.position = 'absolute';
-                tempInput.style.left = '-9999px';
+                tempInput.style.position = 'fixed';
+                tempInput.style.left = '0';
+                tempInput.style.top = '0';
+                tempInput.style.width = '1px';
+                tempInput.style.height = '1px';
+                tempInput.style.opacity = '0';
+                tempInput.style.pointerEvents = 'none';
                 tempInput.addEventListener('input', function() {
                     rainbowActive = false;
                     var c = tempInput.value;
@@ -1010,10 +1028,13 @@ Machine)</div>
                 });
                 tempInput.addEventListener('change', function() { tempInput.remove(); });
                 document.body.appendChild(tempInput);
-                tempInput.click();
+                if (typeof tempInput.showPicker === 'function') {
+                    tempInput.showPicker();
+                } else {
+                    tempInput.click();
+                }
             });
 
-            // Custom photo modal buttons
             document.getElementById('customPhotoOkBtn').addEventListener('click', function() {
                 if (pendingCustomPhotoData) {
                     customPhotoData = pendingCustomPhotoData;
@@ -1051,7 +1072,6 @@ Machine)</div>
             document.getElementById('customPhotoCancelBtn').addEventListener('click', cancelCustomPhotoModal);
             document.getElementById('customPhotoModal').addEventListener('click', function(e) { if (e.target === this) cancelCustomPhotoModal(); });
 
-            // ---------- TOGGLE EXTRA WALLPAPERS ----------
             function toggleExtraWallpapers() {
                 if (!showExtraWallpapers) {
                     showModal(
@@ -1074,21 +1094,20 @@ Machine)</div>
                 updateDisplays();
             });
 
-            // ---------- RESTORE DEFAULTS ----------
             function confirmRestoreDefaults() {
                 showModal('Are you sure you would like to restore defaults?', function() { restoreDefaults(); }, null);
             }
             function restoreDefaults() {
                 timeIndex = 0;
-                zerosMode = 2;          // Auto
-                ampmMode = 2;           // Auto
+                zerosMode = 2;
+                ampmMode = 2;
                 selectedWallpaperId = 1;
                 selectedExtraWallpaperId = null;
                 customPhotoData = null;
                 showExtraWallpapers = false;
                 pendingCustomPhotoData = null;
                 pendingCustomThumbSrc = null;
-                flickWindowIndex = 1;   // On Flick
+                flickWindowIndex = 1;
 
                 rainbowActive = false;
                 stopRainbowTimer();
@@ -1121,7 +1140,6 @@ Machine)</div>
                 startRainbowAnimation();
             }
 
-            // ---------- BUILD THEME GRID ----------
             function buildThemeGrid() {
                 var container = document.getElementById('themeGrid');
                 container.innerHTML = '';
@@ -1166,7 +1184,6 @@ Machine)</div>
                 });
             }
 
-            // ---------- LOAD CONFIG ----------
             function loadConfig(retries) {
                 retries = retries || 3;
                 selectedExtraWallpaperId = null;
@@ -1175,7 +1192,6 @@ Machine)</div>
                     try {
                         var config = JSON.parse(stored);
 
-                        // Clock Mode
                         if (config.ClockMode !== undefined) {
                             var val = parseInt(config.ClockMode, 10);
                             if (val === 0) timeIndex = 0;
@@ -1183,7 +1199,6 @@ Machine)</div>
                             else if (val === 2) timeIndex = 2;
                         }
 
-                        // Leading Zeros – read integer, fallback to boolean
                         if (config.LeadingZeros !== undefined) {
                             var lz = parseInt(config.LeadingZeros, 10);
                             if (!isNaN(lz) && lz >= 0 && lz <= 2) {
@@ -1193,7 +1208,6 @@ Machine)</div>
                             }
                         }
 
-                        // Show AM/PM – read integer, fallback to boolean
                         if (config.ShowAMPM !== undefined) {
                             var ap = parseInt(config.ShowAMPM, 10);
                             if (!isNaN(ap) && ap >= 0 && ap <= 2) {
@@ -1203,13 +1217,17 @@ Machine)</div>
                             }
                         }
 
-                        // Flick Window
                         if (config.FlickWindow !== undefined) {
                             var fw = parseInt(config.FlickWindow, 10);
                             if (!isNaN(fw) && fw >= 0 && fw <= 2) flickWindowIndex = fw;
                         }
 
-                        // Wallpaper
+                        if (config.Version !== undefined) {
+                            watchVersion = config.Version;
+                        } else {
+                            watchVersion = '1.0.0';
+                        }
+
                         if (config.Wallpaper !== undefined) {
                             var wp = parseInt(config.Wallpaper, 10);
                             if (!isNaN(wp)) {
@@ -1221,13 +1239,11 @@ Machine)</div>
                             }
                         }
 
-                        // Custom Photo
                         if (config.CustomPhoto && selectedWallpaperId === 8) {
                             decodeCustomPhotoToThumbnail(config.CustomPhoto);
                             customPhotoData = config.CustomPhoto;
                         }
 
-                        // UI Color (including rainbow)
                         if (config.UI_Color) {
                             var c = config.UI_Color;
                             if (c === 'rainbow') {
@@ -1285,6 +1301,8 @@ Machine)</div>
                         showExtraWallpapers = (showExtra === 'true');
                         updateExtraDisplay();
 
+                        applyVersionGating();
+
                         if (showTimer) { clearTimeout(showTimer); showTimer = null; }
                         showApp();
                         return true;
@@ -1293,7 +1311,6 @@ Machine)</div>
                     }
                 }
 
-                // Retry logic
                 if (retries > 0) {
                     setTimeout(function() { loadConfig(retries - 1); }, 500);
                     if (!showTimer) {
@@ -1301,7 +1318,6 @@ Machine)</div>
                     }
                     return false;
                 } else {
-                    // FALLBACK: explicitly set Auto
                     zerosMode = 2;
                     ampmMode = 2;
                     applyStyles('#9664ff', '#6442a5');
@@ -1313,6 +1329,10 @@ Machine)</div>
                     updateDisplays();
                     updateCustomPhotoSection();
                     updateExtraDisplay();
+
+                    watchVersion = '1.0.0';
+                    applyVersionGating();
+
                     if (!showTimer) {
                         showTimer = setTimeout(function() { showApp(); }, 1000);
                     }
@@ -1320,7 +1340,6 @@ Machine)</div>
                 }
             }
 
-            // ---------- BUILD WALLPAPER GRID ----------
             function buildGrid() {
                 var grid = document.getElementById('wallpaperGrid');
                 grid.innerHTML = '';
@@ -1355,8 +1374,7 @@ Machine)</div>
                 });
             }
 
-            // ---------- CUSTOM PHOTO PROCESSING (16-colour) ----------
-            function setPhotoStatus(msg, isError) { /* no visible status */ }
+            function setPhotoStatus(msg, isError) { }
             function setSubmitDisabled(disabled) {
                 var btns = document.querySelectorAll('button[type="submit"], input[type="submit"], .save-btn');
                 for (var i = 0; i < btns.length; i++) { btns[i].disabled = disabled; btns[i].style.opacity = disabled ? '0.5' : '1'; }
@@ -1418,7 +1436,6 @@ Machine)</div>
             function quantizeColorAndPack(imageData,width,height){ var paletteIds=buildPalette(imageData.data); var palette=paletteIds.map(function(id){ var c=colorFromId(id); return { id:id, r:c.r*85, g:c.g*85, b:c.b*85 }; }); var rowBytes=Math.floor((width+1)/2); var pixelData=new Uint8Array(rowBytes*height); var data=imageData.data; var curR=new Float32Array(width+2),curG=new Float32Array(width+2),curB=new Float32Array(width+2); var nextR=new Float32Array(width+2),nextG=new Float32Array(width+2),nextB=new Float32Array(width+2); for(var y=0;y<height;y++){ for(var x=0;x<width;x++){ var idx=(y*width+x)*4; var r=clamp(data[idx]+curR[x+1],0,255), g=clamp(data[idx+1]+curG[x+1],0,255), b=clamp(data[idx+2]+curB[x+1],0,255); var pi=nearestPaletteIndex(r,g,b,palette); var chosen=palette[pi]; data[idx]=chosen.r; data[idx+1]=chosen.g; data[idx+2]=chosen.b; data[idx+3]=255; var byteIdx=y*rowBytes+Math.floor(x/2); if((x&1)===0) pixelData[byteIdx]=pi<<4; else pixelData[byteIdx]|=pi; var er=r-chosen.r,eg=g-chosen.g,eb=b-chosen.b; curR[x+2]+=er*7/16; curG[x+2]+=eg*7/16; curB[x+2]+=eb*7/16; nextR[x]+=er*3/16; nextG[x]+=eg*3/16; nextB[x]+=eb*3/16; nextR[x+1]+=er*5/16; nextG[x+1]+=eg*5/16; nextB[x+1]+=eb*5/16; nextR[x+2]+=er/16; nextG[x+2]+=eg/16; nextB[x+2]+=eb/16; } var tr=curR,tg=curG,tb=curB; curR=nextR; curG=nextG; curB=nextB; nextR=tr; nextG=tg; nextB=tb; for(var c=0;c<width+2;c++){ nextR[c]=0; nextG[c]=0; nextB[c]=0; } } var paletteBytes=new Uint8Array(16); var fallback=paletteIds.length?paletteIds[0]:0; for(var p=0;p<16;p++){ var id=p<paletteIds.length?paletteIds[p]:fallback; paletteBytes[p]=0xC0|id; } return { pixelData:pixelData, palette:Array.from(paletteBytes), color:true }; }
             function prepareImage(image, generation, sourceLabel, blockedRetry){ if(generation!==photoLoadGeneration) return; try{ var srcW=image.naturalWidth||image.width, srcH=image.naturalHeight||image.height; var ctx=canvas.getContext('2d'); ctx.fillStyle='#000'; ctx.fillRect(0,0,watchWidth,watchHeight); ctx.imageSmoothingEnabled=true; if(typeof ctx.imageSmoothingQuality!=='undefined') ctx.imageSmoothingQuality='high'; var scale=Math.max(watchWidth/srcW, watchHeight/srcH); var cropW=watchWidth/scale, cropH=watchHeight/scale; var sx=(srcW-cropW)/2, sy=(srcH-cropH)/2; ctx.drawImage(image,sx,sy,cropW,cropH,0,0,watchWidth,watchHeight); var imageData=ctx.getImageData(0,0,watchWidth,watchHeight); var result=quantizeColorAndPack(imageData,watchWidth,watchHeight); ctx.putImageData(imageData,0,0); canvas.style.display='block'; var binary=''; for(var i=0;i<result.pixelData.length;i++) binary+=String.fromCharCode(result.pixelData[i]); var compressed=LZString.compressToEncodedURIComponent(btoa(binary)); pendingCustomPhotoData={ compressed:compressed, palette:result.palette, color:true }; pendingCustomThumbSrc=canvas.toDataURL('image/png'); setSubmitDisabled(false); if(photoLoadTimer){ clearTimeout(photoLoadTimer); photoLoadTimer=null; } } catch(e){ var detail=e&&e.message?e.message:String(e); var blocked=e&&e.name==='SecurityError'; blocked=blocked||/cross-origin|cross origin|taint|insecure/i.test(detail); if(blocked&&blockedRetry) blockedRetry(); else if(blocked) failPhotoLoad(generation,'The image service returned data that the browser could not read.'); else failPhotoLoad(generation,'Photo processing failed: '+detail); } }
 
-            // ---------- FILE & URL INPUT HANDLERS ----------
             document.getElementById('photoFileBtn').addEventListener('click', function() { document.getElementById('photoFile').click(); });
             document.getElementById('photoFile').addEventListener('change', function(){ var file=this.files&&this.files[0]; if(!file) return; var generation=beginPhotoLoad('Loading photo file…'); var reader=new FileReader(); reader.onerror=function(){ failPhotoLoad(generation,'The photo could not be read.'); }; reader.onload=function(e){ var img=new Image(); img.onerror=function(){ failPhotoLoad(generation,'The selected image could not be decoded.'); }; img.onload=function(){ prepareImage(img,generation,'file'); }; img.src=e.target.result; }; reader.readAsDataURL(file); });
             document.getElementById('loadUrlBtn').addEventListener('click', function(){ loadImageUrl(false); });
@@ -1427,7 +1444,6 @@ Machine)</div>
             document.getElementById('photoUrl').addEventListener('input', function(){ resetPhotoLoad('URL changed. Tap Load URL to prepare it.', false); });
             document.getElementById('photoUrl').addEventListener('keydown', function(e){ if(e.key==='Enter'||e.keyCode===13){ e.preventDefault(); loadImageUrl(false); } });
 
-            // ---------- MODAL & RAINBOW ----------
             function activateRainbowStandard(){
                 document.querySelectorAll('.theme-item').forEach(function(el){ el.classList.remove('selected'); });
                 var rainbowItem=document.querySelector('.theme-item[data-rainbow="true"]');
@@ -1495,7 +1511,6 @@ Machine)</div>
             function showRainbowConfirm(){ showModal('This mode uses a lot of power.\nWould you like to use\npower-saving mode?', activateRainbowPowerSaving, activateRainbowStandard); }
             window.showTWMConfirm = function(){ showModal('Change Language?\n(This will restart The World\nMachine)', null, null); };
 
-            // ---------- GET CONFIG ----------
             function getConfig() {
                 var uiColor = savedUiColor;
                 if (uiColor !== 'rainbow' && uiColor !== 'rainbow_power') {
@@ -1508,14 +1523,15 @@ Machine)</div>
                     ShowAMPM: ampmMode,
                     Wallpaper: selectedWallpaperId,
                     Inverted: invertedOn,
-                    UI_Color: uiColor,        // ✅ now sends "9664ff"
+                    UI_Color: uiColor,
                     FlickWindow: flickWindowIndex
                 };
                 if (selectedWallpaperId === 8 && customPhotoData) config.CustomPhoto = customPhotoData;
                 return config;
             }
 
-            // ---------- INIT ----------
+            applyVersionGating();
+
             buildThemeGrid();
             buildGrid();
             updateDisplays();
