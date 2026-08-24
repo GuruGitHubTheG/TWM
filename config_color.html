@@ -183,6 +183,14 @@
             padding: 0;
         }
 
+        .hidden-color-input {
+            position: absolute;
+            width: 1px;
+            height: 1px;
+            opacity: 0;
+            pointer-events: none;
+        }
+
         @media (max-width: 400px) { .container { padding:0 5px; padding-top:76px; } .window-content { padding:20px 12px 12px 12px; } .window { border-width:4px; } .window-divider { height:10px; } }
         ::-webkit-scrollbar { width:0; background:transparent; }
 
@@ -275,8 +283,8 @@
 
         .custom-photo-preview {
             flex: 1 1 50%;
-            height: 164px;               /* fixed height matches right column */
-            min-height: 0;               /* allow shrinking if needed */
+            height: 164px;
+            min-height: 0;
             display: flex;
             align-items: center;
             justify-content: center;
@@ -377,19 +385,19 @@
                     </div>
                 </div>
                 <div class="setting-row">
-                    <div class="setting-label-centered">Show OneShot</div>
-                    <div class="setting-rect">
-                        <button class="btn-left" id="flickWindowLeft"><img src="https://raw.githubusercontent.com/GuruGitHubTheG/TWM/main/icons/left.png" alt="<"></button>
-                        <div class="setting-middle"><span class="setting-value" id="flickWindowDisplay">On Flick</span></div>
-                        <button class="btn-right" id="flickWindowRight"><img src="https://raw.githubusercontent.com/GuruGitHubTheG/TWM/main/icons/right.png" alt=">"></button>
-                    </div>
-                </div>
-                <div class="setting-row">
                     <div class="setting-label-centered">Show Extra Wallpapers</div>
                     <div class="setting-rect">
                         <button class="btn-left" id="extraLeft"><img src="https://raw.githubusercontent.com/GuruGitHubTheG/TWM/main/icons/left.png" alt="<"></button>
                         <div class="setting-middle"><span class="setting-value" id="extraDisplay">OFF</span></div>
                         <button class="btn-right" id="extraRight"><img src="https://raw.githubusercontent.com/GuruGitHubTheG/TWM/main/icons/right.png" alt=">"></button>
+                    </div>
+                </div>
+                <div class="setting-row">
+                    <div class="setting-label-centered">Show OneShot</div>
+                    <div class="setting-rect">
+                        <button class="btn-left" id="flickWindowLeft"><img src="https://raw.githubusercontent.com/GuruGitHubTheG/TWM/main/icons/left.png" alt="<"></button>
+                        <div class="setting-middle"><span class="setting-value" id="flickWindowDisplay">On Flick</span></div>
+                        <button class="btn-right" id="flickWindowRight"><img src="https://raw.githubusercontent.com/GuruGitHubTheG/TWM/main/icons/right.png" alt=">"></button>
                     </div>
                 </div>
                 <div class="setting-row">
@@ -458,10 +466,10 @@
                     <div class="theme-grid" id="themeGrid"></div>
                     <div class="setting-row" style="margin-top:24px;">
                         <div class="setting-label-centered" id="customColorLabel">Color: #9664ff</div>
-                        <button class="custom-color-btn" id="setCustomColorBtn">Set Custom Color</button>
+                        <label class="custom-color-btn" for="UI_Color">Set Custom Color</label>
+                        <input type="color" id="UI_Color" value="#9664ff" class="hidden-color-input">
+                        <input type="color" id="Secondary_Color" value="#6442a5" style="display:none;">
                     </div>
-                    <input type="color" id="UI_Color" value="#9664ff" style="display:none;">
-                    <input type="color" id="Secondary_Color" value="#6442a5" style="display:none;">
                 </div>
             </div>
         </div>
@@ -1005,34 +1013,31 @@ Machine)</div>
             document.getElementById('dismissBtnColor5').addEventListener('click', showAccessDeniedModal);
             document.getElementById('closeBtnColor5').addEventListener('click', showAccessDeniedModal);
             document.getElementById('restoreDefaultsBtn').addEventListener('click', confirmRestoreDefaults);
-            document.getElementById('setCustomColorBtn').addEventListener('click', function() {
-                var tempInput = document.createElement('input');
-                tempInput.type = 'color';
-                tempInput.value = document.getElementById('UI_Color').value || '#9664ff';
-                tempInput.style.position = 'fixed';
-                tempInput.style.left = '0';
-                tempInput.style.top = '0';
-                tempInput.style.width = '1px';
-                tempInput.style.height = '1px';
-                tempInput.style.opacity = '0';
-                tempInput.style.pointerEvents = 'none';
-                tempInput.addEventListener('input', function() {
-                    rainbowActive = false;
-                    var c = tempInput.value;
-                    document.getElementById('UI_Color').value = c;
-                    document.getElementById('customColorLabel').textContent = 'Color: ' + c;
-                    savedUiColor = c;
-                    var variant = calculateVariant(c);
-                    document.querySelectorAll('.theme-item').forEach(function(el){ el.classList.remove('selected'); });
-                    applyStyles(c, variant);
+
+            // Label fallback for Set Custom Color
+            var customColorLabel = document.querySelector('label[for="UI_Color"]');
+            if (customColorLabel) {
+                customColorLabel.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    var input = document.getElementById('UI_Color');
+                    if (input) {
+                        if (typeof input.showPicker === 'function') {
+                            input.showPicker();
+                        } else {
+                            input.click();
+                        }
+                    }
                 });
-                tempInput.addEventListener('change', function() { tempInput.remove(); });
-                document.body.appendChild(tempInput);
-                if (typeof tempInput.showPicker === 'function') {
-                    tempInput.showPicker();
-                } else {
-                    tempInput.click();
-                }
+            }
+
+            document.getElementById('UI_Color').addEventListener('input', function() {
+                var c = this.value;
+                document.getElementById('customColorLabel').textContent = 'Color: ' + c;
+                savedUiColor = c;
+                rainbowActive = false;
+                document.querySelectorAll('.theme-item').forEach(function(el){ el.classList.remove('selected'); });
+                var variant = calculateVariant(c);
+                applyStyles(c, variant);
             });
 
             document.getElementById('customPhotoOkBtn').addEventListener('click', function() {
