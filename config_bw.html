@@ -591,16 +591,22 @@ Machine)</div>
 
                 var watchVersion = '1.0.0';
 
-                // Immediately read version from stored config if available
-                var storedConfig = localStorage.getItem('twm_config');
-                if (storedConfig) {
-                    try {
-                        var parsedStored = JSON.parse(storedConfig);
-                        if (parsedStored.Version) {
-                            watchVersion = parsedStored.Version;
+                // First try query parameter (comes from pebble-js-app.js)
+                var versionParam = getQueryParam('version');
+                if (versionParam) {
+                    watchVersion = versionParam;
+                } else {
+                    // Fallback to stored config if available
+                    var storedConfig = localStorage.getItem('twm_config');
+                    if (storedConfig) {
+                        try {
+                            var parsedStored = JSON.parse(storedConfig);
+                            if (parsedStored.Version) {
+                                watchVersion = parsedStored.Version;
+                            }
+                        } catch (e) {
+                            // ignore malformed config
                         }
-                    } catch (e) {
-                        // ignore malformed config
                     }
                 }
 
