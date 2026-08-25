@@ -658,6 +658,20 @@ Machine)</div>
 
             var watchVersion = '1.0.0';
 
+            // Immediately read version from stored config if available
+            var storedConfig = localStorage.getItem('twm_config');
+            if (storedConfig) {
+                try {
+                    var parsedStored = JSON.parse(storedConfig);
+                    if (parsedStored.Version) {
+                        watchVersion = parsedStored.Version;
+                    }
+                } catch (e) {
+                    // ignore malformed config
+                }
+            }
+
+
             function parseVersion(v) {
                 var parts = String(v).split('.');
                 return {
