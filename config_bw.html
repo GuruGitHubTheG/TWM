@@ -1046,10 +1046,10 @@ Machine)</div>
                                 if (!isNaN(fw) && fw >= 0 && fw <= 2) flickWindowIndex = fw;
                             }
 
-                            if (config.Version !== undefined) {
+                            // Only use stored version if no query parameter was provided
+                            if (!getQueryParam('version') && config.Version !== undefined) {
                                 watchVersion = config.Version;
                             }
-                            // If no version in stored config, keep the one from the URL or previous value
 
                             if (config.HourlyVibration !== undefined) {
                                 var hv = parseInt(config.HourlyVibration, 10);
