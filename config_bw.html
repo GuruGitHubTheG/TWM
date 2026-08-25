@@ -833,6 +833,15 @@ Machine)</div>
 
                 function saveConfig() {
                     var config = getConfig();
+                    // Preserve the Version field from any previously stored config
+                    try {
+                        var oldConfig = JSON.parse(localStorage.getItem('twm_config') || '{}');
+                        if (oldConfig.Version) {
+                            config.Version = oldConfig.Version;
+                        }
+                    } catch (e) {
+                        // ignore malformed old config
+                    }
                     var json = JSON.stringify(config);
                     var encoded = encodeURIComponent(json);
                     localStorage.setItem('twm_config', json);
