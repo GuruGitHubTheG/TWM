@@ -404,8 +404,8 @@
                     </div>
                 </div>
 
-                <!-- Hourly Chime (only gabbro/flint) -->
-                <div class="setting-row" data-min-version="1.1.0" data-platforms="gabbro,flint">
+                <!-- Hourly Chime (only emery/flint) -->
+                <div class="setting-row" data-min-version="1.1.0" data-platforms="emery,flint">
                     <div class="setting-label-centered">Hourly Chime</div>
                     <div class="setting-rect">
                         <button class="btn-left" id="hourlyChimeLeft"><img src="https://raw.githubusercontent.com/GuruGitHubTheG/TWM/main/icons/left.png" alt="<"></button>
@@ -695,35 +695,36 @@ Machine)</div>
                 return a.patch >= r.patch;
             }
 
-            function applyVersionGating() {
-                var elements = document.querySelectorAll('[data-min-version]');
-                elements.forEach(function(el) {
-                    var minVer = el.getAttribute('data-min-version');
-                    if (!minVer) return;
-                    if (!isVersionAtLeast(watchVersion, minVer)) {
-                        el.style.display = 'none';
-                    } else {
-                        el.style.display = '';
-                    }
-                });
-            }
-
             var hourlyVibrationIndex = 0;        // 0=OFF,1=Short,2=Long,3=Double
             var btDisconnectVibrationIndex = 0;  // same
             var hourlyChimeOn = false;
 
             var vibrationOptions = ['OFF', 'Short', 'Long', 'Double'];
 
-            function applyPlatformGating() {
+            function applyFeatureGating() {
                 var currentPlatform = getQueryParam('platform') || 'basalt';
-                var elements = document.querySelectorAll('[data-platforms]');
+                var elements = document.querySelectorAll('[data-min-version], [data-platforms]');
                 elements.forEach(function(el) {
-                    var platforms = el.getAttribute('data-platforms').split(',');
-                    if (platforms.indexOf(currentPlatform) === -1) {
-                        el.style.display = 'none';
-                    } else {
-                        el.style.display = '';
+                    var show = true;
+
+                    // Check version requirement
+                    var minVer = el.getAttribute('data-min-version');
+                    if (minVer) {
+                        if (!isVersionAtLeast(watchVersion, minVer)) {
+                            show = false;
+                        }
                     }
+
+                    // Check platform requirement
+                    var platformsAttr = el.getAttribute('data-platforms');
+                    if (platformsAttr) {
+                        var platforms = platformsAttr.split(',');
+                        if (platforms.indexOf(currentPlatform) === -1) {
+                            show = false;
+                        }
+                    }
+
+                    el.style.display = show ? '' : 'none';
                 });
             }
 
@@ -1419,8 +1420,7 @@ Machine)</div>
                         showExtraWallpapers = (showExtra === 'true');
                         updateExtraDisplay();
 
-                        applyPlatformGating();
-                        applyVersionGating();
+                        applyFeatureGating();
 
                         if (showTimer) { clearTimeout(showTimer); showTimer = null; }
                         showApp();
@@ -1450,8 +1450,7 @@ Machine)</div>
                     updateExtraDisplay();
 
                     watchVersion = '1.0.0';
-                    applyPlatformGating();
-                    applyVersionGating();
+                    applyFeatureGating();
 
                     if (!showTimer) {
                         showTimer = setTimeout(function() { showApp(); }, 1000);
@@ -1653,8 +1652,7 @@ Machine)</div>
                 return config;
             }
 
-            applyPlatformGating();
-            applyVersionGating();
+            applyFeatureGating();
 
             buildThemeGrid();
             buildGrid();
