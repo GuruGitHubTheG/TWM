@@ -15,7 +15,9 @@ var KEY_LEADING_ZEROS = 5;
 var KEY_SHOW_AMPM = 6;
 var KEY_UI_COLOR = 7;
 var KEY_FLICK_WINDOW = 8;
-var KEY_FLICK_DURATION = 9;
+var KEY_HOURLY_VIBRATION = 21;
+var KEY_BT_DISCONNECT_VIBRATION = 22;
+var KEY_HOURLY_CHIME = 23;
 var KEY_IMAGE_REQUEST = 10;
 var KEY_IMAGE_BEGIN = 11;
 var KEY_IMAGE_WIDTH = 12;
@@ -41,6 +43,8 @@ var sending = false;
 var transfer = null;
 var pendingTransfer = null;
 var photoTransferGeneration = 0;
+
+var watchVersionFromConfig = null;
 
 // ---------- LZString Decompression (compressToEncodedURIComponent) ----------
 var LZString = (function() {
@@ -599,6 +603,16 @@ Pebble.addEventListener('showConfiguration', function() {
                     '?platform=' + platform +
                     '&width=' + dims.width +
                     '&height=' + dims.height;
+  
+    // Try to append version from stored config, if available
+    try {
+        var storedConfig = JSON.parse(localStorage.getItem('twm_config') || '{}');
+        if (storedConfig.Version) {
+            configPageUrl += '&version=' + encodeURIComponent(storedConfig.Version);
+        }
+    } catch (e) {
+        // ignore
+    }
 
     console.log('Config URL: ' + configPageUrl);
 
@@ -642,10 +656,16 @@ Pebble.addEventListener('appmessage', function(e) {
             var config = JSON.parse(json);
             localStorage.setItem('twm_config', JSON.stringify(config));
             console.log('Saved config to localStorage');
+    
+            // Update config page URL with version info
+            watchVersionFromConfig = config.Version || '1.0.0';
+            if (configPageUrl && configPageUrl.indexOf('version=') === -1) {
+                configPageUrl += '&version=' + encodeURIComponent(watchVersionFromConfig);
+            }
         } catch (err) {
             console.log('Error parsing ConfigData: ' + err);
         }
-
+    
         if (waitingForConfig) {
             waitingForConfig = false;
             if (configTimeout) {
@@ -736,16 +756,29 @@ Pebble.addEventListener('webviewclosed', function(e) {
     } else {
         dict[KEY_FLICK_WINDOW] = 1;
     }
-
-    // Flick Duration (0=Toggle, 1=5s, 2=10s, 3=15s, 4=30s, 5=60s)
-    if (config.FlickDuration !== undefined) {
-        var fd = parseInt(config.FlickDuration, 10);
-        if (!isNaN(fd) && fd >= 0 && fd <= 5) dict[KEY_FLICK_DURATION] = fd;
-        else dict[KEY_FLICK_DURATION] = 2;
+    
+    if (config.HourlyVibration !== undefined) {
+        var hv = parseInt(config.HourlyVibration, 10);
+        if (!isNaN(hv) && hv >= 0 && hv <= 3) dict[KEY_HOURLY_VIBRATION] = hv;
+        else dict[KEY_HOURLY_VIBRATION] = 0;
     } else {
-        dict[KEY_FLICK_DURATION] = 2;
+        dict[KEY_HOURLY_VIBRATION] = 0;
     }
-
+    
+    if (config.BTDisconnectVibration !== undefined) {
+        var btv = parseInt(config.BTDisconnectVibration, 10);
+        if (!isNaN(btv) && btv >= 0 && btv <= 3) dict[KEY_BT_DISCONNECT_VIBRATION] = btv;
+        else dict[KEY_BT_DISCONNECT_VIBRATION] = 0;
+    } else {
+        dict[KEY_BT_DISCONNECT_VIBRATION] = 0;
+    }
+    
+    if (config.HourlyChime !== undefined) {
+        dict[KEY_HOURLY_CHIME] = (config.HourlyChime === true || config.HourlyChime === 1) ? 1 : 0;
+    } else {
+        dict[KEY_HOURLY_CHIME] = 0;
+    }
+    
     if (config.Inverted !== undefined) dict[KEY_INVERTED] = (config.Inverted === true || config.Inverted === 'true') ? 1 : 0;
     if (config.UI_Color) dict[KEY_UI_COLOR] = config.UI_Color;
 
@@ -756,7 +789,9 @@ Pebble.addEventListener('webviewclosed', function(e) {
         LeadingZeros: String(dict[KEY_LEADING_ZEROS]),
         ShowAMPM: String(dict[KEY_SHOW_AMPM]),
         FlickWindow: String(dict[KEY_FLICK_WINDOW]),
-        FlickDuration: String(dict[KEY_FLICK_DURATION]),
+        HourlyVibration: String(dict[KEY_HOURLY_VIBRATION]),
+        BTDisconnectVibration: String(dict[KEY_BT_DISCONNECT_VIBRATION]),
+        HourlyChime: String(dict[KEY_HOURLY_CHIME]),
         Inverted: String(config.Inverted !== undefined ? config.Inverted : false),
         UI_Color: config.UI_Color || 'aa55ff'
     };

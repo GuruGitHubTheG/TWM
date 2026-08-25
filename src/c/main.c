@@ -1,5 +1,7 @@
 #include <pebble.h>
 
+#define WATCH_VERSION "1.1.0"
+
 // ---------- EXPLICIT MESSAGE KEYS ----------
 #define KEY_REQUEST_CONFIG         0
 #define KEY_CONFIG_DATA            1
@@ -10,6 +12,10 @@
 #define KEY_SHOW_AMPM              6
 #define KEY_UI_COLOR               7
 #define KEY_FLICK_WINDOW           8
+
+#define KEY_HOURLY_VIBRATION          21
+#define KEY_BT_DISCONNECT_VIBRATION   22
+#define KEY_HOURLY_CHIME              23
 
 // Custom image transfer keys
 #define KEY_IMAGE_REQUEST          10
@@ -33,6 +39,10 @@
 #define PERSIST_UI_COLOR       107
 #define PERSIST_RAINBOW_MODE   106
 #define PERSIST_FLICK_WINDOW   206
+
+#define PERSIST_HOURLY_VIBRATION          208
+#define PERSIST_BT_DISCONNECT_VIBRATION   209
+#define PERSIST_HOURLY_CHIME              210
 
 // Custom photo persistence (single slot)
 #define PERSIST_PHOTO_META      901
@@ -133,6 +143,10 @@ static uint8_t s_request_attempts = 0;
 static int s_flick_window = 1;        // 0=Never, 1=On Flick, 2=Always
 static bool s_flick_visible = false;  // current visibility state of the flick window
 static AppTimer *s_flick_timer = NULL;
+
+static int  s_hourly_vibration = 0;        // 0=OFF,1=Short,2=Long,3=Double
+static int  s_bt_disconnect_vibration = 0; // 0=OFF,1=Short,2=Long,3=Double
+static bool s_hourly_chime = false;        // false=OFF, true=ON
 
 // Forward declarations
 static void schedule_image_request(void);
@@ -279,6 +293,21 @@ static void load_settings(void) {
         s_flick_window = persist_read_int(PERSIST_FLICK_WINDOW);
     else
         s_flick_window = 1; // default On Flick
+    
+    if (persist_exists(PERSIST_HOURLY_VIBRATION))
+        s_hourly_vibration = persist_read_int(PERSIST_HOURLY_VIBRATION);
+    else
+        s_hourly_vibration = 0;
+    
+    if (persist_exists(PERSIST_BT_DISCONNECT_VIBRATION))
+        s_bt_disconnect_vibration = persist_read_int(PERSIST_BT_DISCONNECT_VIBRATION);
+    else
+        s_bt_disconnect_vibration = 0;
+    
+    if (persist_exists(PERSIST_HOURLY_CHIME))
+        s_hourly_chime = persist_read_bool(PERSIST_HOURLY_CHIME);
+    else
+        s_hourly_chime = false;
 }
 
 static void save_settings(void) {
@@ -300,6 +329,162 @@ static void save_settings(void) {
 #endif
 
     persist_write_int(PERSIST_FLICK_WINDOW, s_flick_window);
+    persist_write_int(PERSIST_HOURLY_VIBRATION, s_hourly_vibration);
+    persist_write_int(PERSIST_BT_DISCONNECT_VIBRATION, s_bt_disconnect_vibration);
+    persist_write_bool(PERSIST_HOURLY_CHIME, s_hourly_chime);
+}
+
+static void perform_vibration(int mode) {
+    switch (mode) {
+        case 1: vibes_short_pulse(); break;
+        case 2: vibes_long_pulse(); break;
+        case 3: vibes_double_pulse(); break;
+        default: break;
+    }
+}
+
+// ---------- PCM SOUND PLAYER (Emery/Flint only) ----------
+#if defined(PBL_PLATFORM_EMERY) || defined(PBL_PLATFORM_FLINT)
+
+static uint8_t *s_active_wav = NULL;
+
+static void wav_finished_callback(SpeakerFinishReason reason, void *ctx) {
+    free(ctx);
+    s_active_wav = NULL;
+}
+
+static bool parse_wav_header(const uint8_t *data, size_t size,
+                              uint32_t *data_offset, uint32_t *data_size,
+                              uint16_t *bits_per_sample, uint32_t *sample_rate) {
+    if (size < 44) return false;
+    if (*(uint32_t*)data != 0x46464952 || *(uint32_t*)(data + 8) != 0x45564157)
+        return false;
+
+    size_t offset = 12;
+    *data_offset = 0;
+    *data_size = 0;
+
+    for (int chunk_idx = 0; chunk_idx < 100; chunk_idx++) {
+        if (offset + 8 > size) break;
+
+        uint32_t chunk_id = *(uint32_t*)(data + offset);
+        uint32_t chunk_size = *(uint32_t*)(data + offset + 4);
+
+        if (chunk_id == 0x20746d66) { // "fmt "
+            if (offset + 8 + 16 > size) return false;
+            uint16_t audio_format = *(uint16_t*)(data + offset + 8);
+            uint16_t num_channels   = *(uint16_t*)(data + offset + 10);
+            *sample_rate            = *(uint32_t*)(data + offset + 12);
+            *bits_per_sample        = *(uint16_t*)(data + offset + 22);
+
+            if (audio_format != 1) return false;
+            if (num_channels != 1) return false;
+            if (*bits_per_sample != 8 && *bits_per_sample != 16) return false;
+        } else if (chunk_id == 0x61746164) { // "data"
+            if (offset + 8 + chunk_size > size) return false;
+            *data_offset = offset + 8;
+            *data_size = chunk_size;
+            return true;
+        }
+
+        offset += 8 + ((chunk_size + 1) & ~1);
+    }
+
+    return (*data_offset != 0 && *data_size != 0);
+}
+
+static void play_wav_resource(uint32_t resource_id) {
+    if (s_active_wav != NULL) {
+        speaker_set_finish_callback(NULL, NULL);
+        speaker_stop();
+        free(s_active_wav);
+        s_active_wav = NULL;
+    }
+
+    ResHandle rh = resource_get_handle(resource_id);
+    size_t res_size = resource_size(rh);
+    if (res_size == 0 || res_size > 65536) return;
+
+    uint8_t *wav_data = malloc(res_size);
+    if (!wav_data) return;
+
+    resource_load_byte_range(rh, 0, wav_data, res_size);
+
+    uint32_t data_offset = 0, data_size = 0;
+    uint16_t bits_per_sample = 0;
+    uint32_t sample_rate = 0;
+
+    if (!parse_wav_header(wav_data, res_size, &data_offset, &data_size,
+                          &bits_per_sample, &sample_rate)) {
+        free(wav_data);
+        return;
+    }
+
+    if (data_offset + data_size > res_size) {
+        free(wav_data);
+        return;
+    }
+
+    if (data_size > 16384) {
+        data_size = 16384;
+    }
+
+    if (bits_per_sample == 8) {
+        uint8_t *samples = wav_data + data_offset;
+        for (uint32_t i = 0; i < data_size; i++) {
+            samples[i] ^= 0x80;
+        }
+    }
+
+    SpeakerPcmFormat format;
+    if (sample_rate == 8000) {
+        format = (bits_per_sample == 16) ? SpeakerPcmFormat_8kHz_16bit : SpeakerPcmFormat_8kHz_8bit;
+    } else if (sample_rate == 16000) {
+        format = (bits_per_sample == 16) ? SpeakerPcmFormat_16kHz_16bit : SpeakerPcmFormat_16kHz_8bit;
+    } else {
+        free(wav_data);
+        return;
+    }
+
+    SpeakerSample sample = {
+        .data = wav_data + data_offset,
+        .num_bytes = data_size,
+        .format = format,
+        .base_midi_note = 60,
+        .loop = false
+    };
+
+    SpeakerNote note = {
+        .midi_note = 60,
+        .waveform = 0,
+        .duration_ms = 30000,
+        .velocity = 127
+    };
+
+    SpeakerTrack track = {
+        .notes = &note,
+        .num_notes = 1,
+        .sample = &sample
+    };
+
+    speaker_set_finish_callback(wav_finished_callback, wav_data);
+    if (speaker_play_tracks(&track, 1, 80)) {
+        s_active_wav = wav_data;
+    } else {
+        free(wav_data);
+        speaker_set_finish_callback(NULL, NULL);
+    }
+}
+
+#endif // EMERY / FLINT
+
+static void perform_hourly_chime(void) {
+#if defined(PBL_PLATFORM_EMERY) || defined(PBL_PLATFORM_FLINT)
+    // Play audio chime (no vibration – that's the Hourly Vibration setting)
+    play_wav_resource(RESOURCE_ID_TWM_STARTUP_SOUND);
+#else
+    // No sound on other platforms; do nothing
+#endif
 }
 
 // ---------- TIME ----------
@@ -359,6 +544,14 @@ static void tick_handler(struct tm *tick_time, TimeUnits units_changed) {
     update_time();
     if (s_overlay_layer) {
         layer_mark_dirty(s_overlay_layer);
+    }
+    if (tick_time->tm_min == 0 && tick_time->tm_sec == 0) {
+        if (s_hourly_vibration != 0) {
+            perform_vibration(s_hourly_vibration);
+        }
+        if (s_hourly_chime) {
+            perform_hourly_chime();
+        }
     }
 }
 
@@ -488,7 +681,6 @@ static bool persist_custom_image(const uint8_t *pixel_data, uint32_t pixel_len,
         width = PBL_DISPLAY_WIDTH;
         height = PBL_DISPLAY_HEIGHT;
         total_len = pixel_len + palette_len;
-        const uint8_t *pixels = pixel_data;
         delete_photo_storage();
 
         uint16_t checksum = image_checksum(pixel_data, pixel_len);
@@ -1512,6 +1704,15 @@ static void main_window_unload(Window *window) {
         app_timer_cancel(s_flick_timer);
         s_flick_timer = NULL;
     }
+
+#if defined(PBL_PLATFORM_EMERY) || defined(PBL_PLATFORM_FLINT)
+    if (s_active_wav != NULL) {
+        speaker_set_finish_callback(NULL, NULL);
+        speaker_stop();
+        free(s_active_wav);
+        s_active_wav = NULL;
+    }
+#endif
 }
 
 // ---------- INBOX CALLBACK ----------
@@ -1525,14 +1726,19 @@ static void inbox_received_callback(DictionaryIterator *iter, void *context) {
         snprintf(json, sizeof(json),
             "{\"ClockMode\":%d,\"LeadingZeros\":%d,\"ShowAMPM\":%d,"
             "\"Wallpaper\":%d,\"Inverted\":%s,\"UI_Color\":\"%s\","
-            "\"FlickWindow\":%d}",
+            "\"FlickWindow\":%d,\"Version\":\"%s\","
+            "\"HourlyVibration\":%d,\"BTDisconnectVibration\":%d,\"HourlyChime\":%d}",
             s_clock_mode,
             s_leading_zeros_mode,
             s_show_ampm_mode,
             s_wallpaper_value,
             s_inverted ? "true" : "false",
             s_ui_color,
-            s_flick_window
+            s_flick_window,
+            WATCH_VERSION,
+            s_hourly_vibration,
+            s_bt_disconnect_vibration,
+            s_hourly_chime ? 1 : 0
         );
         DictionaryIterator *out;
         app_message_outbox_begin(&out);
@@ -1655,7 +1861,37 @@ static void inbox_received_callback(DictionaryIterator *iter, void *context) {
             }
         }
     }
-
+    
+    t = dict_find(iter, KEY_HOURLY_VIBRATION);
+    if (t) {
+        int val = (t->type == TUPLE_CSTRING) ? atoi(t->value->cstring) : t->value->int32;
+        if (val != s_hourly_vibration) {
+            s_hourly_vibration = val;
+            save_settings();
+            APP_LOG(APP_LOG_LEVEL_INFO, "HourlyVibration set to %d", val);
+        }
+    }
+    
+    t = dict_find(iter, KEY_BT_DISCONNECT_VIBRATION);
+    if (t) {
+        int val = (t->type == TUPLE_CSTRING) ? atoi(t->value->cstring) : t->value->int32;
+        if (val != s_bt_disconnect_vibration) {
+            s_bt_disconnect_vibration = val;
+            save_settings();
+            APP_LOG(APP_LOG_LEVEL_INFO, "BTDisconnectVibration set to %d", val);
+        }
+    }
+    
+    t = dict_find(iter, KEY_HOURLY_CHIME);
+    if (t) {
+        bool val = (t->value->int32 == 1);
+        if (val != s_hourly_chime) {
+            s_hourly_chime = val;
+            save_settings();
+            APP_LOG(APP_LOG_LEVEL_INFO, "HourlyChime set to %d", val);
+        }
+    }
+  
     // Custom image transfer
     t = dict_find(iter, KEY_IMAGE_DESIRED_CHECKSUM);
     if (t && s_wallpaper_value == WALLPAPER_CUSTOM) {
@@ -1735,6 +1971,11 @@ static void outbox_failed_handler(DictionaryIterator *iterator,
 }
 
 static void connection_handler(bool connected) {
+    if (!connected) {
+        if (s_bt_disconnect_vibration != 0) {
+            perform_vibration(s_bt_disconnect_vibration);
+        }
+    }
     if (!connected && s_transfer_active) {
         fail_transfer("phone disconnected");
         return;

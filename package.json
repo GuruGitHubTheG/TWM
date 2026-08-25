@@ -58,6 +58,15 @@
                     "type": "bitmap"
                 },
                 {
+                    "file": "data/twm-compressed-8k.wav",
+                    "name": "TWM_STARTUP_SOUND",
+                    "targetPlatforms": [
+                        "emery",
+                        "flint"
+                    ],
+                    "type": "raw"
+                },
+                {
                     "file": "images/lightbulb-inverted.png",
                     "name": "LIGHTBULB_INVERTED",
                     "targetPlatforms": [
@@ -275,5 +284,5 @@
             "watchface": true
         }
     },
-    "version": "1.0.0"
+    "version": "1.1.0"
 }
