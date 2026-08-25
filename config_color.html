@@ -1042,15 +1042,7 @@ Machine)</div>
 
             function saveConfig() {
                 var config = getConfig();
-                // Preserve the Version field from any previously stored config
-                try {
-                    var oldConfig = JSON.parse(localStorage.getItem('twm_config') || '{}');
-                    if (oldConfig.Version) {
-                        config.Version = oldConfig.Version;
-                    }
-                } catch (e) {
-                    // ignore malformed old config
-                }
+                config.Version = watchVersion;
                 var json = JSON.stringify(config);
                 var encoded = encodeURIComponent(json);
                 localStorage.setItem('twm_config', json);
@@ -1339,9 +1331,8 @@ Machine)</div>
 
                         if (config.Version !== undefined) {
                             watchVersion = config.Version;
-                        } else {
-                            watchVersion = '1.0.0';
                         }
+                        // If no version in stored config, keep the one from the URL or previous value
 
                         if (config.HourlyVibration !== undefined) {
                             var hv = parseInt(config.HourlyVibration, 10);
