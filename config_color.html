@@ -384,6 +384,35 @@
                         <button class="btn-right" id="ampmRight"><img src="https://raw.githubusercontent.com/GuruGitHubTheG/TWM/main/icons/right.png" alt=">"></button>
                     </div>
                 </div>
+                <!-- Hourly Vibration -->
+                <div class="setting-row" data-min-version="1.1.0">
+                    <div class="setting-label-centered">Hourly Vibration</div>
+                    <div class="setting-rect">
+                        <button class="btn-left" id="hourlyVibrationLeft"><img src="https://raw.githubusercontent.com/GuruGitHubTheG/TWM/main/icons/left.png" alt="<"></button>
+                        <div class="setting-middle"><span class="setting-value" id="hourlyVibrationDisplay">OFF</span></div>
+                        <button class="btn-right" id="hourlyVibrationRight"><img src="https://raw.githubusercontent.com/GuruGitHubTheG/TWM/main/icons/right.png" alt=">"></button>
+                    </div>
+                </div>
+
+                <!-- BT Disconnect Vibration -->
+                <div class="setting-row" data-min-version="1.1.0">
+                    <div class="setting-label-centered">BT Disconnect Vibration</div>
+                    <div class="setting-rect">
+                        <button class="btn-left" id="btDisconnectVibrationLeft"><img src="https://raw.githubusercontent.com/GuruGitHubTheG/TWM/main/icons/left.png" alt="<"></button>
+                        <div class="setting-middle"><span class="setting-value" id="btDisconnectVibrationDisplay">OFF</span></div>
+                        <button class="btn-right" id="btDisconnectVibrationRight"><img src="https://raw.githubusercontent.com/GuruGitHubTheG/TWM/main/icons/right.png" alt=">"></button>
+                    </div>
+                </div>
+
+                <!-- Hourly Chime (only gabbro/flint) -->
+                <div class="setting-row" data-min-version="1.1.0" data-platforms="gabbro,flint">
+                    <div class="setting-label-centered">Hourly Chime</div>
+                    <div class="setting-rect">
+                        <button class="btn-left" id="hourlyChimeLeft"><img src="https://raw.githubusercontent.com/GuruGitHubTheG/TWM/main/icons/left.png" alt="<"></button>
+                        <div class="setting-middle"><span class="setting-value" id="hourlyChimeDisplay">OFF</span></div>
+                        <button class="btn-right" id="hourlyChimeRight"><img src="https://raw.githubusercontent.com/GuruGitHubTheG/TWM/main/icons/right.png" alt=">"></button>
+                    </div>
+                </div>
                 <div class="setting-row">
                     <div class="setting-label-centered">Show Extra Wallpapers</div>
                     <div class="setting-rect">
@@ -659,6 +688,25 @@ Machine)</div>
                 });
             }
 
+            var hourlyVibrationIndex = 0;        // 0=OFF,1=Short,2=Long,3=Double
+            var btDisconnectVibrationIndex = 0;  // same
+            var hourlyChimeOn = false;
+
+            var vibrationOptions = ['OFF', 'Short', 'Long', 'Double'];
+
+            function applyPlatformGating() {
+                var currentPlatform = getQueryParam('platform') || 'basalt';
+                var elements = document.querySelectorAll('[data-platforms]');
+                elements.forEach(function(el) {
+                    var platforms = el.getAttribute('data-platforms').split(',');
+                    if (platforms.indexOf(currentPlatform) === -1) {
+                        el.style.display = 'none';
+                    } else {
+                        el.style.display = '';
+                    }
+                });
+            }
+
             var appShown = false;
             var showTimer = null;
             function showApp() {
@@ -820,6 +868,9 @@ Machine)</div>
                 var ampmLabels = ['OFF', 'ON', 'Auto'];
                 document.getElementById('ampmDisplay').textContent = ampmLabels[ampmMode];
                 document.getElementById('flickWindowDisplay').textContent = flickWindowOptions[flickWindowIndex];
+                document.getElementById('hourlyVibrationDisplay').textContent = vibrationOptions[hourlyVibrationIndex];
+                document.getElementById('btDisconnectVibrationDisplay').textContent = vibrationOptions[btDisconnectVibrationIndex];
+                document.getElementById('hourlyChimeDisplay').textContent = hourlyChimeOn ? 'ON' : 'OFF';
             }
             function updateCustomPhotoSection() {
                 var show = selectedWallpaperId === 8 && selectedExtraWallpaperId === null;
@@ -1014,6 +1065,33 @@ Machine)</div>
             document.getElementById('closeBtnColor5').addEventListener('click', showAccessDeniedModal);
             document.getElementById('restoreDefaultsBtn').addEventListener('click', confirmRestoreDefaults);
 
+            document.getElementById('hourlyVibrationLeft').addEventListener('click', function() {
+                hourlyVibrationIndex = (hourlyVibrationIndex - 1 + vibrationOptions.length) % vibrationOptions.length;
+                updateDisplays();
+            });
+            document.getElementById('hourlyVibrationRight').addEventListener('click', function() {
+                hourlyVibrationIndex = (hourlyVibrationIndex + 1) % vibrationOptions.length;
+                updateDisplays();
+            });
+
+            document.getElementById('btDisconnectVibrationLeft').addEventListener('click', function() {
+                btDisconnectVibrationIndex = (btDisconnectVibrationIndex - 1 + vibrationOptions.length) % vibrationOptions.length;
+                updateDisplays();
+            });
+            document.getElementById('btDisconnectVibrationRight').addEventListener('click', function() {
+                btDisconnectVibrationIndex = (btDisconnectVibrationIndex + 1) % vibrationOptions.length;
+                updateDisplays();
+            });
+
+            document.getElementById('hourlyChimeLeft').addEventListener('click', function() {
+                hourlyChimeOn = !hourlyChimeOn;
+                updateDisplays();
+            });
+            document.getElementById('hourlyChimeRight').addEventListener('click', function() {
+                hourlyChimeOn = !hourlyChimeOn;
+                updateDisplays();
+            });
+
             // Label fallback for Set Custom Color
             var customColorLabel = document.querySelector('label[for="UI_Color"]');
             if (customColorLabel) {
@@ -1113,6 +1191,9 @@ Machine)</div>
                 pendingCustomPhotoData = null;
                 pendingCustomThumbSrc = null;
                 flickWindowIndex = 1;
+                hourlyVibrationIndex = 0;
+                btDisconnectVibrationIndex = 0;
+                hourlyChimeOn = false;
 
                 rainbowActive = false;
                 stopRainbowTimer();
@@ -1233,6 +1314,18 @@ Machine)</div>
                             watchVersion = '1.0.0';
                         }
 
+                        if (config.HourlyVibration !== undefined) {
+                            var hv = parseInt(config.HourlyVibration, 10);
+                            if (!isNaN(hv) && hv >= 0 && hv <= 3) hourlyVibrationIndex = hv;
+                        }
+                        if (config.BTDisconnectVibration !== undefined) {
+                            var btv = parseInt(config.BTDisconnectVibration, 10);
+                            if (!isNaN(btv) && btv >= 0 && btv <= 3) btDisconnectVibrationIndex = btv;
+                        }
+                        if (config.HourlyChime !== undefined) {
+                            hourlyChimeOn = config.HourlyChime === true || config.HourlyChime === 1;
+                        }
+
                         if (config.Wallpaper !== undefined) {
                             var wp = parseInt(config.Wallpaper, 10);
                             if (!isNaN(wp)) {
@@ -1306,6 +1399,7 @@ Machine)</div>
                         showExtraWallpapers = (showExtra === 'true');
                         updateExtraDisplay();
 
+                        applyPlatformGating();
                         applyVersionGating();
 
                         if (showTimer) { clearTimeout(showTimer); showTimer = null; }
@@ -1336,6 +1430,7 @@ Machine)</div>
                     updateExtraDisplay();
 
                     watchVersion = '1.0.0';
+                    applyPlatformGating();
                     applyVersionGating();
 
                     if (!showTimer) {
@@ -1529,12 +1624,16 @@ Machine)</div>
                     Wallpaper: selectedWallpaperId,
                     Inverted: invertedOn,
                     UI_Color: uiColor,
-                    FlickWindow: flickWindowIndex
+                    FlickWindow: flickWindowIndex,
+                    HourlyVibration: hourlyVibrationIndex,
+                    BTDisconnectVibration: btDisconnectVibrationIndex,
+                    HourlyChime: hourlyChimeOn
                 };
                 if (selectedWallpaperId === 8 && customPhotoData) config.CustomPhoto = customPhotoData;
                 return config;
             }
 
+            applyPlatformGating();
             applyVersionGating();
 
             buildThemeGrid();
