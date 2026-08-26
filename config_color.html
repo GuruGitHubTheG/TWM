@@ -6,7 +6,7 @@
     <title>The World Machine Settings</title>
     <style>
         :root {
-            --primary: #aa55ff;
+            --primary: #9664ff;
             --primary-variant: #6442a5;
         }
         @font-face { font-family: 'Volter'; src: url('https://raw.githubusercontent.com/GuruGitHubTheG/TWM/main/Volter.ttf') format('truetype'); }
@@ -709,14 +709,18 @@ Machine)</div>
             var hourlyChimeOn = false;
 
             // --- Silence During Quiet Time ---
-            var silenceQuietTimeIndex = 0;
-            var silenceQuietTimeOptions = ['OFF', 'ON'];   // default for non-sound platforms
-            var silenceQuietTimeValues = [0, 3];           // map to actual values (0=OFF, 3=Both)
+            var silenceQuietTimeOptions;
+            var silenceQuietTimeValues;
+            var silenceQuietTimeIndex;
 
-            // Adjust based on platform
             if (currentPlatform === 'emery' || currentPlatform === 'flint') {
-                silenceQuietTimeOptions = ['OFF', 'Vibration Only', 'Sound Only', 'Both'];
+                silenceQuietTimeOptions = ['OFF', 'Vibration Only', 'Sound Only', 'Both Vibration and Sound'];
                 silenceQuietTimeValues = [0, 1, 2, 3];
+                silenceQuietTimeIndex = 3;   // Default: Both
+            } else {
+                silenceQuietTimeOptions = ['OFF', 'ON'];
+                silenceQuietTimeValues = [0, 3];
+                silenceQuietTimeIndex = 1;   // Default: ON
             }
 
             var vibrationOptions = ['OFF', 'Short', 'Long', 'Double'];
@@ -1244,7 +1248,7 @@ Machine)</div>
                 hourlyVibrationIndex = 0;
                 btDisconnectVibrationIndex = 0;
                 hourlyChimeOn = false;
-                silenceQuietTimeIndex = 0;
+                silenceQuietTimeIndex = (currentPlatform === 'emery' || currentPlatform === 'flint') ? 3 : 1;
 
                 rainbowActive = false;
                 stopRainbowTimer();
