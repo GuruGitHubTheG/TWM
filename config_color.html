@@ -660,7 +660,13 @@ Machine)</div>
                 { title: 'From Niko', file: 'From_Niko.png' }
             ];
             var extraWallpaperThumbBase = 'https://raw.githubusercontent.com/GuruGitHubTheG/TWM/main/wallpapers/more/';
-            var extraWallpaperSubfolder = (currentPlatform === 'emery') ? 'emery' : 'basalt';
+            var extraWallpaperSubfolderMap = {
+                'emery': 'emery',
+                'chalk': 'chalk',
+                'gabbro': 'gabbro',
+                'basalt': 'basalt'
+            };
+            var extraWallpaperSubfolder = extraWallpaperSubfolderMap[currentPlatform] || 'basalt';
             var extraWallpaperWatchBase = 'https://raw.githubusercontent.com/GuruGitHubTheG/TWM/main/wallpapers/more/' + extraWallpaperSubfolder + '/';
 
             var flickWindowIndex = 1;
@@ -969,7 +975,13 @@ Machine)</div>
                 updateCustomPhotoSection();
                 hideCustomPhotoModal();
 
-                var watchSuffix = (watchHeight === 228) ? '_228.png' : '_168.png';
+                var suffixMap = {
+                    168: '_168.png',   // Basalt
+                    180: '_180.png',   // Chalk
+                    228: '_228.png',   // Emery
+                    260: '_260.png'    // Gabbro
+                };
+                var watchSuffix = suffixMap[watchHeight] || '_168.png';
 
                 if (file === 'Secret_RAM_Club.png') {
                     showModal(
