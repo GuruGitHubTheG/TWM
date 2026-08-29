@@ -1,6 +1,6 @@
 #include <pebble.h>
 
-#define WATCH_VERSION "1.2.1"
+#define WATCH_VERSION "1.2.2"
 
 // ---------- EXPLICIT MESSAGE KEYS ----------
 #define KEY_REQUEST_CONFIG         0
@@ -16,7 +16,7 @@
 #define KEY_HOURLY_VIBRATION          21
 #define KEY_BT_DISCONNECT_VIBRATION   22
 #define KEY_HOURLY_CHIME              23
-#define KEY_SILENCE_QUIET_TIME        24   // NEW
+#define KEY_SILENCE_QUIET_TIME        24
 
 // Custom image transfer keys
 #define KEY_IMAGE_REQUEST          10
@@ -44,7 +44,7 @@
 #define PERSIST_HOURLY_VIBRATION          208
 #define PERSIST_BT_DISCONNECT_VIBRATION   209
 #define PERSIST_HOURLY_CHIME              210
-#define PERSIST_SILENCE_QUIET_TIME        211   // NEW
+#define PERSIST_SILENCE_QUIET_TIME        211
 
 // Custom photo persistence (single slot)
 #define PERSIST_PHOTO_META      901
@@ -150,6 +150,8 @@ static int  s_hourly_vibration = 0;        // 0=OFF,1=Short,2=Long,3=Double
 static int  s_bt_disconnect_vibration = 0; // 0=OFF,1=Short,2=Long,3=Double
 static bool s_hourly_chime = false;        // false=OFF, true=ON
 static int  s_silence_quiet_time = 3;      // 0=OFF, 1=Vibration Only, 2=Sound Only, 3=Both
+
+static int s_last_hour = -1;               // startup guard
 
 // Forward declarations
 static void schedule_image_request(void);
@@ -565,13 +567,19 @@ static void tick_handler(struct tm *tick_time, TimeUnits units_changed) {
         layer_mark_dirty(s_overlay_layer);
     }
 
-    // Hourly feedback triggered by hour change (not second‑level)
+    // Hourly feedback triggered by hour change (not second-level)
     if (units_changed & HOUR_UNIT) {
-        if (s_hourly_vibration != 0 && !should_silence_vibration()) {
-            perform_vibration(s_hourly_vibration);
-        }
-        if (s_hourly_chime && !should_silence_sound()) {
-            perform_hourly_chime();
+        // Guard against immediate trigger on startup
+        if (s_last_hour == -1) {
+            s_last_hour = tick_time->tm_hour;  // set initial hour, no feedback
+        } else if (tick_time->tm_hour != s_last_hour) {
+            s_last_hour = tick_time->tm_hour;
+            if (s_hourly_vibration != 0 && !should_silence_vibration()) {
+                perform_vibration(s_hourly_vibration);
+            }
+            if (s_hourly_chime && !should_silence_sound()) {
+                perform_hourly_chime();
+            }
         }
     }
 }
@@ -1904,6 +1912,17 @@ static void inbox_received_callback(DictionaryIterator *iter, void *context) {
             APP_LOG(APP_LOG_LEVEL_INFO, "BTDisconnectVibration set to %d", val);
         }
     }
+
+    // ADD THIS BLOCK (missing)
+    t = dict_find(iter, KEY_HOURLY_CHIME);
+    if (t) {
+        bool val = (t->value->int32 == 1);
+        if (val != s_hourly_chime) {
+            s_hourly_chime = val;
+            save_settings();
+            APP_LOG(APP_LOG_LEVEL_INFO, "HourlyChime set to %d", val);
+        }
+    }
     
     t = dict_find(iter, KEY_SILENCE_QUIET_TIME);
     if (t) {
@@ -2025,6 +2044,11 @@ static void init(void) {
         .unload = main_window_unload
     });
     window_stack_push(s_main_window, true);
+
+    // Set last_hour to current hour so we don't play hourly feedback immediately
+    time_t now = time(NULL);
+    struct tm *t = localtime(&now);
+    s_last_hour = t->tm_hour;
 
     tick_timer_service_subscribe(SECOND_UNIT | MINUTE_UNIT | HOUR_UNIT, tick_handler);
     connection_service_subscribe((ConnectionHandlers) {
