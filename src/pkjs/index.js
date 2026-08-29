@@ -18,6 +18,7 @@ var KEY_FLICK_WINDOW = 8;
 var KEY_HOURLY_VIBRATION = 21;
 var KEY_BT_DISCONNECT_VIBRATION = 22;
 var KEY_HOURLY_CHIME = 23;
+var KEY_SILENCE_QUIET_TIME = 24;
 var KEY_IMAGE_REQUEST = 10;
 var KEY_IMAGE_BEGIN = 11;
 var KEY_IMAGE_WIDTH = 12;
@@ -778,6 +779,14 @@ Pebble.addEventListener('webviewclosed', function(e) {
     } else {
         dict[KEY_HOURLY_CHIME] = 0;
     }
+  
+    if (config.SilenceQuietTime !== undefined) {
+        var sq = parseInt(config.SilenceQuietTime, 10);
+        if (!isNaN(sq) && sq >= 0 && sq <= 3) dict[KEY_SILENCE_QUIET_TIME] = sq;
+        else dict[KEY_SILENCE_QUIET_TIME] = 3;
+    } else {
+        dict[KEY_SILENCE_QUIET_TIME] = 3;
+    }
     
     if (config.Inverted !== undefined) dict[KEY_INVERTED] = (config.Inverted === true || config.Inverted === 'true') ? 1 : 0;
     if (config.UI_Color) dict[KEY_UI_COLOR] = config.UI_Color;
@@ -793,7 +802,8 @@ Pebble.addEventListener('webviewclosed', function(e) {
         BTDisconnectVibration: String(dict[KEY_BT_DISCONNECT_VIBRATION]),
         HourlyChime: String(dict[KEY_HOURLY_CHIME]),
         Inverted: String(config.Inverted !== undefined ? config.Inverted : false),
-        UI_Color: config.UI_Color || 'aa55ff'
+        UI_Color: config.UI_Color || 'aa55ff',
+        SilenceQuietTime: String(dict[KEY_SILENCE_QUIET_TIME])
     };
     localStorage.setItem('clay-settings', JSON.stringify(ordinarySettings));
 

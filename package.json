@@ -27,16 +27,12 @@
                     "targetPlatforms": [
                         "aplite",
                         "basalt",
+                        "chalk",
                         "diorite",
                         "emery",
+                        "gabbro",
                         "flint"
                     ],
-                    "type": "bitmap"
-                },
-                {
-                    "file": "images/taskbar.png",
-                    "name": "TASKBAR",
-                    "targetPlatforms": null,
                     "type": "bitmap"
                 },
                 {
@@ -79,7 +75,11 @@
                 {
                     "file": "images/showdesktop-inverted.png",
                     "name": "SHOW_DESKTOP_INVERTED",
-                    "targetPlatforms": null,
+                    "targetPlatforms": [
+                        "aplite",
+                        "diorite",
+                        "flint"
+                    ],
                     "type": "bitmap"
                 },
                 {
@@ -95,8 +95,10 @@
                     "targetPlatforms": [
                         "aplite",
                         "basalt",
+                        "chalk",
                         "diorite",
                         "emery",
+                        "gabbro",
                         "flint"
                     ],
                     "type": "bitmap"
@@ -107,8 +109,10 @@
                     "targetPlatforms": [
                         "aplite",
                         "basalt",
+                        "chalk",
                         "diorite",
                         "emery",
+                        "gabbro",
                         "flint"
                     ],
                     "type": "bitmap"
@@ -119,8 +123,10 @@
                     "targetPlatforms": [
                         "aplite",
                         "basalt",
+                        "chalk",
                         "diorite",
                         "emery",
+                        "gabbro",
                         "flint"
                     ],
                     "type": "bitmap"
@@ -131,8 +137,10 @@
                     "targetPlatforms": [
                         "aplite",
                         "basalt",
+                        "chalk",
                         "diorite",
                         "emery",
+                        "gabbro",
                         "flint"
                     ],
                     "type": "bitmap"
@@ -143,8 +151,10 @@
                     "targetPlatforms": [
                         "aplite",
                         "basalt",
+                        "chalk",
                         "diorite",
                         "emery",
+                        "gabbro",
                         "flint"
                     ],
                     "type": "bitmap"
@@ -155,8 +165,10 @@
                     "targetPlatforms": [
                         "aplite",
                         "basalt",
+                        "chalk",
                         "diorite",
                         "emery",
+                        "gabbro",
                         "flint"
                     ],
                     "type": "bitmap"
@@ -167,8 +179,10 @@
                     "targetPlatforms": [
                         "aplite",
                         "basalt",
+                        "chalk",
                         "diorite",
                         "emery",
+                        "gabbro",
                         "flint"
                     ],
                     "type": "bitmap"
@@ -219,7 +233,8 @@
                     "file": "images/minimize_button.png",
                     "name": "MINIMIZE_BUTTON",
                     "targetPlatforms": [
-                        "emery"
+                        "emery",
+                        "gabbro"
                     ],
                     "type": "bitmap"
                 },
@@ -233,7 +248,8 @@
                     "file": "images/maximize_button.png",
                     "name": "MAXIMIZE_BUTTON",
                     "targetPlatforms": [
-                        "emery"
+                        "emery",
+                        "gabbro"
                     ],
                     "type": "bitmap"
                 },
@@ -284,5 +300,5 @@
             "watchface": true
         }
     },
-    "version": "1.1.0"
+    "version": "1.2.1"
 }

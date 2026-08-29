@@ -1,6 +1,6 @@
 #include <pebble.h>
 
-#define WATCH_VERSION "1.1.0"
+#define WATCH_VERSION "1.2.1"
 
 // ---------- EXPLICIT MESSAGE KEYS ----------
 #define KEY_REQUEST_CONFIG         0
@@ -16,6 +16,7 @@
 #define KEY_HOURLY_VIBRATION          21
 #define KEY_BT_DISCONNECT_VIBRATION   22
 #define KEY_HOURLY_CHIME              23
+#define KEY_SILENCE_QUIET_TIME        24   // NEW
 
 // Custom image transfer keys
 #define KEY_IMAGE_REQUEST          10
@@ -43,6 +44,7 @@
 #define PERSIST_HOURLY_VIBRATION          208
 #define PERSIST_BT_DISCONNECT_VIBRATION   209
 #define PERSIST_HOURLY_CHIME              210
+#define PERSIST_SILENCE_QUIET_TIME        211   // NEW
 
 // Custom photo persistence (single slot)
 #define PERSIST_PHOTO_META      901
@@ -75,7 +77,7 @@ static int s_wallpaper_value = 1;
 static int s_clock_mode = 0;
 static int s_leading_zeros_mode = 2;   // 0=OFF, 1=ON, 2=Auto
 static int s_show_ampm_mode = 2;       // 0=OFF, 1=ON, 2=Auto
-static char s_ui_color[16] = "aa55ff";
+static char s_ui_color[16] = "9664ff";
 #ifdef PBL_COLOR
 static bool s_rainbow_active = false;
 static bool s_rainbow_power_saving = false;
@@ -91,7 +93,7 @@ static uint32_t s_lightbulb_res_id;
 static uint32_t s_desktop_res_id;
 static uint32_t s_oneshot_window_icon_res_id;
 static uint32_t s_close_button_res_id;
-#ifdef PBL_PLATFORM_EMERY
+#if defined(PBL_PLATFORM_EMERY) || defined(PBL_PLATFORM_GABBRO)
 static uint32_t s_minimize_button_res_id;
 static uint32_t s_maximize_button_res_id;
 #endif
@@ -106,7 +108,7 @@ static GBitmap *s_desktop_bitmap;
 static GBitmap *s_oneshot_window_icon_bitmap;
 static GBitmap *s_oneshot_window_content_bitmap;
 static GBitmap *s_close_button_bitmap;
-#ifdef PBL_PLATFORM_EMERY
+#if defined(PBL_PLATFORM_EMERY) || defined(PBL_PLATFORM_GABBRO)
 static GBitmap *s_minimize_button_bitmap;
 static GBitmap *s_maximize_button_bitmap;
 #endif
@@ -147,6 +149,7 @@ static AppTimer *s_flick_timer = NULL;
 static int  s_hourly_vibration = 0;        // 0=OFF,1=Short,2=Long,3=Double
 static int  s_bt_disconnect_vibration = 0; // 0=OFF,1=Short,2=Long,3=Double
 static bool s_hourly_chime = false;        // false=OFF, true=ON
+static int  s_silence_quiet_time = 3;      // 0=OFF, 1=Vibration Only, 2=Sound Only, 3=Both
 
 // Forward declarations
 static void schedule_image_request(void);
@@ -206,7 +209,7 @@ static void update_colors_and_resources(void) {
     s_desktop_res_id = RESOURCE_ID_SHOW_DESKTOP;
     s_oneshot_window_icon_res_id = RESOURCE_ID_ONESHOT_WINDOW_ICON;
     s_close_button_res_id = RESOURCE_ID_CLOSE_BUTTON;
-#ifdef PBL_PLATFORM_EMERY
+#if defined(PBL_PLATFORM_EMERY) || defined(PBL_PLATFORM_GABBRO)
     s_minimize_button_res_id = RESOURCE_ID_MINIMIZE_BUTTON;
     s_maximize_button_res_id = RESOURCE_ID_MAXIMIZE_BUTTON;
 #endif
@@ -308,6 +311,11 @@ static void load_settings(void) {
         s_hourly_chime = persist_read_bool(PERSIST_HOURLY_CHIME);
     else
         s_hourly_chime = false;
+  
+    if (persist_exists(PERSIST_SILENCE_QUIET_TIME))
+        s_silence_quiet_time = persist_read_int(PERSIST_SILENCE_QUIET_TIME);
+    else
+        s_silence_quiet_time = 3;
 }
 
 static void save_settings(void) {
@@ -332,6 +340,7 @@ static void save_settings(void) {
     persist_write_int(PERSIST_HOURLY_VIBRATION, s_hourly_vibration);
     persist_write_int(PERSIST_BT_DISCONNECT_VIBRATION, s_bt_disconnect_vibration);
     persist_write_bool(PERSIST_HOURLY_CHIME, s_hourly_chime);
+    persist_write_int(PERSIST_SILENCE_QUIET_TIME, s_silence_quiet_time);
 }
 
 static void perform_vibration(int mode) {
@@ -487,6 +496,16 @@ static void perform_hourly_chime(void) {
 #endif
 }
 
+static bool should_silence_vibration(void) {
+    if (!quiet_time_is_active()) return false;
+    return (s_silence_quiet_time == 1 || s_silence_quiet_time == 3);
+}
+
+static bool should_silence_sound(void) {
+    if (!quiet_time_is_active()) return false;
+    return (s_silence_quiet_time == 2 || s_silence_quiet_time == 3);
+}
+
 // ---------- TIME ----------
 static void update_time(void) {
     time_t now = time(NULL);
@@ -545,11 +564,13 @@ static void tick_handler(struct tm *tick_time, TimeUnits units_changed) {
     if (s_overlay_layer) {
         layer_mark_dirty(s_overlay_layer);
     }
-    if (tick_time->tm_min == 0 && tick_time->tm_sec == 0) {
-        if (s_hourly_vibration != 0) {
+
+    // Hourly feedback triggered by hour change (not second‑level)
+    if (units_changed & HOUR_UNIT) {
+        if (s_hourly_vibration != 0 && !should_silence_vibration()) {
             perform_vibration(s_hourly_vibration);
         }
-        if (s_hourly_chime) {
+        if (s_hourly_chime && !should_silence_sound()) {
             perform_hourly_chime();
         }
     }
@@ -1163,7 +1184,7 @@ static void apply_inverted(bool inverted) {
     }
     s_close_button_bitmap = gbitmap_create_with_resource(s_close_button_res_id);
 
-#ifdef PBL_PLATFORM_EMERY
+#if defined(PBL_PLATFORM_EMERY) || defined(PBL_PLATFORM_GABBRO)
     if (s_minimize_button_bitmap) {
         gbitmap_destroy(s_minimize_button_bitmap);
         s_minimize_button_bitmap = NULL;
@@ -1219,7 +1240,7 @@ static void apply_ui_color(const char *hex) {
 #define RECTANGLE_HEIGHT 24
 #define RECTANGLE_OFFSET_X 2
 #define RECTANGLE_OFFSET_Y 2
-#ifdef PBL_PLATFORM_EMERY
+#if defined(PBL_PLATFORM_EMERY) || defined(PBL_PLATFORM_GABBRO)
     #define RECTANGLE_WIDTH 90
 #else
     #define RECTANGLE_WIDTH 68
@@ -1248,7 +1269,7 @@ static void apply_ui_color(const char *hex) {
 
 // ---------- ONESHOT WINDOW CONSTANTS ----------
 #define ONESHOT_WIN_BORDER           2
-#ifdef PBL_PLATFORM_EMERY
+#if defined(PBL_PLATFORM_EMERY) || defined(PBL_PLATFORM_GABBRO)
   #define ONESHOT_WIN_CONTENT_W        160
   #define ONESHOT_WIN_CONTENT_H        120
 #else
@@ -1564,7 +1585,7 @@ static void oneshot_window_update_proc(Layer *layer, GContext *ctx) {
                        GRect(text_x, text_y, title_size.w, title_size.h),
                        GTextOverflowModeWordWrap, GTextAlignmentLeft, NULL);
 
-#ifdef PBL_PLATFORM_EMERY
+#if defined(PBL_PLATFORM_EMERY) || defined(PBL_PLATFORM_GABBRO)
     int close_x = win_x + ONESHOT_WIN_BORDER + ONESHOT_WIN_CONTENT_W
                   - ONESHOT_WIN_CLOSE_RIGHT_MARGIN - ONESHOT_WIN_ICON_SIZE;
     int maximize_x = close_x - ONESHOT_WIN_ICON_SIZE - 2;
@@ -1655,7 +1676,7 @@ static void main_window_load(Window *window) {
     s_oneshot_window_icon_bitmap = gbitmap_create_with_resource(s_oneshot_window_icon_res_id);
     s_oneshot_window_content_bitmap = gbitmap_create_with_resource(RESOURCE_ID_ONESHOT_WINDOW);
     s_close_button_bitmap = gbitmap_create_with_resource(s_close_button_res_id);
-#ifdef PBL_PLATFORM_EMERY
+#if defined(PBL_PLATFORM_EMERY) || defined(PBL_PLATFORM_GABBRO)
     s_minimize_button_bitmap = gbitmap_create_with_resource(s_minimize_button_res_id);
     s_maximize_button_bitmap = gbitmap_create_with_resource(s_maximize_button_res_id);
 #endif
@@ -1695,7 +1716,7 @@ static void main_window_unload(Window *window) {
     if (s_oneshot_window_icon_bitmap) gbitmap_destroy(s_oneshot_window_icon_bitmap);
     if (s_oneshot_window_content_bitmap) gbitmap_destroy(s_oneshot_window_content_bitmap);
     if (s_close_button_bitmap) gbitmap_destroy(s_close_button_bitmap);
-#ifdef PBL_PLATFORM_EMERY
+#if defined(PBL_PLATFORM_EMERY) || defined(PBL_PLATFORM_GABBRO)
     if (s_minimize_button_bitmap) gbitmap_destroy(s_minimize_button_bitmap);
     if (s_maximize_button_bitmap) gbitmap_destroy(s_maximize_button_bitmap);
 #endif
@@ -1727,7 +1748,8 @@ static void inbox_received_callback(DictionaryIterator *iter, void *context) {
             "{\"ClockMode\":%d,\"LeadingZeros\":%d,\"ShowAMPM\":%d,"
             "\"Wallpaper\":%d,\"Inverted\":%s,\"UI_Color\":\"%s\","
             "\"FlickWindow\":%d,\"Version\":\"%s\","
-            "\"HourlyVibration\":%d,\"BTDisconnectVibration\":%d,\"HourlyChime\":%d}",
+            "\"HourlyVibration\":%d,\"BTDisconnectVibration\":%d,\"HourlyChime\":%d,"
+            "\"SilenceQuietTime\":%d}",
             s_clock_mode,
             s_leading_zeros_mode,
             s_show_ampm_mode,
@@ -1738,7 +1760,8 @@ static void inbox_received_callback(DictionaryIterator *iter, void *context) {
             WATCH_VERSION,
             s_hourly_vibration,
             s_bt_disconnect_vibration,
-            s_hourly_chime ? 1 : 0
+            s_hourly_chime ? 1 : 0,
+            s_silence_quiet_time
         );
         DictionaryIterator *out;
         app_message_outbox_begin(&out);
@@ -1882,13 +1905,13 @@ static void inbox_received_callback(DictionaryIterator *iter, void *context) {
         }
     }
     
-    t = dict_find(iter, KEY_HOURLY_CHIME);
+    t = dict_find(iter, KEY_SILENCE_QUIET_TIME);
     if (t) {
-        bool val = (t->value->int32 == 1);
-        if (val != s_hourly_chime) {
-            s_hourly_chime = val;
+        int val = (t->type == TUPLE_CSTRING) ? atoi(t->value->cstring) : t->value->int32;
+        if (val != s_silence_quiet_time) {
+            s_silence_quiet_time = val;
             save_settings();
-            APP_LOG(APP_LOG_LEVEL_INFO, "HourlyChime set to %d", val);
+            APP_LOG(APP_LOG_LEVEL_INFO, "SilenceQuietTime set to %d", val);
         }
     }
   
@@ -1972,7 +1995,7 @@ static void outbox_failed_handler(DictionaryIterator *iterator,
 
 static void connection_handler(bool connected) {
     if (!connected) {
-        if (s_bt_disconnect_vibration != 0) {
+        if (s_bt_disconnect_vibration != 0 && !should_silence_vibration()) {
             perform_vibration(s_bt_disconnect_vibration);
         }
     }
@@ -2003,7 +2026,7 @@ static void init(void) {
     });
     window_stack_push(s_main_window, true);
 
-    tick_timer_service_subscribe(SECOND_UNIT, tick_handler);
+    tick_timer_service_subscribe(SECOND_UNIT | MINUTE_UNIT | HOUR_UNIT, tick_handler);
     connection_service_subscribe((ConnectionHandlers) {
         .pebble_app_connection_handler = connection_handler,
     });
