@@ -1,6 +1,6 @@
 #include <pebble.h>
 
-#define WATCH_VERSION "1.2.2"
+#define WATCH_VERSION "2.0.0"
 
 // ---------- EXPLICIT MESSAGE KEYS ----------
 #define KEY_REQUEST_CONFIG         0
@@ -595,6 +595,11 @@ static uint16_t image_checksum(const uint8_t *data, uint32_t length) {
 
 static void destroy_custom_image(void) {
     if (s_custom_wallpaper_bitmap) {
+        // Detach layer from bitmap to avoid dangling reference
+        if (s_wallpaper_layer) {
+            bitmap_layer_set_bitmap(s_wallpaper_layer, NULL);
+            layer_set_hidden(bitmap_layer_get_layer(s_wallpaper_layer), true);
+        }
         gbitmap_destroy(s_custom_wallpaper_bitmap);
         s_custom_wallpaper_bitmap = NULL;
     }
@@ -945,12 +950,24 @@ static bool load_persisted_custom_image(void) {
 #endif
     }
 
-    // Replace current image with the loaded one
-    destroy_custom_image();
+    // Replace current image with the loaded one (without black flash)
+    GBitmap *old_custom = s_custom_wallpaper_bitmap;
     s_custom_wallpaper_bitmap = full_bitmap;
     s_custom_wallpaper_valid = true;
     s_custom_wallpaper_is_low_depth = is_half;
     s_want_full_custom_image = is_half;   // request full if only half-res was loaded
+
+    // Update the layer to show the new bitmap before freeing old
+    if (s_wallpaper_layer) {
+        bitmap_layer_set_bitmap(s_wallpaper_layer, s_custom_wallpaper_bitmap);
+        layer_set_hidden(bitmap_layer_get_layer(s_wallpaper_layer), false);
+        if (s_main_window) window_set_background_color(s_main_window, GColorClear);
+    }
+
+    // Now it's safe to free the old bitmap
+    if (old_custom) {
+        gbitmap_destroy(old_custom);
+    }
 
     free(combined);
     APP_LOG(APP_LOG_LEVEL_INFO, "Custom image loaded: %s, checksum %s",
@@ -984,12 +1001,25 @@ static void begin_custom_image_transfer(uint16_t width, uint16_t height,
 
     cancel_transfer();
 
+    // We may need to free old bitmap to make room. But if old is half-res,
+    // we can attempt to keep it for seamless upgrade.
+    // Try to allocate new transfer buffer first.
     s_transfer_pixel_data = malloc(length);
     if (!s_transfer_pixel_data) {
-        gbitmap_destroy(bitmap);
-        APP_LOG(APP_LOG_LEVEL_ERROR, "Cannot allocate custom image buffer");
-        return;
+        // Allocation failed; we must free old custom bitmap and retry
+        if (s_custom_wallpaper_bitmap) {
+            destroy_custom_image();
+        }
+        s_transfer_pixel_data = malloc(length);
+        if (!s_transfer_pixel_data) {
+            gbitmap_destroy(bitmap);
+            APP_LOG(APP_LOG_LEVEL_ERROR, "Cannot allocate custom image buffer");
+            return;
+        }
     }
+
+    // If we freed the old bitmap above, we should hide the layer (already done by destroy_custom_image)
+    // Otherwise, the old image remains visible during transfer – nice.
 
     memcpy(s_transfer_palette, palette, CUSTOM_PALETTE_SIZE);
     s_transfer_bitmap = bitmap;
@@ -1007,6 +1037,11 @@ static void begin_custom_image_transfer(uint16_t width, uint16_t height,
 static void fail_transfer(const char *reason) {
     APP_LOG(APP_LOG_LEVEL_WARNING, "Custom image transfer failed: %s", reason);
     cancel_transfer();
+    // Try to restore previous custom image from persistence
+    if (s_wallpaper_value == WALLPAPER_CUSTOM) {
+        load_persisted_custom_image();
+        update_wallpaper();
+    }
     if (needs_custom_image()) {
         schedule_image_request();
     }
@@ -1033,20 +1068,30 @@ static void finish_custom_image_transfer(uint32_t length, uint16_t checksum) {
         APP_LOG(APP_LOG_LEVEL_WARNING, "Custom image persistence failed");
     }
 
-    destroy_custom_image();
+    // Swap to new bitmap before freeing old
+    GBitmap *old_custom = s_custom_wallpaper_bitmap;
+
     s_custom_wallpaper_bitmap = s_transfer_bitmap;
     s_custom_wallpaper_valid = true;
     s_custom_wallpaper_is_low_depth = false;
     s_want_full_custom_image = false;
-    s_transfer_bitmap = NULL;
+    s_transfer_bitmap = NULL;   // ownership transferred
+
+    // Update the layer to show the new bitmap
+    update_wallpaper();
+
+    // Now safe to destroy the old bitmap
+    if (old_custom) {
+        gbitmap_destroy(old_custom);
+    }
+
+    // Clean up transfer state
     s_transfer_active = false;
     cancel_transfer_timer();
-
     free(s_transfer_pixel_data);
     s_transfer_pixel_data = NULL;
 
     APP_LOG(APP_LOG_LEVEL_INFO, "Custom image ready");
-    update_wallpaper();
 }
 
 static void update_wallpaper(void) {
@@ -1243,16 +1288,13 @@ static void apply_ui_color(const char *hex) {
 #endif
 
 // ---------- LAYOUT CONSTANTS ----------
+// ---------- LAYOUT CONSTANTS ----------
 #define LINE_HEIGHT 28
 #define SEPARATOR_HEIGHT 2
 #define RECTANGLE_HEIGHT 24
-#define RECTANGLE_OFFSET_X 2
 #define RECTANGLE_OFFSET_Y 2
-#if defined(PBL_PLATFORM_EMERY) || defined(PBL_PLATFORM_GABBRO)
-    #define RECTANGLE_WIDTH 90
-#else
-    #define RECTANGLE_WIDTH 68
-#endif
+
+// Common offsets
 #define ANCHOR_WIDTH 26
 #define ANCHOR_HEIGHT 9
 #define ANCHOR_OFFSET_X 2
@@ -1272,8 +1314,35 @@ static void apply_ui_color(const char *hex) {
 #define ANCHOR_4X6_OFFSET_Y 0
 #define RECT_16X16_OFFSET_FROM_ANCHOR_X -16
 #define RECT_16X16_OFFSET_FROM_ANCHOR_Y -16
-#define LIGHTBULB_OFFSET_X 4
 #define LIGHTBULB_OFFSET_Y 4
+
+// Platform-specific: default (non-round, non-chalk)
+#if !defined(PBL_PLATFORM_CHALK) && !defined(PBL_PLATFORM_GABBRO)
+  #define RECTANGLE_OFFSET_X 2
+  #if defined(PBL_PLATFORM_EMERY)
+    #define RECTANGLE_WIDTH 90
+  #else
+    #define RECTANGLE_WIDTH 68
+  #endif
+  #define LIGHTBULB_OFFSET_X 4
+  #define CHALK_SPECIAL_LAYOUT 0
+#endif
+
+
+// Gabbro: time‑only centered (same as Chalk special layout)
+#if defined(PBL_PLATFORM_GABBRO)
+  #define RECTANGLE_OFFSET_X 2
+  #define RECTANGLE_WIDTH 90
+  #define LIGHTBULB_OFFSET_X 4
+  #define CHALK_SPECIAL_LAYOUT 1
+#endif
+
+// Chalk: special layout
+#if defined(PBL_PLATFORM_CHALK)
+  #define RECTANGLE_OFFSET_X 0   // not used in special layout
+  #define LIGHTBULB_OFFSET_X 4   // left padding inside button
+  #define CHALK_SPECIAL_LAYOUT 1
+#endif
 
 // ---------- ONESHOT WINDOW CONSTANTS ----------
 #define ONESHOT_WIN_BORDER           2
@@ -1469,7 +1538,13 @@ static void accel_tap_handler(AccelAxisType axis, int32_t direction) {
 
 // ---------- UI UPDATE PROCS ----------
 static void overlay_update_proc(Layer *layer, GContext *ctx) {
+#if defined(PBL_PLATFORM_GABBRO)
+    // On Gabbro, always use full bounds so the taskbar stays at the bottom
+    // even when Quick View is active.
+    GRect bounds = layer_get_bounds(layer);
+#else
     GRect bounds = layer_get_unobstructed_bounds(layer);
+#endif
     int w = bounds.size.w;
     int h = bounds.size.h;
 
@@ -1484,7 +1559,27 @@ static void overlay_update_proc(Layer *layer, GContext *ctx) {
     graphics_context_set_fill_color(ctx, s_accent_color);
     graphics_fill_rect(ctx, GRect(0, separator_y, w, SEPARATOR_HEIGHT), 0, GCornerNone);
 
-    // Only draw the OneShot taskbar button and text when the window is visible
+    // Update time string once
+    update_time();
+    GSize time_size = graphics_text_layout_get_content_size(s_time_buffer, s_text_font,
+                                                            GRect(0,0,200,200),
+                                                            GTextOverflowModeWordWrap,
+                                                            GTextAlignmentLeft);
+
+#if CHALK_SPECIAL_LAYOUT
+    // ---- SPECIAL TASKBAR (Chalk & Gabbro) ----
+    // Only the clock, centered horizontally.
+    int clock_y = h - time_size.h - TIME_TEXT_BOTTOM_OFFSET;
+    int clock_x = (w - time_size.w) / 2;
+
+    graphics_context_set_text_color(ctx, s_accent_color);
+    graphics_draw_text(ctx, s_time_buffer, s_text_font,
+                       GRect(clock_x, clock_y, time_size.w, time_size.h),
+                       GTextOverflowModeWordWrap, GTextAlignmentLeft, NULL);
+
+#else
+    // ---- Original (non‑special) taskbar ----
+    // OneShot button (with text if flick_visible)
     if (s_flick_visible) {
         int rx = RECTANGLE_OFFSET_X;
         int ry = h - RECTANGLE_OFFSET_Y - RECTANGLE_HEIGHT;
@@ -1499,6 +1594,7 @@ static void overlay_update_proc(Layer *layer, GContext *ctx) {
                                                ib.size.w, ib.size.h));
         }
 
+        // Draw "OneShot" text
         int ax = ANCHOR_OFFSET_X;
         int ay = h - ANCHOR_OFFSET_Y - ANCHOR_HEIGHT;
         int ar = ax + ANCHOR_WIDTH;
@@ -1515,12 +1611,7 @@ static void overlay_update_proc(Layer *layer, GContext *ctx) {
                            GTextOverflowModeWordWrap, GTextAlignmentLeft, NULL);
     }
 
-    // Time and desktop icon are always drawn
-    update_time();
-    GSize time_size = graphics_text_layout_get_content_size(s_time_buffer, s_text_font,
-                                                            GRect(0,0,200,200),
-                                                            GTextOverflowModeWordWrap,
-                                                            GTextAlignmentLeft);
+    // Draw clock (always)
     int base_x = w - time_size.w - TIME_TEXT_RIGHT_OFFSET;
     int base_y = h - time_size.h - TIME_TEXT_BOTTOM_OFFSET;
     graphics_context_set_text_color(ctx, s_accent_color);
@@ -1530,6 +1621,7 @@ static void overlay_update_proc(Layer *layer, GContext *ctx) {
                              time_size.w, time_size.h),
                        GTextOverflowModeWordWrap, GTextAlignmentRight, NULL);
 
+    // Draw desktop button (always, unless special layout)
     int a4x = w - ANCHOR_4X6_WIDTH - ANCHOR_4X6_RIGHT_OFFSET + ANCHOR_4X6_OFFSET_X;
     int a4y = h - ANCHOR_4X6_HEIGHT - ANCHOR_4X6_BOTTOM_OFFSET + ANCHOR_4X6_OFFSET_Y;
     int rx_16 = a4x + RECT_16X16_OFFSET_FROM_ANCHOR_X;
@@ -1541,6 +1633,7 @@ static void overlay_update_proc(Layer *layer, GContext *ctx) {
         graphics_draw_bitmap_in_rect(ctx, s_desktop_bitmap,
                                      GRect(rx_16, ry_16, 16, 16));
     }
+#endif
 }
 
 static void oneshot_window_update_proc(Layer *layer, GContext *ctx) {
