@@ -384,6 +384,24 @@
                         <button class="btn-right" id="ampmRight"><img src="https://raw.githubusercontent.com/GuruGitHubTheG/TWM/main/icons/right.png" alt=">"></button>
                     </div>
                 </div>
+                <!-- Date Format -->
+                <div class="setting-row" data-min-version="2.1.0">
+                    <div class="setting-label-centered">Date Format</div>
+                    <div class="setting-rect">
+                        <button class="btn-left" id="dateFormatLeft"><img src="https://raw.githubusercontent.com/GuruGitHubTheG/TWM/main/icons/left.png" alt="<"></button>
+                        <div class="setting-middle"><span class="setting-value" id="dateFormatDisplay">MM.DD.YYYY</span></div>
+                        <button class="btn-right" id="dateFormatRight"><img src="https://raw.githubusercontent.com/GuruGitHubTheG/TWM/main/icons/right.png" alt=">"></button>
+                    </div>
+                </div>
+                <!-- Date Separator -->
+                <div class="setting-row" data-min-version="2.1.0">
+                    <div class="setting-label-centered">Date Separator</div>
+                    <div class="setting-rect">
+                        <button class="btn-left" id="dateSeparatorLeft"><img src="https://raw.githubusercontent.com/GuruGitHubTheG/TWM/main/icons/left.png" alt="<"></button>
+                        <div class="setting-middle"><span class="setting-value" id="dateSeparatorDisplay">.</span></div>
+                        <button class="btn-right" id="dateSeparatorRight"><img src="https://raw.githubusercontent.com/GuruGitHubTheG/TWM/main/icons/right.png" alt=">"></button>
+                    </div>
+                </div>
                 <!-- Hourly Vibration -->
                 <div class="setting-row" data-min-version="1.1.0">
                     <div class="setting-label-centered">Hourly Vibration</div>
@@ -422,12 +440,30 @@
                         <button class="btn-right" id="silenceQuietTimeRight"><img src="https://raw.githubusercontent.com/GuruGitHubTheG/TWM/main/icons/right.png" alt=">"></button>
                     </div>
                 </div>
-                <div class="setting-row">
+                <div class="setting-row" data-max-version="2.0.0">
                     <div class="setting-label-centered">Show OneShot</div>
                     <div class="setting-rect">
                         <button class="btn-left" id="flickWindowLeft"><img src="https://raw.githubusercontent.com/GuruGitHubTheG/TWM/main/icons/left.png" alt="<"></button>
                         <div class="setting-middle"><span class="setting-value" id="flickWindowDisplay">On Flick</span></div>
                         <button class="btn-right" id="flickWindowRight"><img src="https://raw.githubusercontent.com/GuruGitHubTheG/TWM/main/icons/right.png" alt=">"></button>
+                    </div>
+                </div>
+                <!-- Active Window -->
+                <div class="setting-row" data-min-version="2.1.0">
+                    <div class="setting-label-centered">Active Window</div>
+                    <div class="setting-rect">
+                        <button class="btn-left" id="activeWindowLeft"><img src="https://raw.githubusercontent.com/GuruGitHubTheG/TWM/main/icons/left.png" alt="<"></button>
+                        <div class="setting-middle"><span class="setting-value" id="activeWindowDisplay">OneShot</span></div>
+                        <button class="btn-right" id="activeWindowRight"><img src="https://raw.githubusercontent.com/GuruGitHubTheG/TWM/main/icons/right.png" alt=">"></button>
+                    </div>
+                </div>
+                <!-- Show Window -->
+                <div class="setting-row" data-min-version="2.1.0">
+                    <div class="setting-label-centered">Show Window</div>
+                    <div class="setting-rect">
+                        <button class="btn-left" id="showWindowLeft"><img src="https://raw.githubusercontent.com/GuruGitHubTheG/TWM/main/icons/left.png" alt="<"></button>
+                        <div class="setting-middle"><span class="setting-value" id="showWindowDisplay">On Flick</span></div>
+                        <button class="btn-right" id="showWindowRight"><img src="https://raw.githubusercontent.com/GuruGitHubTheG/TWM/main/icons/right.png" alt=">"></button>
                     </div>
                 </div>
                 <div class="setting-row">
@@ -672,6 +708,17 @@ Machine)</div>
             var flickWindowIndex = 1;
             var flickWindowOptions = ['Never', 'On Flick', 'Always'];
 
+            var dateFormatIndex = 0;      // 0=MM.DD.YYYY, 1=DD.MM.YYYY, 2=YYYY.MM.DD
+            var dateSeparatorIndex = 0;   // 0='.', 1='/', 2='-', 3=' '
+            var activeWindowIndex = 0;    // 0=OneShot, 1=Timer
+            var showWindowIndex = 1;      // 0=Never, 1=On Flick, 2=Always
+
+            var dateFormatOptions = ['MM.DD.YYYY', 'DD.MM.YYYY', 'YYYY.MM.DD'];
+            var dateSeparatorOptions = ['.', '/', '-', ' '];
+            var dateSeparatorDisplayOptions = ['.', '/', '-', 'Space'];
+            var activeWindowOptions = ['OneShot', 'Timer'];
+            var showWindowOptions = ['Never', 'On Flick', 'Always'];
+
             var watchVersion = '1.0.0';
 
             // First try query parameter (comes from pebble-js-app.js)
@@ -710,6 +757,14 @@ Machine)</div>
                 return a.patch >= r.patch;
             }
 
+            function isVersionGreaterThan(actual, required) {
+                var a = parseVersion(actual);
+                var r = parseVersion(required);
+                if (a.major !== r.major) return a.major > r.major;
+                if (a.minor !== r.minor) return a.minor > r.minor;
+                return a.patch > r.patch;
+            }
+
             var hourlyVibrationIndex = 0;        // 0=OFF,1=Short,2=Long,3=Double
             var btDisconnectVibrationIndex = 0;  // same
             var hourlyChimeOn = false;
@@ -732,25 +787,21 @@ Machine)</div>
             var vibrationOptions = ['OFF', 'Short', 'Long', 'Double'];
 
             function applyFeatureGating() {
-                var elements = document.querySelectorAll('[data-min-version], [data-platforms]');
+                var elements = document.querySelectorAll('[data-min-version], [data-max-version], [data-platforms]');
                 elements.forEach(function(el) {
                     var show = true;
 
                     var minVer = el.getAttribute('data-min-version');
-                    if (minVer) {
-                        if (!isVersionAtLeast(watchVersion, minVer)) {
-                            show = false;
-                        }
-                    }
+                    if (minVer && !isVersionAtLeast(watchVersion, minVer)) show = false;
+
+                    var maxVer = el.getAttribute('data-max-version');
+                    if (maxVer && isVersionGreaterThan(watchVersion, maxVer)) show = false;
 
                     var platformsAttr = el.getAttribute('data-platforms');
                     if (platformsAttr) {
                         var platforms = platformsAttr.split(',');
-                        if (platforms.indexOf(currentPlatform) === -1) {
-                            show = false;
-                        }
+                        if (platforms.indexOf(currentPlatform) === -1) show = false;
                     }
-
                     el.style.display = show ? '' : 'none';
                 });
             }
@@ -909,6 +960,13 @@ Machine)</div>
                 } catch(e) { console.log('Failed to decode custom photo thumbnail: ' + e.message); }
             }
 
+            function updateDateFormatDisplay() {
+                var format = dateFormatOptions[dateFormatIndex];
+                var sep = dateSeparatorOptions[dateSeparatorIndex];
+                var display = format.replace(/\./g, sep);
+                document.getElementById('dateFormatDisplay').textContent = display;
+            }
+
             function updateDisplays() {
                 document.getElementById('timeDisplay').textContent = timeOptions[timeIndex];
                 var zeroLabels = ['OFF', 'ON', 'Auto'];
@@ -920,6 +978,10 @@ Machine)</div>
                 document.getElementById('btDisconnectVibrationDisplay').textContent = vibrationOptions[btDisconnectVibrationIndex];
                 document.getElementById('hourlyChimeDisplay').textContent = hourlyChimeOn ? 'ON' : 'OFF';
                 document.getElementById('silenceQuietTimeDisplay').textContent = silenceQuietTimeOptions[silenceQuietTimeIndex];
+                updateDateFormatDisplay();
+                document.getElementById('dateSeparatorDisplay').textContent = dateSeparatorDisplayOptions[dateSeparatorIndex];
+                document.getElementById('activeWindowDisplay').textContent = activeWindowOptions[activeWindowIndex];
+                document.getElementById('showWindowDisplay').textContent = showWindowOptions[showWindowIndex];
             }
             function updateCustomPhotoSection() {
                 var show = selectedWallpaperId === 8 && selectedExtraWallpaperId === null;
@@ -1115,6 +1177,51 @@ Machine)</div>
                 ampmMode = (ampmMode + 1) % 3;
                 updateDisplays();
             });
+
+            // Date Format
+            document.getElementById('dateFormatLeft').addEventListener('click', function() {
+                dateFormatIndex = (dateFormatIndex - 1 + dateFormatOptions.length) % dateFormatOptions.length;
+                updateDateFormatDisplay();
+                updateDisplays();
+            });
+            document.getElementById('dateFormatRight').addEventListener('click', function() {
+                dateFormatIndex = (dateFormatIndex + 1) % dateFormatOptions.length;
+                updateDateFormatDisplay();
+                updateDisplays();
+            });
+
+            // Date Separator
+            document.getElementById('dateSeparatorLeft').addEventListener('click', function() {
+                dateSeparatorIndex = (dateSeparatorIndex - 1 + dateSeparatorOptions.length) % dateSeparatorOptions.length;
+                updateDateFormatDisplay();
+                updateDisplays();
+            });
+            document.getElementById('dateSeparatorRight').addEventListener('click', function() {
+                dateSeparatorIndex = (dateSeparatorIndex + 1) % dateSeparatorOptions.length;
+                updateDateFormatDisplay();
+                updateDisplays();
+            });
+
+            // Active Window
+            document.getElementById('activeWindowLeft').addEventListener('click', function() {
+                activeWindowIndex = (activeWindowIndex - 1 + activeWindowOptions.length) % activeWindowOptions.length;
+                updateDisplays();
+            });
+            document.getElementById('activeWindowRight').addEventListener('click', function() {
+                activeWindowIndex = (activeWindowIndex + 1) % activeWindowOptions.length;
+                updateDisplays();
+            });
+
+            // Show Window
+            document.getElementById('showWindowLeft').addEventListener('click', function() {
+                showWindowIndex = (showWindowIndex - 1 + showWindowOptions.length) % showWindowOptions.length;
+                updateDisplays();
+            });
+            document.getElementById('showWindowRight').addEventListener('click', function() {
+                showWindowIndex = (showWindowIndex + 1) % showWindowOptions.length;
+                updateDisplays();
+            });
+
             document.getElementById('extraLeft').addEventListener('click', toggleExtraWallpapers);
             document.getElementById('extraRight').addEventListener('click', toggleExtraWallpapers);
             document.getElementById('dismissBtnColor5').addEventListener('click', showAccessDeniedModal);
@@ -1269,9 +1376,15 @@ Machine)</div>
                 document.getElementById('UI_Color').value = '#9664ff';
                 document.getElementById('customColorLabel').textContent = 'Color: #9664ff';
 
+                dateFormatIndex = 0;
+                dateSeparatorIndex = 0;
+                activeWindowIndex = 0;
+                showWindowIndex = 1;
+
                 localStorage.removeItem('twm_show_extra_wallpapers');
                 localStorage.removeItem('twm_selected_extra_wallpaper');
 
+                updateDateFormatDisplay();
                 updateDisplays();
                 updateCustomPhotoSection();
                 updateExtraDisplay();
@@ -1374,6 +1487,27 @@ Machine)</div>
                             var fw = parseInt(config.FlickWindow, 10);
                             if (!isNaN(fw) && fw >= 0 && fw <= 2) flickWindowIndex = fw;
                         }
+
+                        // ========== NEW SETTINGS (version 2.1.0+) ==========
+                        if (isVersionAtLeast(watchVersion, '2.1.0')) {
+                            if (config.ActiveWindow !== undefined) {
+                                var aw = parseInt(config.ActiveWindow, 10);
+                                if (!isNaN(aw) && aw >= 0 && aw <= 1) activeWindowIndex = aw;
+                            }
+                            if (config.ShowWindow !== undefined) {
+                                var sw = parseInt(config.ShowWindow, 10);
+                                if (!isNaN(sw) && sw >= 0 && sw <= 2) showWindowIndex = sw;
+                            }
+                            if (config.DateFormat !== undefined) {
+                                var df = parseInt(config.DateFormat, 10);
+                                if (!isNaN(df) && df >= 0 && df <= 2) dateFormatIndex = df;
+                            }
+                            if (config.DateSeparator !== undefined) {
+                                var ds = parseInt(config.DateSeparator, 10);
+                                if (!isNaN(ds) && ds >= 0 && ds <= 3) dateSeparatorIndex = ds;
+                            }
+                        }
+                        // ========== END NEW SETTINGS ==========
 
                         // Only use stored version if no query parameter was provided
                         if (!getQueryParam('version') && config.Version !== undefined) {
@@ -1695,13 +1829,23 @@ Machine)</div>
                     Wallpaper: selectedWallpaperId,
                     Inverted: invertedOn,
                     UI_Color: uiColor,
-                    FlickWindow: flickWindowIndex,
                     HourlyVibration: hourlyVibrationIndex,
                     BTDisconnectVibration: btDisconnectVibrationIndex,
                     HourlyChime: hourlyChimeOn,
                     SilenceQuietTime: silenceQuietTimeValues[silenceQuietTimeIndex]
                 };
+
+                // Conditionally add legacy FlickWindow for older watch versions
+                if (!isVersionAtLeast(watchVersion, '2.1.0')) {
+                    config.FlickWindow = flickWindowIndex;
+                }
                 if (selectedWallpaperId === 8 && customPhotoData) config.CustomPhoto = customPhotoData;
+                if (isVersionAtLeast(watchVersion, '2.1.0')) {
+                    config.ActiveWindow = activeWindowIndex;
+                    config.ShowWindow = showWindowIndex;
+                    config.DateFormat = dateFormatIndex;
+                    config.DateSeparator = dateSeparatorIndex;
+                }
                 return config;
             }
 
