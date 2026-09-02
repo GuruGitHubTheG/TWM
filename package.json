@@ -284,6 +284,30 @@
                         "flint"
                     ],
                     "type": "bitmap"
+                },
+                {
+                    "file": "images/timer.png",
+                    "name": "TIMER",
+                    "targetPlatforms": [
+                        "aplite",
+                        "basalt",
+                        "chalk",
+                        "diorite",
+                        "emery",
+                        "gabbro",
+                        "flint"
+                    ],
+                    "type": "bitmap"
+                },
+                {
+                    "file": "images/timer-inverted.png",
+                    "name": "TIMER_INVERTED",
+                    "targetPlatforms": [
+                        "aplite",
+                        "diorite",
+                        "flint"
+                    ],
+                    "type": "bitmap"
                 }
             ]
         },
@@ -302,5 +326,5 @@
             "watchface": true
         }
     },
-    "version": "2.0.0"
+    "version": "2.1.0"
 }

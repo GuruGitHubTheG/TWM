@@ -1,6 +1,9 @@
 #include <pebble.h>
 
-#define WATCH_VERSION "2.0.0"
+#define WATCH_VERSION "2.1.0"
+
+// Temporary settings variable: set to true to use Timer window, false for OneShot.
+static bool s_use_timer_window = false;
 
 // ---------- EXPLICIT MESSAGE KEYS ----------
 #define KEY_REQUEST_CONFIG         0
@@ -17,6 +20,12 @@
 #define KEY_BT_DISCONNECT_VIBRATION   22
 #define KEY_HOURLY_CHIME              23
 #define KEY_SILENCE_QUIET_TIME        24
+
+#define KEY_ACTIVE_WINDOW          25
+#define KEY_SHOW_WINDOW            26
+#define KEY_DATE_FORMAT            27
+#define KEY_DATE_SEPARATOR         28
+#define KEY_MONTH_FORMAT          29
 
 // Custom image transfer keys
 #define KEY_IMAGE_REQUEST          10
@@ -45,6 +54,12 @@
 #define PERSIST_BT_DISCONNECT_VIBRATION   209
 #define PERSIST_HOURLY_CHIME              210
 #define PERSIST_SILENCE_QUIET_TIME        211
+
+#define PERSIST_ACTIVE_WINDOW      212
+#define PERSIST_SHOW_WINDOW        213
+#define PERSIST_DATE_FORMAT        214
+#define PERSIST_DATE_SEPARATOR     215
+#define PERSIST_MONTH_FORMAT      216
 
 // Custom photo persistence (single slot)
 #define PERSIST_PHOTO_META      901
@@ -75,8 +90,8 @@
 static bool s_inverted = false;
 static int s_wallpaper_value = 1;
 static int s_clock_mode = 0;
-static int s_leading_zeros_mode = 2;   // 0=OFF, 1=ON, 2=Auto
-static int s_show_ampm_mode = 2;       // 0=OFF, 1=ON, 2=Auto
+static int s_leading_zeros_mode = 2;
+static int s_show_ampm_mode = 2;
 static char s_ui_color[16] = "9664ff";
 #ifdef PBL_COLOR
 static bool s_rainbow_active = false;
@@ -87,11 +102,13 @@ static uint8_t s_rainbow_power_hue_index = 0;
 
 static GColor s_dark_color;
 static GColor s_accent_color;
+static GColor s_variant_color;   // For punctuation flashing
 static GColor s_text_color;
 static GColor s_background_color;
-static uint32_t s_lightbulb_res_id;
+static uint32_t s_taskbar_icon_res_id;
 static uint32_t s_desktop_res_id;
 static uint32_t s_oneshot_window_icon_res_id;
+static uint32_t s_timer_window_icon_res_id;
 static uint32_t s_close_button_res_id;
 #if defined(PBL_PLATFORM_EMERY) || defined(PBL_PLATFORM_GABBRO)
 static uint32_t s_minimize_button_res_id;
@@ -103,9 +120,10 @@ static Layer *s_overlay_layer;
 static Layer *s_oneshot_window_layer;
 static BitmapLayer *s_wallpaper_layer;
 static GBitmap *s_wallpaper_bitmap;
-static GBitmap *s_lightbulb_bitmap;
+static GBitmap *s_taskbar_icon_bitmap;
 static GBitmap *s_desktop_bitmap;
 static GBitmap *s_oneshot_window_icon_bitmap;
+static GBitmap *s_timer_window_icon_bitmap;
 static GBitmap *s_oneshot_window_content_bitmap;
 static GBitmap *s_close_button_bitmap;
 #if defined(PBL_PLATFORM_EMERY) || defined(PBL_PLATFORM_GABBRO)
@@ -142,16 +160,27 @@ static AppTimer *s_request_timer = NULL;
 static uint8_t s_request_attempts = 0;
 
 // Flick globals
-static int s_flick_window = 1;        // 0=Never, 1=On Flick, 2=Always
-static bool s_flick_visible = false;  // current visibility state of the flick window
+static int s_flick_window = 1;
+static bool s_flick_visible = false;
 static AppTimer *s_flick_timer = NULL;
 
-static int  s_hourly_vibration = 0;        // 0=OFF,1=Short,2=Long,3=Double
-static int  s_bt_disconnect_vibration = 0; // 0=OFF,1=Short,2=Long,3=Double
-static bool s_hourly_chime = false;        // false=OFF, true=ON
-static int  s_silence_quiet_time = 3;      // 0=OFF, 1=Vibration Only, 2=Sound Only, 3=Both
+static int  s_hourly_vibration = 0;
+static int  s_bt_disconnect_vibration = 0;
+static bool s_hourly_chime = false;
+static int  s_silence_quiet_time = 3;
 
-static int s_last_hour = -1;               // startup guard
+static int s_last_hour = -1;
+
+// Timer window animation (for punctuation flashing and ms updates)
+static AppTimer *s_timer_window_flash_timer = NULL;
+static AppTimer *s_timer_window_ms_timer = NULL;
+static bool s_timer_punct_primary = true;
+
+static int s_active_window = 0;      // 0=OneShot, 1=Timer
+static int s_show_window = 1;        // 0=Never, 1=On Flick, 2=Always
+static int s_date_format = 0;        // 0=MM.DD.YYYY, 1=DD.MM.YYYY, 2=YYYY.MM.DD
+static int s_date_separator = 0;     // 0='.', 1='/', 2='-', 3=' '
+static int s_month_format = 0;     // 0=Numeric (12), 1=Abbreviated (DEC)
 
 // Forward declarations
 static void schedule_image_request(void);
@@ -161,6 +190,10 @@ static void update_time(void);
 static void overlay_update_proc(Layer *layer, GContext *ctx);
 static void oneshot_window_update_proc(Layer *layer, GContext *ctx);
 static void accel_tap_handler(AccelAxisType axis, int32_t direction);
+static void draw_oneshot_window(GContext *ctx);
+static void draw_timer_window(GContext *ctx);
+static void start_timer_window_anim(void);
+static void stop_timer_window_anim(void);
 
 typedef struct __attribute__((__packed__)) {
   uint32_t magic;
@@ -183,6 +216,26 @@ static GColor hex_to_gcolor(const char *hex) {
         else if (c >= 'A' && c <= 'F') val |= (c - 'A' + 10);
     }
     return GColorFromHEX(val);
+}
+
+static GColor get_variant_from_hex(const char *hex) {
+    uint32_t val = 0;
+    for (int i = 0; i < 6; i++) {
+        char c = hex[i];
+        val <<= 4;
+        if (c >= '0' && c <= '9') val |= (c - '0');
+        else if (c >= 'a' && c <= 'f') val |= (c - 'a' + 10);
+        else if (c >= 'A' && c <= 'F') val |= (c - 'A' + 10);
+    }
+    uint8_t r = (val >> 16) & 0xFF;
+    uint8_t g = (val >> 8) & 0xFF;
+    uint8_t b = val & 0xFF;
+
+    uint8_t vr = (uint8_t)((r * 60) / 100);
+    uint8_t vg = (uint8_t)((g * 60) / 100);
+    uint8_t vb = (uint8_t)((b * 60) / 100);
+
+    return GColorFromRGB(vr, vg, vb);
 }
 #endif
 
@@ -207,9 +260,19 @@ static void update_colors_and_resources(void) {
     }
     s_text_color = GColorFromRGB(1,1,1);
     s_background_color = GColorClear;
-    s_lightbulb_res_id = RESOURCE_ID_LIGHTBULB;
+
+    // Compute variant color directly from the hex string (same as HTML)
+    s_variant_color = get_variant_from_hex(s_ui_color);
+
+    if (s_use_timer_window) {
+        s_taskbar_icon_res_id = RESOURCE_ID_TIMER;
+    } else {
+        s_taskbar_icon_res_id = RESOURCE_ID_LIGHTBULB;
+    }
+
     s_desktop_res_id = RESOURCE_ID_SHOW_DESKTOP;
     s_oneshot_window_icon_res_id = RESOURCE_ID_ONESHOT_WINDOW_ICON;
+    s_timer_window_icon_res_id = RESOURCE_ID_TIMER_WINDOW_ICON;
     s_close_button_res_id = RESOURCE_ID_CLOSE_BUTTON;
 #if defined(PBL_PLATFORM_EMERY) || defined(PBL_PLATFORM_GABBRO)
     s_minimize_button_res_id = RESOURCE_ID_MINIMIZE_BUTTON;
@@ -221,9 +284,14 @@ static void update_colors_and_resources(void) {
         s_accent_color = GColorBlack;
         s_text_color = GColorWhite;
         s_background_color = GColorClear;
-        s_lightbulb_res_id = RESOURCE_ID_LIGHTBULB_INVERTED;
+        // Medium gray variant for BW (from BW HTML: #808080)
+        s_variant_color = GColorFromRGB(128, 128, 128);
+
+        if (s_use_timer_window) s_taskbar_icon_res_id = RESOURCE_ID_TIMER_INVERTED;
+        else s_taskbar_icon_res_id = RESOURCE_ID_LIGHTBULB_INVERTED;
         s_desktop_res_id = RESOURCE_ID_SHOW_DESKTOP_INVERTED;
         s_oneshot_window_icon_res_id = RESOURCE_ID_ONESHOT_WINDOW_ICON_INVERTED;
+        s_timer_window_icon_res_id = RESOURCE_ID_TIMER_WINDOW_ICON_INVERTED;
 #ifdef RESOURCE_ID_CLOSE_BUTTON_INVERTED
         s_close_button_res_id = RESOURCE_ID_CLOSE_BUTTON_INVERTED;
 #else
@@ -234,9 +302,14 @@ static void update_colors_and_resources(void) {
         s_accent_color = GColorWhite;
         s_text_color = GColorBlack;
         s_background_color = GColorClear;
-        s_lightbulb_res_id = RESOURCE_ID_LIGHTBULB;
+        // Medium gray variant for BW (from BW HTML: #808080)
+        s_variant_color = GColorFromRGB(128, 128, 128);
+
+        if (s_use_timer_window) s_taskbar_icon_res_id = RESOURCE_ID_TIMER;
+        else s_taskbar_icon_res_id = RESOURCE_ID_LIGHTBULB;
         s_desktop_res_id = RESOURCE_ID_SHOW_DESKTOP;
         s_oneshot_window_icon_res_id = RESOURCE_ID_ONESHOT_WINDOW_ICON;
+        s_timer_window_icon_res_id = RESOURCE_ID_TIMER_WINDOW_ICON;
         s_close_button_res_id = RESOURCE_ID_CLOSE_BUTTON;
     }
 #endif
@@ -250,29 +323,31 @@ static void load_settings(void) {
     if (persist_exists(PERSIST_CLOCK_MODE))
         s_clock_mode = persist_read_int(PERSIST_CLOCK_MODE);
 
-    // Migrate old Leading Zeros boolean (key 104) to new mode
+  // If old flick setting exists and new show setting has never been set,
+    // migrate it to preserve user preference.
+    if (persist_exists(PERSIST_FLICK_WINDOW) && !persist_exists(PERSIST_SHOW_WINDOW)) {
+        s_show_window = s_flick_window;
+    }
+
     if (persist_exists(104)) {
         bool old = persist_read_bool(104);
-        int newMode = old ? 1 : 0;
-        persist_write_int(PERSIST_LEADING_ZEROS_MODE, newMode);
+        persist_write_int(PERSIST_LEADING_ZEROS_MODE, old ? 1 : 0);
         persist_delete(104);
     }
     if (persist_exists(PERSIST_LEADING_ZEROS_MODE))
         s_leading_zeros_mode = persist_read_int(PERSIST_LEADING_ZEROS_MODE);
     else
-        s_leading_zeros_mode = 2; // default Auto
+        s_leading_zeros_mode = 2;
 
-    // Migrate old Show AM/PM boolean (key 105) to new mode
     if (persist_exists(105)) {
         bool old = persist_read_bool(105);
-        int newMode = old ? 1 : 0;
-        persist_write_int(PERSIST_SHOW_AMPM_MODE, newMode);
+        persist_write_int(PERSIST_SHOW_AMPM_MODE, old ? 1 : 0);
         persist_delete(105);
     }
     if (persist_exists(PERSIST_SHOW_AMPM_MODE))
         s_show_ampm_mode = persist_read_int(PERSIST_SHOW_AMPM_MODE);
     else
-        s_show_ampm_mode = 2; // default Auto
+        s_show_ampm_mode = 2;
 
     if (persist_exists(PERSIST_UI_COLOR))
         persist_read_string(PERSIST_UI_COLOR, s_ui_color, sizeof(s_ui_color));
@@ -297,27 +372,55 @@ static void load_settings(void) {
     if (persist_exists(PERSIST_FLICK_WINDOW))
         s_flick_window = persist_read_int(PERSIST_FLICK_WINDOW);
     else
-        s_flick_window = 1; // default On Flick
-    
+        s_flick_window = 1;
+
     if (persist_exists(PERSIST_HOURLY_VIBRATION))
         s_hourly_vibration = persist_read_int(PERSIST_HOURLY_VIBRATION);
     else
         s_hourly_vibration = 0;
-    
+
     if (persist_exists(PERSIST_BT_DISCONNECT_VIBRATION))
         s_bt_disconnect_vibration = persist_read_int(PERSIST_BT_DISCONNECT_VIBRATION);
     else
         s_bt_disconnect_vibration = 0;
-    
+
     if (persist_exists(PERSIST_HOURLY_CHIME))
         s_hourly_chime = persist_read_bool(PERSIST_HOURLY_CHIME);
     else
         s_hourly_chime = false;
-  
+
     if (persist_exists(PERSIST_SILENCE_QUIET_TIME))
         s_silence_quiet_time = persist_read_int(PERSIST_SILENCE_QUIET_TIME);
     else
         s_silence_quiet_time = 3;
+  
+    if (persist_exists(PERSIST_ACTIVE_WINDOW))
+        s_active_window = persist_read_int(PERSIST_ACTIVE_WINDOW);
+    else
+        s_active_window = 0;
+    
+    if (persist_exists(PERSIST_SHOW_WINDOW))
+        s_show_window = persist_read_int(PERSIST_SHOW_WINDOW);
+    else
+        s_show_window = 1;   // On Flick
+    
+    if (persist_exists(PERSIST_DATE_FORMAT))
+        s_date_format = persist_read_int(PERSIST_DATE_FORMAT);
+    else
+        s_date_format = 0;
+    
+    if (persist_exists(PERSIST_DATE_SEPARATOR))
+        s_date_separator = persist_read_int(PERSIST_DATE_SEPARATOR);
+    else
+        s_date_separator = 0;
+    
+    if (persist_exists(PERSIST_MONTH_FORMAT))
+        s_month_format = persist_read_int(PERSIST_MONTH_FORMAT);
+    else
+        s_month_format = 0;
+    
+    // Update derived flag
+    s_use_timer_window = (s_active_window == 1);
 }
 
 static void save_settings(void) {
@@ -343,6 +446,12 @@ static void save_settings(void) {
     persist_write_int(PERSIST_BT_DISCONNECT_VIBRATION, s_bt_disconnect_vibration);
     persist_write_bool(PERSIST_HOURLY_CHIME, s_hourly_chime);
     persist_write_int(PERSIST_SILENCE_QUIET_TIME, s_silence_quiet_time);
+  
+    persist_write_int(PERSIST_ACTIVE_WINDOW, s_active_window);
+    persist_write_int(PERSIST_SHOW_WINDOW, s_show_window);
+    persist_write_int(PERSIST_DATE_FORMAT, s_date_format);
+    persist_write_int(PERSIST_DATE_SEPARATOR, s_date_separator);
+    persist_write_int(PERSIST_MONTH_FORMAT, s_month_format);
 }
 
 static void perform_vibration(int mode) {
@@ -491,10 +600,9 @@ static void play_wav_resource(uint32_t resource_id) {
 
 static void perform_hourly_chime(void) {
 #if defined(PBL_PLATFORM_EMERY) || defined(PBL_PLATFORM_FLINT)
-    // Play audio chime (no vibration – that's the Hourly Vibration setting)
     play_wav_resource(RESOURCE_ID_TWM_STARTUP_SOUND);
 #else
-    // No sound on other platforms; do nothing
+    // No sound on other platforms
 #endif
 }
 
@@ -521,23 +629,21 @@ static void update_time(void) {
     else
         use_24h = false;
 
-    // Effective leading zeros
     bool effective_leading_zeros;
-    if (s_leading_zeros_mode == 0)      // OFF
+    if (s_leading_zeros_mode == 0)
         effective_leading_zeros = false;
-    else if (s_leading_zeros_mode == 1) // ON
+    else if (s_leading_zeros_mode == 1)
         effective_leading_zeros = true;
-    else                                // Auto
-        effective_leading_zeros = use_24h;   // ON for 24h, OFF for 12h
+    else
+        effective_leading_zeros = use_24h;
 
-    // Effective AM/PM display
     bool effective_show_ampm;
-    if (s_show_ampm_mode == 0)          // OFF
+    if (s_show_ampm_mode == 0)
         effective_show_ampm = false;
-    else if (s_show_ampm_mode == 1)     // ON
+    else if (s_show_ampm_mode == 1)
         effective_show_ampm = true;
-    else                                // Auto
-        effective_show_ampm = !use_24h; // ON for 12h, OFF for 24h
+    else
+        effective_show_ampm = !use_24h;
 
     if (use_24h) {
         if (effective_leading_zeros)
@@ -567,11 +673,13 @@ static void tick_handler(struct tm *tick_time, TimeUnits units_changed) {
         layer_mark_dirty(s_overlay_layer);
     }
 
-    // Hourly feedback triggered by hour change (not second-level)
+    if (s_oneshot_window_layer && s_use_timer_window) {
+        layer_mark_dirty(s_oneshot_window_layer);
+    }
+
     if (units_changed & HOUR_UNIT) {
-        // Guard against immediate trigger on startup
         if (s_last_hour == -1) {
-            s_last_hour = tick_time->tm_hour;  // set initial hour, no feedback
+            s_last_hour = tick_time->tm_hour;
         } else if (tick_time->tm_hour != s_last_hour) {
             s_last_hour = tick_time->tm_hour;
             if (s_hourly_vibration != 0 && !should_silence_vibration()) {
@@ -595,7 +703,6 @@ static uint16_t image_checksum(const uint8_t *data, uint32_t length) {
 
 static void destroy_custom_image(void) {
     if (s_custom_wallpaper_bitmap) {
-        // Detach layer from bitmap to avoid dangling reference
         if (s_wallpaper_layer) {
             bitmap_layer_set_bitmap(s_wallpaper_layer, NULL);
             layer_set_hidden(bitmap_layer_get_layer(s_wallpaper_layer), true);
@@ -776,7 +883,6 @@ static bool persist_custom_image(const uint8_t *pixel_data, uint32_t pixel_len,
         return false;
     }
 
-    // Build half-res pixels
     uint16_t full_row_bytes = (PBL_DISPLAY_WIDTH + 1) / 2;
     for (int y = 0; y < half_h; ++y) {
         int src_y = y * 2;
@@ -903,7 +1009,6 @@ static bool load_persisted_custom_image(void) {
     bool checksum_ok = (image_checksum(combined, total_len) == meta.checksum);
     if (!checksum_ok) {
         APP_LOG(APP_LOG_LEVEL_WARNING, "Custom image checksum mismatch, using anyway");
-        // Continue loading despite checksum failure – image may still be usable
     }
 
     uint32_t persist_pixel_len = total_len - meta.palette_length;
@@ -943,28 +1048,24 @@ static bool load_persisted_custom_image(void) {
         }
         memcpy(gbitmap_get_palette(full_bitmap), persist_palette, CUSTOM_PALETTE_SIZE);
 #else
-        // BW only supports full-res, so half-res should never occur
         gbitmap_destroy(full_bitmap);
         free(combined);
         return false;
 #endif
     }
 
-    // Replace current image with the loaded one (without black flash)
     GBitmap *old_custom = s_custom_wallpaper_bitmap;
     s_custom_wallpaper_bitmap = full_bitmap;
     s_custom_wallpaper_valid = true;
     s_custom_wallpaper_is_low_depth = is_half;
-    s_want_full_custom_image = is_half;   // request full if only half-res was loaded
+    s_want_full_custom_image = is_half;
 
-    // Update the layer to show the new bitmap before freeing old
     if (s_wallpaper_layer) {
         bitmap_layer_set_bitmap(s_wallpaper_layer, s_custom_wallpaper_bitmap);
         layer_set_hidden(bitmap_layer_get_layer(s_wallpaper_layer), false);
         if (s_main_window) window_set_background_color(s_main_window, GColorClear);
     }
 
-    // Now it's safe to free the old bitmap
     if (old_custom) {
         gbitmap_destroy(old_custom);
     }
@@ -993,20 +1094,15 @@ static void begin_custom_image_transfer(uint16_t width, uint16_t height,
     uint16_t row_bytes = gbitmap_get_bytes_per_row(bitmap);
     uint32_t pixel_length = (uint32_t)row_bytes * height;
     if (length != pixel_length) {
-        APP_LOG(APP_LOG_LEVEL_ERROR, "Custom image length mismatch: %lu vs %lu",
-                (unsigned long)length, (unsigned long)pixel_length);
+        APP_LOG(APP_LOG_LEVEL_ERROR, "Custom image length mismatch");
         gbitmap_destroy(bitmap);
         return;
     }
 
     cancel_transfer();
 
-    // We may need to free old bitmap to make room. But if old is half-res,
-    // we can attempt to keep it for seamless upgrade.
-    // Try to allocate new transfer buffer first.
     s_transfer_pixel_data = malloc(length);
     if (!s_transfer_pixel_data) {
-        // Allocation failed; we must free old custom bitmap and retry
         if (s_custom_wallpaper_bitmap) {
             destroy_custom_image();
         }
@@ -1017,9 +1113,6 @@ static void begin_custom_image_transfer(uint16_t width, uint16_t height,
             return;
         }
     }
-
-    // If we freed the old bitmap above, we should hide the layer (already done by destroy_custom_image)
-    // Otherwise, the old image remains visible during transfer – nice.
 
     memcpy(s_transfer_palette, palette, CUSTOM_PALETTE_SIZE);
     s_transfer_bitmap = bitmap;
@@ -1037,7 +1130,6 @@ static void begin_custom_image_transfer(uint16_t width, uint16_t height,
 static void fail_transfer(const char *reason) {
     APP_LOG(APP_LOG_LEVEL_WARNING, "Custom image transfer failed: %s", reason);
     cancel_transfer();
-    // Try to restore previous custom image from persistence
     if (s_wallpaper_value == WALLPAPER_CUSTOM) {
         load_persisted_custom_image();
         update_wallpaper();
@@ -1060,32 +1152,23 @@ static void finish_custom_image_transfer(uint32_t length, uint16_t checksum) {
     memcpy(gbitmap_get_data(s_transfer_bitmap), s_transfer_pixel_data, s_transfer_pixel_length);
     memcpy(gbitmap_get_palette(s_transfer_bitmap), s_transfer_palette, CUSTOM_PALETTE_SIZE);
 
-    bool persisted = persist_custom_image(s_transfer_pixel_data, s_transfer_pixel_length,
+   (void)persist_custom_image(s_transfer_pixel_data, s_transfer_pixel_length,
                                           s_transfer_palette, CUSTOM_PALETTE_SIZE);
-    if (persisted) {
-        APP_LOG(APP_LOG_LEVEL_INFO, "Custom image persisted");
-    } else {
-        APP_LOG(APP_LOG_LEVEL_WARNING, "Custom image persistence failed");
-    }
 
-    // Swap to new bitmap before freeing old
     GBitmap *old_custom = s_custom_wallpaper_bitmap;
 
     s_custom_wallpaper_bitmap = s_transfer_bitmap;
     s_custom_wallpaper_valid = true;
     s_custom_wallpaper_is_low_depth = false;
     s_want_full_custom_image = false;
-    s_transfer_bitmap = NULL;   // ownership transferred
+    s_transfer_bitmap = NULL;
 
-    // Update the layer to show the new bitmap
     update_wallpaper();
 
-    // Now safe to destroy the old bitmap
     if (old_custom) {
         gbitmap_destroy(old_custom);
     }
 
-    // Clean up transfer state
     s_transfer_active = false;
     cancel_transfer_timer();
     free(s_transfer_pixel_data);
@@ -1213,11 +1296,11 @@ static void apply_inverted(bool inverted) {
     if (s_main_window)
         window_set_background_color(s_main_window, s_background_color);
 
-    if (s_lightbulb_bitmap) {
-        gbitmap_destroy(s_lightbulb_bitmap);
-        s_lightbulb_bitmap = NULL;
+    if (s_taskbar_icon_bitmap) {
+        gbitmap_destroy(s_taskbar_icon_bitmap);
+        s_taskbar_icon_bitmap = NULL;
     }
-    s_lightbulb_bitmap = gbitmap_create_with_resource(s_lightbulb_res_id);
+    s_taskbar_icon_bitmap = gbitmap_create_with_resource(s_taskbar_icon_res_id);
 
     if (s_desktop_bitmap) {
         gbitmap_destroy(s_desktop_bitmap);
@@ -1230,6 +1313,12 @@ static void apply_inverted(bool inverted) {
         s_oneshot_window_icon_bitmap = NULL;
     }
     s_oneshot_window_icon_bitmap = gbitmap_create_with_resource(s_oneshot_window_icon_res_id);
+
+    if (s_timer_window_icon_bitmap) {
+        gbitmap_destroy(s_timer_window_icon_bitmap);
+        s_timer_window_icon_bitmap = NULL;
+    }
+    s_timer_window_icon_bitmap = gbitmap_create_with_resource(s_timer_window_icon_res_id);
 
     if (s_close_button_bitmap) {
         gbitmap_destroy(s_close_button_bitmap);
@@ -1273,13 +1362,16 @@ static void apply_ui_color(const char *hex) {
         s_rainbow_power_hue_index = 0;
         start_rainbow_timer();
     } else {
-        if (hex[0] == '#') hex++;   // Strip leading '#'
-
+        if (hex[0] == '#') hex++;
         strncpy(s_ui_color, hex, sizeof(s_ui_color)-1);
         s_ui_color[sizeof(s_ui_color)-1] = '\0';
         s_rainbow_active = false;
         stop_rainbow_timer();
         s_accent_color = hex_to_gcolor(hex);
+
+        // Recompute variant color directly from the hex string
+        s_variant_color = get_variant_from_hex(hex);
+
         if (s_overlay_layer) layer_mark_dirty(s_overlay_layer);
         if (s_oneshot_window_layer) layer_mark_dirty(s_oneshot_window_layer);
     }
@@ -1288,13 +1380,11 @@ static void apply_ui_color(const char *hex) {
 #endif
 
 // ---------- LAYOUT CONSTANTS ----------
-// ---------- LAYOUT CONSTANTS ----------
 #define LINE_HEIGHT 28
 #define SEPARATOR_HEIGHT 2
 #define RECTANGLE_HEIGHT 24
 #define RECTANGLE_OFFSET_Y 2
 
-// Common offsets
 #define ANCHOR_WIDTH 26
 #define ANCHOR_HEIGHT 9
 #define ANCHOR_OFFSET_X 2
@@ -1316,7 +1406,6 @@ static void apply_ui_color(const char *hex) {
 #define RECT_16X16_OFFSET_FROM_ANCHOR_Y -16
 #define LIGHTBULB_OFFSET_Y 4
 
-// Platform-specific: default (non-round, non-chalk)
 #if !defined(PBL_PLATFORM_CHALK) && !defined(PBL_PLATFORM_GABBRO)
   #define RECTANGLE_OFFSET_X 2
   #if defined(PBL_PLATFORM_EMERY)
@@ -1328,8 +1417,6 @@ static void apply_ui_color(const char *hex) {
   #define CHALK_SPECIAL_LAYOUT 0
 #endif
 
-
-// Gabbro: time‑only centered (same as Chalk special layout)
 #if defined(PBL_PLATFORM_GABBRO)
   #define RECTANGLE_OFFSET_X 2
   #define RECTANGLE_WIDTH 90
@@ -1337,10 +1424,9 @@ static void apply_ui_color(const char *hex) {
   #define CHALK_SPECIAL_LAYOUT 1
 #endif
 
-// Chalk: special layout
 #if defined(PBL_PLATFORM_CHALK)
-  #define RECTANGLE_OFFSET_X 0   // not used in special layout
-  #define LIGHTBULB_OFFSET_X 4   // left padding inside button
+  #define RECTANGLE_OFFSET_X 0
+  #define LIGHTBULB_OFFSET_X 4
   #define CHALK_SPECIAL_LAYOUT 1
 #endif
 
@@ -1363,15 +1449,52 @@ static void apply_ui_color(const char *hex) {
 #define ONESHOT_WIN_TOTAL_W          (ONESHOT_WIN_BORDER * 2 + ONESHOT_WIN_CONTENT_W)
 #define ONESHOT_WIN_TOTAL_H          (ONESHOT_WIN_BORDER * 2 + ONESHOT_WIN_TOPBAR_H + ONESHOT_WIN_DIVIDER_H + ONESHOT_WIN_CONTENT_H)
 
+// ---------- TIMER WINDOW CONSTANTS ----------
+#define TIMER_WIN_BORDER             2
+#define TIMER_WIN_ICON_SIZE          16
+#define TIMER_WIN_ICON_TOP_MARGIN    2
+#define TIMER_WIN_ICON_BOTTOM_MARGIN 2
+#define TIMER_WIN_ICON_LEFT_MARGIN   2
+#define TIMER_WIN_TITLE_GAP          4
+#define TIMER_WIN_CLOSE_RIGHT_MARGIN 2
+#define TIMER_WIN_DIVIDER_H          4
+#define TIMER_WIN_TOPBAR_H           (TIMER_WIN_ICON_SIZE + TIMER_WIN_ICON_TOP_MARGIN + TIMER_WIN_ICON_BOTTOM_MARGIN)
+#define TIMER_WIN_CONTENT_W          93
+#define TIMER_WIN_CONTENT_PADDING    2
+#define TIMER_WIN_SYSTIME_TOP        6
+#define TIMER_WIN_SYSTIME_LABEL_H    12
+#define TIMER_WIN_SYSTIME_RECT_GAP   3
+#define TIMER_WIN_TIME_RECT_H        20
+#define TIMER_WIN_TIME_TOP_PAD       4
+#define TIMER_WIN_TIME_BOTTOM_PAD    3
+#define TIMER_WIN_SYSTIME_TO_DATE_GAP 4
+#define TIMER_WIN_DATE_LABEL_H       12
+#define TIMER_WIN_DATE_RECT_GAP      5
+#define TIMER_WIN_DATE_RECT_BOTTOM_GAP 3
+#define TIMER_WIN_TIME_LEFT_PAD      2
+#define TIMER_WIN_TIME_RIGHT_PAD     2
+#define TIMER_WIN_LABEL_LEFT_PAD     4
+
+// Fixed positions from the right edge of the System Time rectangle
+#define TIMER_WIN_HOUR_3DIGIT_OFFSET   71   // HHH
+#define TIMER_WIN_HOUR_2DIGIT_OFFSET   65   // HH
+#define TIMER_WIN_HOUR_1DIGIT_OFFSET   59   // H
+#define TIMER_WIN_COLON1_OFFSET        53   // first ':'
+#define TIMER_WIN_MIN_OFFSET           50   // MM
+#define TIMER_WIN_COLON2_OFFSET        38   // second ':'
+#define TIMER_WIN_SEC_OFFSET           35   // SS
+#define TIMER_WIN_MS_OFFSET            23   // .ddd (unchanged)
+
+// Debug: set to true to replace all timer digits with zeros (for layout testing)
+static bool s_timer_debug_zero = false;
+
 // ---------- FADE ANIMATION HELPERS ----------
 static GBitmap *copy_bitmap_for_fade(GBitmap *src) {
     if (!src) return NULL;
-
     GBitmapFormat format = gbitmap_get_format(src);
     GSize size = gbitmap_get_bounds(src).size;
     GBitmap *copy = gbitmap_create_blank(size, format);
     if (!copy) return NULL;
-
     uint16_t bytes_per_row = gbitmap_get_bytes_per_row(src);
     uint8_t *src_data = gbitmap_get_data(src);
     uint8_t *dst_data = gbitmap_get_data(copy);
@@ -1380,7 +1503,6 @@ static GBitmap *copy_bitmap_for_fade(GBitmap *src) {
                src_data + y * bytes_per_row,
                bytes_per_row);
     }
-
     if (format == GBitmapFormat1BitPalette || format == GBitmapFormat4BitPalette) {
         GColor *src_pal = gbitmap_get_palette(src);
         GColor *dst_pal = gbitmap_get_palette(copy);
@@ -1390,39 +1512,30 @@ static GBitmap *copy_bitmap_for_fade(GBitmap *src) {
     } else {
         s_oneshot_palette_count = 0;
     }
-
     return copy;
 }
 
 static void oneshot_fade_update(Animation *animation, const AnimationProgress progress) {
     if (!s_oneshot_content_fade_bitmap || s_oneshot_palette_count == 0) return;
-
     GColor *palette = gbitmap_get_palette(s_oneshot_content_fade_bitmap);
-
     for (int i = 0; i < s_oneshot_palette_count; i++) {
         GColor target = s_oneshot_original_palette[i];
         uint8_t fr = (target.r * progress) / ANIMATION_NORMALIZED_MAX;
         uint8_t fg = (target.g * progress) / ANIMATION_NORMALIZED_MAX;
         uint8_t fb = (target.b * progress) / ANIMATION_NORMALIZED_MAX;
-
         palette[i].r = fr;
         palette[i].g = fg;
         palette[i].b = fb;
         palette[i].a = target.a;
     }
-
-    if (s_oneshot_window_layer) {
-        layer_mark_dirty(s_oneshot_window_layer);
-    }
+    if (s_oneshot_window_layer) layer_mark_dirty(s_oneshot_window_layer);
 }
 
 static void oneshot_fade_setup(Animation *animation) {
     oneshot_fade_update(animation, 0);
 }
 
-static void oneshot_fade_teardown(Animation *animation) {
-    // Nothing to do
-}
+static void oneshot_fade_teardown(Animation *animation) { }
 
 static const AnimationImplementation s_oneshot_fade_impl = {
     .setup = oneshot_fade_setup,
@@ -1444,16 +1557,12 @@ static const AnimationHandlers s_oneshot_fade_handlers = {
 
 static void start_oneshot_fade(void) {
     if (!s_oneshot_content_fade_bitmap || s_oneshot_palette_count == 0) return;
-
     if (s_oneshot_fade_animation) {
         animation_unschedule(s_oneshot_fade_animation);
         animation_destroy(s_oneshot_fade_animation);
         s_oneshot_fade_animation = NULL;
     }
-
-    // Reset palette to black before scheduling
     oneshot_fade_update(NULL, 0);
-
     s_oneshot_fade_animation = animation_create();
     animation_set_duration(s_oneshot_fade_animation, 1000);
     animation_set_curve(s_oneshot_fade_animation, AnimationCurveEaseOut);
@@ -1463,91 +1572,44 @@ static void start_oneshot_fade(void) {
     animation_schedule(s_oneshot_fade_animation);
 }
 
-static void flick_timer_callback(void *context) {
-    s_flick_timer = NULL;
-    s_flick_visible = false;
-    if (s_oneshot_fade_animation) {
-        animation_unschedule(s_oneshot_fade_animation);
-        animation_destroy(s_oneshot_fade_animation);
-        s_oneshot_fade_animation = NULL;
-    }
-    if (s_oneshot_window_layer) {
-        layer_set_hidden(s_oneshot_window_layer, true);
-        layer_mark_dirty(s_oneshot_window_layer);
-    }
-    // Mark overlay dirty to update taskbar button visibility
-    if (s_overlay_layer) {
-        layer_mark_dirty(s_overlay_layer);
-    }
+// ---------- TIMER WINDOW ANIMATION ----------
+static void timer_window_ms_callback(void *ctx) {
+    if (s_oneshot_window_layer) layer_mark_dirty(s_oneshot_window_layer);
+    s_timer_window_ms_timer = app_timer_register(100, timer_window_ms_callback, NULL);
 }
 
-static void accel_tap_handler(AccelAxisType axis, int32_t direction) {
-    if (s_flick_window == 0) {
-        // Never: hide and cancel any timer
-        if (s_flick_timer) {
-            app_timer_cancel(s_flick_timer);
-            s_flick_timer = NULL;
-        }
-        if (s_oneshot_window_layer) {
-            layer_set_hidden(s_oneshot_window_layer, true);
-        }
-        if (s_overlay_layer) {
-            layer_mark_dirty(s_overlay_layer);
-        }
-        return;
+static void timer_window_flash_callback(void *ctx) {
+    s_timer_punct_primary = !s_timer_punct_primary;
+    if (s_oneshot_window_layer) layer_mark_dirty(s_oneshot_window_layer);
+    s_timer_window_flash_timer = app_timer_register(333, timer_window_flash_callback, NULL);
+}
+
+static void start_timer_window_anim(void) {
+    stop_timer_window_anim();
+    s_timer_punct_primary = true;
+    s_timer_window_ms_timer = app_timer_register(100, timer_window_ms_callback, NULL);
+    s_timer_window_flash_timer = app_timer_register(333, timer_window_flash_callback, NULL);
+}
+
+static void stop_timer_window_anim(void) {
+    if (s_timer_window_ms_timer) {
+        app_timer_cancel(s_timer_window_ms_timer);
+        s_timer_window_ms_timer = NULL;
     }
-
-    if (s_flick_window == 2) {
-        // Always: show permanently, cancel any timer
-        if (s_flick_timer) {
-            app_timer_cancel(s_flick_timer);
-            s_flick_timer = NULL;
-        }
-        if (s_oneshot_window_layer) {
-            layer_set_hidden(s_oneshot_window_layer, false);
-            layer_mark_dirty(s_oneshot_window_layer);
-        }
-        if (s_overlay_layer) {
-            layer_mark_dirty(s_overlay_layer);
-        }
-        return;
+    if (s_timer_window_flash_timer) {
+        app_timer_cancel(s_timer_window_flash_timer);
+        s_timer_window_flash_timer = NULL;
     }
-
-    // s_flick_window == 1: On Flick with 10-second timeout
-    s_flick_visible = true;
-
-    // Cancel existing timer, if any
-    if (s_flick_timer) {
-        app_timer_cancel(s_flick_timer);
-        s_flick_timer = NULL;
-    }
-
-    // Start / restart 10-second hide timer
-    s_flick_timer = app_timer_register(FLICK_ONESHOT_DURATION_MS, flick_timer_callback, NULL);
-
-    if (s_oneshot_window_layer) {
-        layer_set_hidden(s_oneshot_window_layer, false);
-        layer_mark_dirty(s_oneshot_window_layer);
-    }
-    if (s_overlay_layer) {
-        layer_mark_dirty(s_overlay_layer);
-    }
-
-    start_oneshot_fade();
 }
 
 // ---------- UI UPDATE PROCS ----------
 static void overlay_update_proc(Layer *layer, GContext *ctx) {
 #if defined(PBL_PLATFORM_GABBRO)
-    // On Gabbro, always use full bounds so the taskbar stays at the bottom
-    // even when Quick View is active.
     GRect bounds = layer_get_bounds(layer);
 #else
     GRect bounds = layer_get_unobstructed_bounds(layer);
 #endif
-    int w = bounds.size.w;
-    int h = bounds.size.h;
-
+    int w = bounds.size.w, h = bounds.size.h;
     graphics_context_set_compositing_mode(ctx, GCompOpSet);
 
     int colored_y = h - LINE_HEIGHT;
@@ -1555,11 +1617,9 @@ static void overlay_update_proc(Layer *layer, GContext *ctx) {
 
     graphics_context_set_fill_color(ctx, s_dark_color);
     graphics_fill_rect(ctx, GRect(0, colored_y, w, LINE_HEIGHT), 0, GCornerNone);
-
     graphics_context_set_fill_color(ctx, s_accent_color);
     graphics_fill_rect(ctx, GRect(0, separator_y, w, SEPARATOR_HEIGHT), 0, GCornerNone);
 
-    // Update time string once
     update_time();
     GSize time_size = graphics_text_layout_get_content_size(s_time_buffer, s_text_font,
                                                             GRect(0,0,200,200),
@@ -1567,51 +1627,44 @@ static void overlay_update_proc(Layer *layer, GContext *ctx) {
                                                             GTextAlignmentLeft);
 
 #if CHALK_SPECIAL_LAYOUT
-    // ---- SPECIAL TASKBAR (Chalk & Gabbro) ----
-    // Only the clock, centered horizontally.
     int clock_y = h - time_size.h - TIME_TEXT_BOTTOM_OFFSET;
     int clock_x = (w - time_size.w) / 2;
-
     graphics_context_set_text_color(ctx, s_accent_color);
     graphics_draw_text(ctx, s_time_buffer, s_text_font,
                        GRect(clock_x, clock_y, time_size.w, time_size.h),
                        GTextOverflowModeWordWrap, GTextAlignmentLeft, NULL);
-
 #else
-    // ---- Original (non‑special) taskbar ----
-    // OneShot button (with text if flick_visible)
     if (s_flick_visible) {
         int rx = RECTANGLE_OFFSET_X;
         int ry = h - RECTANGLE_OFFSET_Y - RECTANGLE_HEIGHT;
         graphics_context_set_fill_color(ctx, s_accent_color);
         graphics_fill_rect(ctx, GRect(rx, ry, RECTANGLE_WIDTH, RECTANGLE_HEIGHT), 0, GCornerNone);
 
-        if (s_lightbulb_bitmap) {
-            GRect ib = gbitmap_get_bounds(s_lightbulb_bitmap);
-            graphics_draw_bitmap_in_rect(ctx, s_lightbulb_bitmap,
+        if (s_taskbar_icon_bitmap) {
+            GRect ib = gbitmap_get_bounds(s_taskbar_icon_bitmap);
+            graphics_draw_bitmap_in_rect(ctx, s_taskbar_icon_bitmap,
                                          GRect(rx + LIGHTBULB_OFFSET_X,
                                                ry + LIGHTBULB_OFFSET_Y,
                                                ib.size.w, ib.size.h));
         }
 
-        // Draw "OneShot" text
+        const char *taskbar_text = s_use_timer_window ? "Timer" : "OneShot";
         int ax = ANCHOR_OFFSET_X;
         int ay = h - ANCHOR_OFFSET_Y - ANCHOR_HEIGHT;
         int ar = ax + ANCHOR_WIDTH;
         int at = ay;
-        GSize ts = graphics_text_layout_get_content_size(TEXT_STRING, s_text_font,
+        GSize ts = graphics_text_layout_get_content_size(taskbar_text, s_text_font,
                                                           GRect(0,0,200,200),
                                                           GTextOverflowModeWordWrap,
                                                           GTextAlignmentLeft);
         int tx = ar + TEXT_OFFSET_X;
         int ty = at + TEXT_OFFSET_Y - ts.h;
         graphics_context_set_text_color(ctx, s_text_color);
-        graphics_draw_text(ctx, TEXT_STRING, s_text_font,
+        graphics_draw_text(ctx, taskbar_text, s_text_font,
                            GRect(tx, ty, ts.w, ts.h),
                            GTextOverflowModeWordWrap, GTextAlignmentLeft, NULL);
     }
 
-    // Draw clock (always)
     int base_x = w - time_size.w - TIME_TEXT_RIGHT_OFFSET;
     int base_y = h - time_size.h - TIME_TEXT_BOTTOM_OFFSET;
     graphics_context_set_text_color(ctx, s_accent_color);
@@ -1621,7 +1674,6 @@ static void overlay_update_proc(Layer *layer, GContext *ctx) {
                              time_size.w, time_size.h),
                        GTextOverflowModeWordWrap, GTextAlignmentRight, NULL);
 
-    // Draw desktop button (always, unless special layout)
     int a4x = w - ANCHOR_4X6_WIDTH - ANCHOR_4X6_RIGHT_OFFSET + ANCHOR_4X6_OFFSET_X;
     int a4y = h - ANCHOR_4X6_HEIGHT - ANCHOR_4X6_BOTTOM_OFFSET + ANCHOR_4X6_OFFSET_Y;
     int rx_16 = a4x + RECT_16X16_OFFSET_FROM_ANCHOR_X;
@@ -1636,11 +1688,31 @@ static void overlay_update_proc(Layer *layer, GContext *ctx) {
 #endif
 }
 
-static void oneshot_window_update_proc(Layer *layer, GContext *ctx) {
-    GRect bounds = layer_get_bounds(layer);
-    int screen_w = bounds.size.w;
-    int screen_h = bounds.size.h;
+// ---------- WINDOW DRAWING FUNCTIONS ----------
+static int draw_text_segment(GContext *ctx, const char *text, int x, int y, GColor color) {
+    GSize size = graphics_text_layout_get_content_size(text, s_text_font,
+                                                       GRect(0,0,100,50),
+                                                       GTextOverflowModeWordWrap,
+                                                       GTextAlignmentLeft);
+    if (size.w < 1) size.w = 1;
+    graphics_context_set_text_color(ctx, color);
+    graphics_draw_text(ctx, text, s_text_font,
+                       GRect(x, y, size.w, size.h),
+                       GTextOverflowModeWordWrap, GTextAlignmentLeft, NULL);
+    return size.w;
+}
 
+static int text_width(const char *text) {
+    GSize size = graphics_text_layout_get_content_size(text, s_text_font,
+                                                       GRect(0,0,100,50),
+                                                       GTextOverflowModeWordWrap,
+                                                       GTextAlignmentLeft);
+    return (size.w < 1) ? 1 : size.w;
+}
+
+static void draw_oneshot_window(GContext *ctx) {
+    GRect bounds = layer_get_bounds(s_oneshot_window_layer);
+    int screen_w = bounds.size.w, screen_h = bounds.size.h;
     int taskbar_total_height = LINE_HEIGHT + SEPARATOR_HEIGHT;
     int available_h = screen_h - taskbar_total_height;
 
@@ -1648,7 +1720,6 @@ static void oneshot_window_update_proc(Layer *layer, GContext *ctx) {
     int win_y = (available_h - ONESHOT_WIN_TOTAL_H) / 2;
 
     graphics_context_set_compositing_mode(ctx, GCompOpAssign);
-
     graphics_context_set_fill_color(ctx, s_accent_color);
     graphics_fill_rect(ctx, GRect(win_x, win_y, ONESHOT_WIN_TOTAL_W, ONESHOT_WIN_TOTAL_H), 0, GCornerNone);
 
@@ -1657,87 +1728,316 @@ static void oneshot_window_update_proc(Layer *layer, GContext *ctx) {
     if (s_inverted) win_bg = GColorWhite;
 #endif
     graphics_context_set_fill_color(ctx, win_bg);
-    graphics_fill_rect(ctx, GRect(win_x + ONESHOT_WIN_BORDER,
-                                  win_y + ONESHOT_WIN_BORDER,
-                                  ONESHOT_WIN_TOTAL_W - 2 * ONESHOT_WIN_BORDER,
-                                  ONESHOT_WIN_TOTAL_H - 2 * ONESHOT_WIN_BORDER), 0, GCornerNone);
+    graphics_fill_rect(ctx, GRect(win_x + ONESHOT_WIN_BORDER, win_y + ONESHOT_WIN_BORDER,
+                                  ONESHOT_WIN_TOTAL_W - 2*ONESHOT_WIN_BORDER,
+                                  ONESHOT_WIN_TOTAL_H - 2*ONESHOT_WIN_BORDER), 0, GCornerNone);
 
     graphics_context_set_compositing_mode(ctx, GCompOpSet);
-
     int icon_x = win_x + ONESHOT_WIN_BORDER + ONESHOT_WIN_ICON_LEFT_MARGIN;
     int icon_y = win_y + ONESHOT_WIN_BORDER + ONESHOT_WIN_ICON_TOP_MARGIN;
     graphics_context_set_fill_color(ctx, s_accent_color);
     graphics_fill_rect(ctx, GRect(icon_x, icon_y, ONESHOT_WIN_ICON_SIZE, ONESHOT_WIN_ICON_SIZE), 0, GCornerNone);
-
-    if (s_oneshot_window_icon_bitmap) {
+    if (s_oneshot_window_icon_bitmap)
         graphics_draw_bitmap_in_rect(ctx, s_oneshot_window_icon_bitmap,
                                      GRect(icon_x, icon_y, ONESHOT_WIN_ICON_SIZE, ONESHOT_WIN_ICON_SIZE));
-    }
 
-    int text_gap = 4;
-    int text_x = icon_x + ONESHOT_WIN_ICON_SIZE + text_gap;
+    int text_x = icon_x + ONESHOT_WIN_ICON_SIZE + 4;
     int text_y = win_y + ONESHOT_WIN_BORDER + 5;
     GSize title_size = graphics_text_layout_get_content_size("OneShot", s_text_font,
-                                                              GRect(0,0,200,200),
-                                                              GTextOverflowModeWordWrap,
-                                                              GTextAlignmentLeft);
+                                                             GRect(0,0,200,200),
+                                                             GTextOverflowModeWordWrap,
+                                                             GTextAlignmentLeft);
     graphics_context_set_text_color(ctx, s_accent_color);
     graphics_draw_text(ctx, "OneShot", s_text_font,
                        GRect(text_x, text_y, title_size.w, title_size.h),
                        GTextOverflowModeWordWrap, GTextAlignmentLeft, NULL);
 
 #if defined(PBL_PLATFORM_EMERY) || defined(PBL_PLATFORM_GABBRO)
-    int close_x = win_x + ONESHOT_WIN_BORDER + ONESHOT_WIN_CONTENT_W
-                  - ONESHOT_WIN_CLOSE_RIGHT_MARGIN - ONESHOT_WIN_ICON_SIZE;
-    int maximize_x = close_x - ONESHOT_WIN_ICON_SIZE - 2;
-    int minimize_x = maximize_x - ONESHOT_WIN_ICON_SIZE - 2;
-
+    int close_x = win_x + ONESHOT_WIN_BORDER + ONESHOT_WIN_CONTENT_W - 2 - 16;
+    int max_x = close_x - 16 - 2;
+    int min_x = max_x - 16 - 2;
     graphics_context_set_fill_color(ctx, s_accent_color);
-    graphics_fill_rect(ctx, GRect(minimize_x, icon_y, ONESHOT_WIN_ICON_SIZE, ONESHOT_WIN_ICON_SIZE), 0, GCornerNone);
-    if (s_minimize_button_bitmap) {
-        graphics_draw_bitmap_in_rect(ctx, s_minimize_button_bitmap,
-                                     GRect(minimize_x, icon_y, ONESHOT_WIN_ICON_SIZE, ONESHOT_WIN_ICON_SIZE));
-    }
-
-    graphics_context_set_fill_color(ctx, s_accent_color);
-    graphics_fill_rect(ctx, GRect(maximize_x, icon_y, ONESHOT_WIN_ICON_SIZE, ONESHOT_WIN_ICON_SIZE), 0, GCornerNone);
-    if (s_maximize_button_bitmap) {
-        graphics_draw_bitmap_in_rect(ctx, s_maximize_button_bitmap,
-                                     GRect(maximize_x, icon_y, ONESHOT_WIN_ICON_SIZE, ONESHOT_WIN_ICON_SIZE));
-    }
-
-    graphics_context_set_fill_color(ctx, s_accent_color);
-    graphics_fill_rect(ctx, GRect(close_x, icon_y, ONESHOT_WIN_ICON_SIZE, ONESHOT_WIN_ICON_SIZE), 0, GCornerNone);
-    if (s_close_button_bitmap) {
-        graphics_draw_bitmap_in_rect(ctx, s_close_button_bitmap,
-                                     GRect(close_x, icon_y, ONESHOT_WIN_ICON_SIZE, ONESHOT_WIN_ICON_SIZE));
-    }
+    graphics_fill_rect(ctx, GRect(min_x, icon_y, 16, 16), 0, GCornerNone);
+    if (s_minimize_button_bitmap) graphics_draw_bitmap_in_rect(ctx, s_minimize_button_bitmap, GRect(min_x, icon_y, 16, 16));
+    graphics_fill_rect(ctx, GRect(max_x, icon_y, 16, 16), 0, GCornerNone);
+    if (s_maximize_button_bitmap) graphics_draw_bitmap_in_rect(ctx, s_maximize_button_bitmap, GRect(max_x, icon_y, 16, 16));
+    graphics_fill_rect(ctx, GRect(close_x, icon_y, 16, 16), 0, GCornerNone);
+    if (s_close_button_bitmap) graphics_draw_bitmap_in_rect(ctx, s_close_button_bitmap, GRect(close_x, icon_y, 16, 16));
 #else
-    int close_x = win_x + ONESHOT_WIN_BORDER + ONESHOT_WIN_CONTENT_W
-                  - ONESHOT_WIN_CLOSE_RIGHT_MARGIN - ONESHOT_WIN_ICON_SIZE;
+    int close_x = win_x + ONESHOT_WIN_BORDER + ONESHOT_WIN_CONTENT_W - 2 - 16;
     graphics_context_set_fill_color(ctx, s_accent_color);
-    graphics_fill_rect(ctx, GRect(close_x, icon_y, ONESHOT_WIN_ICON_SIZE, ONESHOT_WIN_ICON_SIZE), 0, GCornerNone);
-    if (s_close_button_bitmap) {
-        graphics_draw_bitmap_in_rect(ctx, s_close_button_bitmap,
-                                     GRect(close_x, icon_y, ONESHOT_WIN_ICON_SIZE, ONESHOT_WIN_ICON_SIZE));
-    }
+    graphics_fill_rect(ctx, GRect(close_x, icon_y, 16, 16), 0, GCornerNone);
+    if (s_close_button_bitmap) graphics_draw_bitmap_in_rect(ctx, s_close_button_bitmap, GRect(close_x, icon_y, 16, 16));
 #endif
 
     int divider_y = win_y + ONESHOT_WIN_BORDER + ONESHOT_WIN_TOPBAR_H;
     graphics_context_set_fill_color(ctx, s_accent_color);
     graphics_fill_rect(ctx, GRect(win_x + ONESHOT_WIN_BORDER, divider_y,
-                                  ONESHOT_WIN_TOTAL_W - 2 * ONESHOT_WIN_BORDER,
-                                  ONESHOT_WIN_DIVIDER_H), 0, GCornerNone);
+                                  ONESHOT_WIN_TOTAL_W - 2*ONESHOT_WIN_BORDER, 4), 0, GCornerNone);
 
-    int content_y = divider_y + ONESHOT_WIN_DIVIDER_H;
-    GBitmap *content_bmp = s_oneshot_content_fade_bitmap
-                           ? s_oneshot_content_fade_bitmap
-                           : s_oneshot_window_content_bitmap;
+    int content_y = divider_y + 4;
+    GBitmap *content_bmp = s_oneshot_content_fade_bitmap ? s_oneshot_content_fade_bitmap : s_oneshot_window_content_bitmap;
     if (content_bmp) {
         graphics_draw_bitmap_in_rect(ctx, content_bmp,
                                      GRect(win_x + ONESHOT_WIN_BORDER, content_y,
                                            ONESHOT_WIN_CONTENT_W, ONESHOT_WIN_CONTENT_H));
     }
+}
+
+static void draw_timer_window(GContext *ctx) {
+    GRect bounds = layer_get_bounds(s_oneshot_window_layer);
+    int screen_w = bounds.size.w, screen_h = bounds.size.h;
+    int taskbar_total_height = LINE_HEIGHT + SEPARATOR_HEIGHT;
+    int available_h = screen_h - taskbar_total_height;
+
+    int win_content_h = TIMER_WIN_TOPBAR_H + TIMER_WIN_DIVIDER_H +
+                        TIMER_WIN_SYSTIME_TOP + TIMER_WIN_SYSTIME_LABEL_H +
+                        TIMER_WIN_SYSTIME_RECT_GAP + TIMER_WIN_TIME_RECT_H +
+                        TIMER_WIN_SYSTIME_TO_DATE_GAP + TIMER_WIN_DATE_LABEL_H +
+                        TIMER_WIN_DATE_RECT_GAP + TIMER_WIN_TIME_RECT_H +
+                        TIMER_WIN_DATE_RECT_BOTTOM_GAP;
+    int win_total_w = TIMER_WIN_BORDER * 2 + TIMER_WIN_CONTENT_W;
+    int win_total_h = TIMER_WIN_BORDER * 2 + win_content_h;
+    int win_x = (screen_w - win_total_w) / 2;
+    int win_y = (available_h - win_total_h) / 2;
+
+    graphics_context_set_compositing_mode(ctx, GCompOpAssign);
+    graphics_context_set_fill_color(ctx, s_accent_color);
+    graphics_fill_rect(ctx, GRect(win_x, win_y, win_total_w, win_total_h), 0, GCornerNone);
+
+    GColor win_bg = GColorBlack;
+#ifndef PBL_COLOR
+    if (s_inverted) win_bg = GColorWhite;
+#endif
+    graphics_context_set_fill_color(ctx, win_bg);
+    graphics_fill_rect(ctx, GRect(win_x + TIMER_WIN_BORDER, win_y + TIMER_WIN_BORDER,
+                                  TIMER_WIN_CONTENT_W, win_content_h), 0, GCornerNone);
+
+    graphics_context_set_compositing_mode(ctx, GCompOpSet);
+    int icon_x = win_x + TIMER_WIN_BORDER + 2;
+    int icon_y = win_y + TIMER_WIN_BORDER + 2;
+    graphics_context_set_fill_color(ctx, s_accent_color);
+    graphics_fill_rect(ctx, GRect(icon_x, icon_y, 16, 16), 0, GCornerNone);
+    if (s_timer_window_icon_bitmap)
+        graphics_draw_bitmap_in_rect(ctx, s_timer_window_icon_bitmap, GRect(icon_x, icon_y, 16, 16));
+
+    int title_x = icon_x + 16 + 4;
+    int title_y = win_y + TIMER_WIN_BORDER + 5;
+    GSize title_size = graphics_text_layout_get_content_size("Timer", s_text_font,
+                                                             GRect(0,0,200,200),
+                                                             GTextOverflowModeWordWrap,
+                                                             GTextAlignmentLeft);
+    graphics_context_set_text_color(ctx, s_accent_color);
+    graphics_draw_text(ctx, "Timer", s_text_font,
+                       GRect(title_x, title_y, title_size.w, title_size.h),
+                       GTextOverflowModeWordWrap, GTextAlignmentLeft, NULL);
+
+    int close_x = win_x + TIMER_WIN_BORDER + TIMER_WIN_CONTENT_W - 2 - 16;
+    graphics_context_set_fill_color(ctx, s_accent_color);
+    graphics_fill_rect(ctx, GRect(close_x, icon_y, 16, 16), 0, GCornerNone);
+    if (s_close_button_bitmap) graphics_draw_bitmap_in_rect(ctx, s_close_button_bitmap, GRect(close_x, icon_y, 16, 16));
+
+    int divider_y = win_y + TIMER_WIN_BORDER + TIMER_WIN_TOPBAR_H;
+    graphics_context_set_fill_color(ctx, s_accent_color);
+    graphics_fill_rect(ctx, GRect(win_x + TIMER_WIN_BORDER, divider_y, TIMER_WIN_CONTENT_W, 4), 0, GCornerNone);
+
+    int content_top = divider_y + 4;
+
+    // System Time label
+    int systime_label_y = content_top + 6;
+    graphics_context_set_text_color(ctx, s_accent_color);
+    graphics_draw_text(ctx, "System Time", s_text_font,
+                       GRect(win_x + TIMER_WIN_BORDER + 4, systime_label_y,
+                             TIMER_WIN_CONTENT_W - 4, 12),
+                       GTextOverflowModeWordWrap, GTextAlignmentLeft, NULL);
+
+    // System Time rectangle
+    int systime_rect_y = systime_label_y + 12 + 3;
+    int rect_x = win_x + TIMER_WIN_BORDER + 2;
+    int rect_w = TIMER_WIN_CONTENT_W - 4;
+    graphics_context_set_stroke_color(ctx, s_accent_color);
+    graphics_context_set_stroke_width(ctx, 1);
+    graphics_draw_rect(ctx, GRect(rect_x, systime_rect_y, rect_w, 20));
+
+    // Correct time extraction
+    time_t secs;
+    uint16_t ms;
+    time_ms(&secs, &ms);
+    struct tm *t = localtime(&secs);
+
+    // Determine time format (must be before date so we can use leading_zeros)
+    bool use_24h = (s_clock_mode == 0) ? clock_is_24h_style() : (s_clock_mode == 2);
+    bool leading_zeros = (s_leading_zeros_mode == 0) ? false :
+                         (s_leading_zeros_mode == 1) ? true : use_24h;
+
+    // Build month component
+    char month_component[4];
+    if (s_month_format == 0) {
+        if (leading_zeros) {
+            snprintf(month_component, sizeof(month_component), "%02d", t->tm_mon + 1);
+        } else {
+            snprintf(month_component, sizeof(month_component), "%d", t->tm_mon + 1);
+        }
+    } else {
+        static const char *months[] = {"JAN","FEB","MAR","APR","MAY","JUN",
+                                       "JUL","AUG","SEP","OCT","NOV","DEC"};
+        snprintf(month_component, sizeof(month_component), "%s", months[t->tm_mon]);
+    }
+
+    // Build day component respecting leading zeros
+    char day_component[3];
+    if (leading_zeros) {
+        snprintf(day_component, sizeof(day_component), "%02d", t->tm_mday);
+    } else {
+        snprintf(day_component, sizeof(day_component), "%d", t->tm_mday);
+    }
+
+    char date_str[16];  // increased for safety
+    char sep = (s_date_separator == 0) ? '.' :
+               (s_date_separator == 1) ? '/' :
+               (s_date_separator == 2) ? '-' : ' ';
+
+    if (s_date_format == 0)      // MM.DD.YYYY
+        snprintf(date_str, sizeof(date_str), "%s%c%s%c%04d",
+                 month_component, sep, day_component, sep, t->tm_year + 1900);
+    else if (s_date_format == 1) // DD.MM.YYYY
+        snprintf(date_str, sizeof(date_str), "%s%c%s%c%04d",
+                 day_component, sep, month_component, sep, t->tm_year + 1900);
+    else                          // YYYY.MM.DD
+        snprintf(date_str, sizeof(date_str), "%04d%c%s%c%s",
+                 t->tm_year + 1900, sep, month_component, sep, day_component);
+
+    int hour = t->tm_hour;
+    if (!use_24h) {
+        hour = hour % 12;
+        if (hour == 0) hour = 12;
+    }
+
+    char hour_str[4];
+    if (leading_zeros) {
+        snprintf(hour_str, sizeof(hour_str), "%03d", hour);
+    } else {
+        snprintf(hour_str, sizeof(hour_str), "%d", hour);
+    }
+
+    char min_str[3], sec_str[3], ms_str[4];
+    snprintf(min_str, sizeof(min_str), "%02d", t->tm_min);
+    snprintf(sec_str, sizeof(sec_str), "%02d", t->tm_sec);
+    snprintf(ms_str, sizeof(ms_str), "%03d", ms);
+
+    if (s_timer_debug_zero) {
+        for (int i = 0; hour_str[i] != '\0'; i++) hour_str[i] = '0';
+        for (int i = 0; min_str[i] != '\0'; i++) min_str[i] = '0';
+        for (int i = 0; sec_str[i] != '\0'; i++) sec_str[i] = '0';
+        for (int i = 0; ms_str[i] != '\0'; i++) ms_str[i] = '0';
+    }
+
+    int hour_digits = strlen(hour_str);
+
+    int hour_offset;
+    if (hour_digits == 3)      hour_offset = TIMER_WIN_HOUR_3DIGIT_OFFSET;
+    else if (hour_digits == 2) hour_offset = TIMER_WIN_HOUR_2DIGIT_OFFSET;
+    else                       hour_offset = TIMER_WIN_HOUR_1DIGIT_OFFSET;
+
+    int colon1_offset = TIMER_WIN_COLON1_OFFSET;
+    int min_offset    = TIMER_WIN_MIN_OFFSET;
+    int colon2_offset = TIMER_WIN_COLON2_OFFSET;
+    int sec_offset    = TIMER_WIN_SEC_OFFSET;
+    int ms_offset     = TIMER_WIN_MS_OFFSET;
+
+    int hour_x   = rect_x + rect_w - hour_offset;
+    int colon1_x = rect_x + rect_w - colon1_offset;
+    int min_x    = rect_x + rect_w - min_offset;
+    int colon2_x = rect_x + rect_w - colon2_offset;
+    int sec_x    = rect_x + rect_w - sec_offset;
+    int ms_x     = rect_x + rect_w - ms_offset;
+
+    int y_text = systime_rect_y + 4;
+
+    GColor primary = s_accent_color;
+    GColor punct_color = s_timer_punct_primary ? s_accent_color : s_variant_color;
+
+    draw_text_segment(ctx, hour_str, hour_x, y_text, primary);
+    draw_text_segment(ctx, ":", colon1_x, y_text, punct_color);
+    draw_text_segment(ctx, min_str, min_x, y_text, primary);
+    draw_text_segment(ctx, ":", colon2_x, y_text, punct_color);
+    draw_text_segment(ctx, sec_str, sec_x, y_text, primary);
+    draw_text_segment(ctx, ".", ms_x, y_text, punct_color);
+    draw_text_segment(ctx, ms_str, ms_x + text_width("."), y_text, primary);
+
+    // Current Date label
+    int date_label_y = systime_rect_y + 20 + 4;
+    graphics_context_set_text_color(ctx, s_accent_color);
+    graphics_draw_text(ctx, "Current Date", s_text_font,
+                       GRect(win_x + TIMER_WIN_BORDER + 4, date_label_y,
+                             TIMER_WIN_CONTENT_W - 4, 12),
+                       GTextOverflowModeWordWrap, GTextAlignmentLeft, NULL);
+
+    // Current Date rectangle
+    int date_rect_y = date_label_y + 12 + 5;
+    graphics_context_set_stroke_color(ctx, s_accent_color);
+    graphics_draw_rect(ctx, GRect(rect_x, date_rect_y, rect_w, 20));
+
+    // Draw actual date string, right-aligned
+    graphics_context_set_text_color(ctx, s_accent_color);
+    graphics_draw_text(ctx, date_str, s_text_font,
+                       GRect(rect_x + 2, date_rect_y + 4,
+                             rect_w - 4, 20 - 4 - 3),
+                       GTextOverflowModeWordWrap, GTextAlignmentRight, NULL);
+}
+
+static void oneshot_window_update_proc(Layer *layer, GContext *ctx) {
+    if (s_use_timer_window) {
+        draw_timer_window(ctx);
+    } else {
+        draw_oneshot_window(ctx);
+    }
+}
+
+// ---------- FLICK & ACCEL ----------
+static void flick_timer_callback(void *context) {
+    s_flick_timer = NULL;
+    s_flick_visible = false;
+    stop_timer_window_anim();
+    if (s_oneshot_fade_animation) {
+        animation_unschedule(s_oneshot_fade_animation);
+        animation_destroy(s_oneshot_fade_animation);
+        s_oneshot_fade_animation = NULL;
+    }
+    if (s_oneshot_window_layer) layer_set_hidden(s_oneshot_window_layer, true);
+    if (s_overlay_layer) layer_mark_dirty(s_overlay_layer);
+}
+
+static void accel_tap_handler(AccelAxisType axis, int32_t direction) {
+    if (s_show_window == 0) {
+        if (s_flick_timer) { app_timer_cancel(s_flick_timer); s_flick_timer = NULL; }
+        stop_timer_window_anim();
+        if (s_oneshot_window_layer) layer_set_hidden(s_oneshot_window_layer, true);
+        if (s_overlay_layer) layer_mark_dirty(s_overlay_layer);
+        return;
+    }
+    if (s_show_window == 2) {
+        if (s_flick_timer) { app_timer_cancel(s_flick_timer); s_flick_timer = NULL; }
+        if (s_oneshot_window_layer) {
+            layer_set_hidden(s_oneshot_window_layer, false);
+            layer_mark_dirty(s_oneshot_window_layer);
+        }
+        if (s_use_timer_window) start_timer_window_anim();
+        else start_oneshot_fade();
+        if (s_overlay_layer) layer_mark_dirty(s_overlay_layer);
+        return;
+    }
+    // On Flick
+    s_flick_visible = true;
+    if (s_flick_timer) { app_timer_cancel(s_flick_timer); s_flick_timer = NULL; }
+    s_flick_timer = app_timer_register(FLICK_ONESHOT_DURATION_MS, flick_timer_callback, NULL);
+    if (s_oneshot_window_layer) {
+        layer_set_hidden(s_oneshot_window_layer, false);
+        layer_mark_dirty(s_oneshot_window_layer);
+    }
+    if (s_use_timer_window) start_timer_window_anim();
+    else start_oneshot_fade();
+    if (s_overlay_layer) layer_mark_dirty(s_overlay_layer);
 }
 
 // ---------- MAIN WINDOW ----------
@@ -1754,14 +2054,12 @@ static void main_window_load(Window *window) {
     layer_set_update_proc(s_oneshot_window_layer, oneshot_window_update_proc);
     layer_add_child(root, s_oneshot_window_layer);
 
-    // Initial visibility based on setting
-    if (s_flick_window == 2) {
-        // Always visible
+    if (s_show_window == 2) {
         s_flick_visible = true;
         layer_set_hidden(s_oneshot_window_layer, false);
-        start_oneshot_fade();
+        if (s_use_timer_window) start_timer_window_anim();
+        else start_oneshot_fade();
     } else {
-        // Hidden for Never and On Flick
         layer_set_hidden(s_oneshot_window_layer, true);
     }
 
@@ -1772,9 +2070,10 @@ static void main_window_load(Window *window) {
     s_text_font = fonts_load_custom_font(resource_get_handle(RESOURCE_ID_VOLTER_9));
     if (!s_text_font) s_text_font = fonts_get_system_font(FONT_KEY_GOTHIC_18_BOLD);
 
-    s_lightbulb_bitmap = gbitmap_create_with_resource(s_lightbulb_res_id);
+    s_taskbar_icon_bitmap = gbitmap_create_with_resource(s_taskbar_icon_res_id);
     s_desktop_bitmap = gbitmap_create_with_resource(s_desktop_res_id);
     s_oneshot_window_icon_bitmap = gbitmap_create_with_resource(s_oneshot_window_icon_res_id);
+    s_timer_window_icon_bitmap = gbitmap_create_with_resource(s_timer_window_icon_res_id);
     s_oneshot_window_content_bitmap = gbitmap_create_with_resource(RESOURCE_ID_ONESHOT_WINDOW);
     s_close_button_bitmap = gbitmap_create_with_resource(s_close_button_res_id);
 #if defined(PBL_PLATFORM_EMERY) || defined(PBL_PLATFORM_GABBRO)
@@ -1797,6 +2096,7 @@ static void main_window_load(Window *window) {
 }
 
 static void main_window_unload(Window *window) {
+    stop_timer_window_anim();
     if (s_oneshot_fade_animation) {
         animation_unschedule(s_oneshot_fade_animation);
         animation_destroy(s_oneshot_fade_animation);
@@ -1812,9 +2112,10 @@ static void main_window_unload(Window *window) {
     layer_destroy(s_oneshot_window_layer);
     layer_destroy(s_overlay_layer);
     if (s_text_font) fonts_unload_custom_font(s_text_font);
-    if (s_lightbulb_bitmap) gbitmap_destroy(s_lightbulb_bitmap);
+    if (s_taskbar_icon_bitmap) gbitmap_destroy(s_taskbar_icon_bitmap);
     if (s_desktop_bitmap) gbitmap_destroy(s_desktop_bitmap);
     if (s_oneshot_window_icon_bitmap) gbitmap_destroy(s_oneshot_window_icon_bitmap);
+    if (s_timer_window_icon_bitmap) gbitmap_destroy(s_timer_window_icon_bitmap);
     if (s_oneshot_window_content_bitmap) gbitmap_destroy(s_oneshot_window_content_bitmap);
     if (s_close_button_bitmap) gbitmap_destroy(s_close_button_bitmap);
 #if defined(PBL_PLATFORM_EMERY) || defined(PBL_PLATFORM_GABBRO)
@@ -1837,253 +2138,192 @@ static void main_window_unload(Window *window) {
 #endif
 }
 
-// ---------- INBOX CALLBACK ----------
+// ---------- INBOX ----------
 static void inbox_received_callback(DictionaryIterator *iter, void *context) {
-    Tuple *t;
-
-    t = dict_find(iter, KEY_REQUEST_CONFIG);
+    Tuple *t = dict_find(iter, KEY_REQUEST_CONFIG);
     if (t) {
-        APP_LOG(APP_LOG_LEVEL_INFO, "Watch asked for config");
-        char json[256];
+        char json[512];
         snprintf(json, sizeof(json),
             "{\"ClockMode\":%d,\"LeadingZeros\":%d,\"ShowAMPM\":%d,"
             "\"Wallpaper\":%d,\"Inverted\":%s,\"UI_Color\":\"%s\","
             "\"FlickWindow\":%d,\"Version\":\"%s\","
             "\"HourlyVibration\":%d,\"BTDisconnectVibration\":%d,\"HourlyChime\":%d,"
-            "\"SilenceQuietTime\":%d}",
-            s_clock_mode,
-            s_leading_zeros_mode,
-            s_show_ampm_mode,
-            s_wallpaper_value,
-            s_inverted ? "true" : "false",
-            s_ui_color,
-            s_flick_window,
-            WATCH_VERSION,
-            s_hourly_vibration,
-            s_bt_disconnect_vibration,
-            s_hourly_chime ? 1 : 0,
-            s_silence_quiet_time
-        );
+            "\"SilenceQuietTime\":%d,"
+            "\"ActiveWindow\":%d,\"ShowWindow\":%d,\"DateFormat\":%d,\"DateSeparator\":%d,"
+            "\"MonthFormat\":%d}",
+            s_clock_mode, s_leading_zeros_mode, s_show_ampm_mode,
+            s_wallpaper_value, s_inverted ? "true" : "false", s_ui_color,
+            s_flick_window, WATCH_VERSION, s_hourly_vibration,
+            s_bt_disconnect_vibration, s_hourly_chime ? 1 : 0, s_silence_quiet_time,
+            s_active_window, s_show_window, s_date_format, s_date_separator,
+            s_month_format);
         DictionaryIterator *out;
         app_message_outbox_begin(&out);
         dict_write_cstring(out, KEY_CONFIG_DATA, json);
         app_message_outbox_send();
-        APP_LOG(APP_LOG_LEVEL_INFO, "Sent config: %s", json);
         return;
     }
 
-    t = dict_find(iter, KEY_INVERTED);
-    if (t) {
+    if ((t = dict_find(iter, KEY_INVERTED))) {
         bool val = (t->value->int32 == 1);
-        if (val != s_inverted) {
-            s_inverted = val;
-            save_settings();
-            apply_inverted(val);
-            APP_LOG(APP_LOG_LEVEL_INFO, "Inverted set to %d", val);
-        }
+        if (val != s_inverted) { s_inverted = val; save_settings(); apply_inverted(val); }
     }
-
-    t = dict_find(iter, KEY_WALLPAPER);
-    if (t) {
+    if ((t = dict_find(iter, KEY_WALLPAPER))) {
         int val = (t->type == TUPLE_CSTRING) ? atoi(t->value->cstring) : t->value->int32;
         if (val != s_wallpaper_value) {
             s_wallpaper_value = val;
             save_settings();
-            if (val == WALLPAPER_CUSTOM && !s_custom_wallpaper_valid) {
-                s_request_attempts = 0;
-            }
+            if (val == WALLPAPER_CUSTOM && !s_custom_wallpaper_valid) s_request_attempts = 0;
             update_wallpaper();
-            APP_LOG(APP_LOG_LEVEL_INFO, "Wallpaper set to %d", val);
         }
     }
-
-    t = dict_find(iter, KEY_CLOCK_MODE);
-    if (t) {
+    if ((t = dict_find(iter, KEY_CLOCK_MODE))) {
         int val = (t->type == TUPLE_CSTRING) ? atoi(t->value->cstring) : t->value->int32;
-        if (val != s_clock_mode) {
-            s_clock_mode = val;
-            save_settings();
-            update_time();
-            APP_LOG(APP_LOG_LEVEL_INFO, "ClockMode set to %d", val);
-        }
+        if (val != s_clock_mode) { s_clock_mode = val; save_settings(); update_time(); }
     }
-
-    t = dict_find(iter, KEY_LEADING_ZEROS);
-    if (t) {
+    if ((t = dict_find(iter, KEY_LEADING_ZEROS))) {
         int val = (t->type == TUPLE_CSTRING) ? atoi(t->value->cstring) : t->value->int32;
-        if (val != s_leading_zeros_mode) {
-            s_leading_zeros_mode = val;
-            save_settings();
-            update_time();
-            APP_LOG(APP_LOG_LEVEL_INFO, "LeadingZeros mode set to %d", val);
-        }
+        if (val != s_leading_zeros_mode) { s_leading_zeros_mode = val; save_settings(); update_time(); }
     }
-
-    t = dict_find(iter, KEY_SHOW_AMPM);
-    if (t) {
+    if ((t = dict_find(iter, KEY_SHOW_AMPM))) {
         int val = (t->type == TUPLE_CSTRING) ? atoi(t->value->cstring) : t->value->int32;
-        if (val != s_show_ampm_mode) {
-            s_show_ampm_mode = val;
-            save_settings();
-            update_time();
-            APP_LOG(APP_LOG_LEVEL_INFO, "ShowAMPM mode set to %d", val);
-        }
+        if (val != s_show_ampm_mode) { s_show_ampm_mode = val; save_settings(); update_time(); }
     }
-
-    t = dict_find(iter, KEY_UI_COLOR);
-    if (t) {
+    if ((t = dict_find(iter, KEY_UI_COLOR))) {
 #ifdef PBL_COLOR
-        const char *hex = t->value->cstring;
-        apply_ui_color(hex);
-        APP_LOG(APP_LOG_LEVEL_INFO, "UI_Color set to %s", hex);
-#else
-        APP_LOG(APP_LOG_LEVEL_INFO, "UI_Color ignored on BW watch");
+        apply_ui_color(t->value->cstring);
 #endif
     }
-
-    t = dict_find(iter, KEY_FLICK_WINDOW);
-    if (t) {
+    if ((t = dict_find(iter, KEY_FLICK_WINDOW))) {
         int val = (t->type == TUPLE_CSTRING) ? atoi(t->value->cstring) : t->value->int32;
         if (val != s_flick_window) {
-            s_flick_window = val;
-            save_settings();
-            // Apply new mode immediately
-            if (s_flick_window == 0) {
-                // Never: hide and cancel timer
-                s_flick_visible = false;
-                if (s_flick_timer) {
-                    app_timer_cancel(s_flick_timer);
-                    s_flick_timer = NULL;
-                }
-                if (s_oneshot_window_layer) {
-                    layer_set_hidden(s_oneshot_window_layer, true);
-                }
-                if (s_overlay_layer) layer_mark_dirty(s_overlay_layer);
-            } else if (s_flick_window == 2) {
-                // Always: show and cancel timer
-                if (s_flick_timer) {
-                    app_timer_cancel(s_flick_timer);
-                    s_flick_timer = NULL;
-                }
-                s_flick_visible = true;
-                if (s_oneshot_window_layer) {
-                    layer_set_hidden(s_oneshot_window_layer, false);
-                    start_oneshot_fade();
-                }
-                if (s_overlay_layer) layer_mark_dirty(s_overlay_layer);
-            } else {
-                // On Flick: hide until next flick
-                if (s_flick_timer) {
-                    app_timer_cancel(s_flick_timer);
-                    s_flick_timer = NULL;
-                }
-                s_flick_visible = false;
-                if (s_oneshot_window_layer) {
-                    layer_set_hidden(s_oneshot_window_layer, true);
-                }
-                if (s_overlay_layer) layer_mark_dirty(s_overlay_layer);
+            s_flick_window = val; save_settings();
+            if (val == 0) { s_flick_visible = false; stop_timer_window_anim(); if (s_flick_timer) { app_timer_cancel(s_flick_timer); s_flick_timer = NULL; } if (s_oneshot_window_layer) layer_set_hidden(s_oneshot_window_layer, true); if (s_overlay_layer) layer_mark_dirty(s_overlay_layer); }
+            else if (val == 2) { s_flick_visible = true; if (s_flick_timer) { app_timer_cancel(s_flick_timer); s_flick_timer = NULL; } if (s_oneshot_window_layer) { layer_set_hidden(s_oneshot_window_layer, false); if (s_use_timer_window) start_timer_window_anim(); else start_oneshot_fade(); } if (s_overlay_layer) layer_mark_dirty(s_overlay_layer); }
+            else { s_flick_visible = false; if (s_flick_timer) { app_timer_cancel(s_flick_timer); s_flick_timer = NULL; } if (s_oneshot_window_layer) layer_set_hidden(s_oneshot_window_layer, true); if (s_overlay_layer) layer_mark_dirty(s_overlay_layer); }
+        }
+    }
+    if ((t = dict_find(iter, KEY_ACTIVE_WINDOW))) {
+        int val = (t->type == TUPLE_CSTRING) ? atoi(t->value->cstring) : t->value->int32;
+        s_active_window = val;
+        s_use_timer_window = (s_active_window == 1);
+        save_settings();
+        update_colors_and_resources();
+        // Recreate bitmaps that depend on s_use_timer_window
+        if (s_taskbar_icon_bitmap) {
+            gbitmap_destroy(s_taskbar_icon_bitmap);
+            s_taskbar_icon_bitmap = NULL;
+        }
+        s_taskbar_icon_bitmap = gbitmap_create_with_resource(s_taskbar_icon_res_id);
+        if (s_main_window) {
+            layer_mark_dirty(s_overlay_layer);
+            layer_mark_dirty(s_oneshot_window_layer);
+        }
+    }
+    
+    if ((t = dict_find(iter, KEY_SHOW_WINDOW))) {
+        int val = (t->type == TUPLE_CSTRING) ? atoi(t->value->cstring) : t->value->int32;
+        s_show_window = val;
+        save_settings();
+        // Apply visibility regardless of previous value
+        if (val == 0) { // Never
+            s_flick_visible = false;
+            stop_timer_window_anim();
+            if (s_flick_timer) { app_timer_cancel(s_flick_timer); s_flick_timer = NULL; }
+            if (s_oneshot_window_layer) layer_set_hidden(s_oneshot_window_layer, true);
+            if (s_overlay_layer) layer_mark_dirty(s_overlay_layer);
+        } else if (val == 2) { // Always
+            s_flick_visible = true;
+            if (s_flick_timer) { app_timer_cancel(s_flick_timer); s_flick_timer = NULL; }
+            if (s_oneshot_window_layer) {
+                layer_set_hidden(s_oneshot_window_layer, false);
+                if (s_use_timer_window) start_timer_window_anim();
+                else start_oneshot_fade();
             }
+            if (s_overlay_layer) layer_mark_dirty(s_overlay_layer);
+        } else { // On Flick (1)
+            s_flick_visible = false;
+            if (s_flick_timer) { app_timer_cancel(s_flick_timer); s_flick_timer = NULL; }
+            if (s_oneshot_window_layer) layer_set_hidden(s_oneshot_window_layer, true);
+            if (s_overlay_layer) layer_mark_dirty(s_overlay_layer);
         }
     }
-    
-    t = dict_find(iter, KEY_HOURLY_VIBRATION);
-    if (t) {
+    if ((t = dict_find(iter, KEY_DATE_FORMAT))) {
         int val = (t->type == TUPLE_CSTRING) ? atoi(t->value->cstring) : t->value->int32;
-        if (val != s_hourly_vibration) {
-            s_hourly_vibration = val;
+        if (val != s_date_format) {
+            s_date_format = val;
             save_settings();
-            APP_LOG(APP_LOG_LEVEL_INFO, "HourlyVibration set to %d", val);
+            if (s_oneshot_window_layer) layer_mark_dirty(s_oneshot_window_layer);
         }
     }
-    
-    t = dict_find(iter, KEY_BT_DISCONNECT_VIBRATION);
-    if (t) {
+    if ((t = dict_find(iter, KEY_DATE_SEPARATOR))) {
         int val = (t->type == TUPLE_CSTRING) ? atoi(t->value->cstring) : t->value->int32;
-        if (val != s_bt_disconnect_vibration) {
-            s_bt_disconnect_vibration = val;
+        if (val != s_date_separator) {
+            s_date_separator = val;
             save_settings();
-            APP_LOG(APP_LOG_LEVEL_INFO, "BTDisconnectVibration set to %d", val);
+            if (s_oneshot_window_layer) layer_mark_dirty(s_oneshot_window_layer);
         }
     }
-
-    // ADD THIS BLOCK (missing)
-    t = dict_find(iter, KEY_HOURLY_CHIME);
-    if (t) {
+    if ((t = dict_find(iter, KEY_MONTH_FORMAT))) {
+        int val = (t->type == TUPLE_CSTRING) ? atoi(t->value->cstring) : t->value->int32;
+        if (val != s_month_format) {
+            s_month_format = val;
+            save_settings();
+            if (s_oneshot_window_layer) layer_mark_dirty(s_oneshot_window_layer);
+        }
+    }
+    if ((t = dict_find(iter, KEY_HOURLY_VIBRATION))) {
+        int val = (t->type == TUPLE_CSTRING) ? atoi(t->value->cstring) : t->value->int32;
+        if (val != s_hourly_vibration) { s_hourly_vibration = val; save_settings(); }
+    }
+    if ((t = dict_find(iter, KEY_BT_DISCONNECT_VIBRATION))) {
+        int val = (t->type == TUPLE_CSTRING) ? atoi(t->value->cstring) : t->value->int32;
+        if (val != s_bt_disconnect_vibration) { s_bt_disconnect_vibration = val; save_settings(); }
+    }
+    if ((t = dict_find(iter, KEY_HOURLY_CHIME))) {
         bool val = (t->value->int32 == 1);
-        if (val != s_hourly_chime) {
-            s_hourly_chime = val;
-            save_settings();
-            APP_LOG(APP_LOG_LEVEL_INFO, "HourlyChime set to %d", val);
-        }
+        if (val != s_hourly_chime) { s_hourly_chime = val; save_settings(); }
     }
-    
-    t = dict_find(iter, KEY_SILENCE_QUIET_TIME);
-    if (t) {
+    if ((t = dict_find(iter, KEY_SILENCE_QUIET_TIME))) {
         int val = (t->type == TUPLE_CSTRING) ? atoi(t->value->cstring) : t->value->int32;
-        if (val != s_silence_quiet_time) {
-            s_silence_quiet_time = val;
-            save_settings();
-            APP_LOG(APP_LOG_LEVEL_INFO, "SilenceQuietTime set to %d", val);
-        }
-    }
-  
-    // Custom image transfer
-    t = dict_find(iter, KEY_IMAGE_DESIRED_CHECKSUM);
-    if (t && s_wallpaper_value == WALLPAPER_CUSTOM) {
-        uint16_t checksum = (uint16_t)t->value->int32;
-        if (s_transfer_active && s_transfer_checksum != checksum) {
-            cancel_transfer();
-        }
-        if (!s_custom_wallpaper_valid) {
-            s_request_attempts = 0;
-            schedule_image_request();
-        }
+        if (val != s_silence_quiet_time) { s_silence_quiet_time = val; save_settings(); }
     }
 
+    if ((t = dict_find(iter, KEY_IMAGE_DESIRED_CHECKSUM)) && s_wallpaper_value == WALLPAPER_CUSTOM) {
+        uint16_t checksum = (uint16_t)t->value->int32;
+        if (s_transfer_active && s_transfer_checksum != checksum) cancel_transfer();
+        if (!s_custom_wallpaper_valid) { s_request_attempts = 0; schedule_image_request(); }
+    }
     Tuple *begin = dict_find(iter, KEY_IMAGE_BEGIN);
     if (begin && begin->value->int32 == 1) {
-        uint16_t width = (uint16_t)dict_find(iter, KEY_IMAGE_WIDTH)->value->int32;
-        uint16_t height = (uint16_t)dict_find(iter, KEY_IMAGE_HEIGHT)->value->int32;
-        uint32_t length = (uint32_t)dict_find(iter, KEY_IMAGE_LENGTH)->value->int32;
-        uint16_t checksum = (uint16_t)dict_find(iter, KEY_IMAGE_CHECKSUM)->value->int32;
+        Tuple *w = dict_find(iter, KEY_IMAGE_WIDTH);
+        Tuple *h = dict_find(iter, KEY_IMAGE_HEIGHT);
+        Tuple *len = dict_find(iter, KEY_IMAGE_LENGTH);
+        Tuple *chk = dict_find(iter, KEY_IMAGE_CHECKSUM);
         Tuple *palette = dict_find(iter, KEY_IMAGE_PALETTE);
-
-        if (palette && palette->type == TUPLE_BYTE_ARRAY &&
-            palette->length == CUSTOM_PALETTE_SIZE) {
-            begin_custom_image_transfer(width, height, length, checksum, palette->value->data);
-        } else {
-            APP_LOG(APP_LOG_LEVEL_WARNING, "Custom image begin missing palette");
+    
+        if (!w || !h || !len || !chk || !palette || palette->length != CUSTOM_PALETTE_SIZE) {
+            return;   // ignore malformed message
         }
+    
+        uint16_t width = (uint16_t)w->value->int32;
+        uint16_t height = (uint16_t)h->value->int32;
+        uint32_t length = (uint32_t)len->value->int32;
+        uint16_t checksum = (uint16_t)chk->value->int32;
+    
+        begin_custom_image_transfer(width, height, length, checksum, palette->value->data);
     }
-
     Tuple *chunk = dict_find(iter, KEY_IMAGE_CHUNK);
     if (chunk) {
         if (!s_transfer_active) return;
         uint32_t offset = (uint32_t)dict_find(iter, KEY_IMAGE_OFFSET)->value->int32;
-        if (chunk->type != TUPLE_BYTE_ARRAY || offset > s_transfer_received ||
-            offset + chunk->length > s_transfer_pixel_length) {
-            fail_transfer("chunk order");
-            return;
-        }
-        if (offset < s_transfer_received) {
-            if (offset + chunk->length <= s_transfer_received &&
-                memcmp(s_transfer_pixel_data + offset, chunk->value->data, chunk->length) == 0) {
-                refresh_transfer_timeout();
-                return;
-            }
-            fail_transfer("chunk overlap");
-            return;
-        }
-        memcpy(s_transfer_pixel_data + s_transfer_received, chunk->value->data, chunk->length);
-        for (uint16_t i = 0; i < chunk->length; i++) {
-            s_transfer_running_checksum =
-                (uint16_t)(s_transfer_running_checksum +
-                           s_transfer_pixel_data[s_transfer_received + i]);
-        }
+        if (offset + chunk->length > s_transfer_pixel_length) { fail_transfer("chunk order"); return; }
+        memcpy(s_transfer_pixel_data + offset, chunk->value->data, chunk->length);
+        for (uint16_t i = 0; i < chunk->length; i++)
+            s_transfer_running_checksum += s_transfer_pixel_data[offset + i];
         s_transfer_received += chunk->length;
         refresh_transfer_timeout();
     }
-
     Tuple *end = dict_find(iter, KEY_IMAGE_END);
     if (end && end->value->int32 == 1) {
         uint32_t length = (uint32_t)dict_find(iter, KEY_IMAGE_LENGTH)->value->int32;
@@ -2093,42 +2333,29 @@ static void inbox_received_callback(DictionaryIterator *iter, void *context) {
 }
 
 static void inbox_dropped_handler(AppMessageResult reason, void *context) {
-    APP_LOG(APP_LOG_LEVEL_WARNING, "AppMessage dropped: %d", reason);
     if (s_transfer_active) fail_transfer("inbox dropped");
 }
 
-static void outbox_failed_handler(DictionaryIterator *iterator,
-                                  AppMessageResult reason, void *context) {
-    APP_LOG(APP_LOG_LEVEL_WARNING, "AppMessage send failed: %d", reason);
-    if (needs_custom_image() && !s_transfer_active) {
-        schedule_image_request();
-    }
+static void outbox_failed_handler(DictionaryIterator *iter, AppMessageResult reason, void *context) {
+    if (needs_custom_image() && !s_transfer_active) schedule_image_request();
 }
 
 static void connection_handler(bool connected) {
     if (!connected) {
-        if (s_bt_disconnect_vibration != 0 && !should_silence_vibration()) {
-            perform_vibration(s_bt_disconnect_vibration);
-        }
-    }
-    if (!connected && s_transfer_active) {
-        fail_transfer("phone disconnected");
-        return;
-    }
-    if (connected && needs_custom_image() && !s_transfer_active) {
+        if (s_bt_disconnect_vibration && !should_silence_vibration()) perform_vibration(s_bt_disconnect_vibration);
+        if (s_transfer_active) fail_transfer("phone disconnected");
+    } else if (connected && needs_custom_image() && !s_transfer_active) {
         s_request_attempts = 0;
         schedule_image_request();
     }
 }
 
+// ---------- INIT / DEINIT ----------
 static void init(void) {
     load_settings();
     update_colors_and_resources();
-
     if (s_wallpaper_value == WALLPAPER_CUSTOM) {
-        if (!load_persisted_custom_image()) {
-            APP_LOG(APP_LOG_LEVEL_INFO, "No persisted custom image");
-        }
+        if (!load_persisted_custom_image()) APP_LOG(APP_LOG_LEVEL_INFO, "No persisted custom image");
     }
 
     s_main_window = window_create();
@@ -2138,26 +2365,21 @@ static void init(void) {
     });
     window_stack_push(s_main_window, true);
 
-    // Set last_hour to current hour so we don't play hourly feedback immediately
     time_t now = time(NULL);
     struct tm *t = localtime(&now);
     s_last_hour = t->tm_hour;
 
     tick_timer_service_subscribe(SECOND_UNIT | MINUTE_UNIT | HOUR_UNIT, tick_handler);
-    connection_service_subscribe((ConnectionHandlers) {
-        .pebble_app_connection_handler = connection_handler,
-    });
+    connection_service_subscribe((ConnectionHandlers) { .pebble_app_connection_handler = connection_handler });
     accel_tap_service_subscribe(accel_tap_handler);
 
     app_message_register_inbox_received(inbox_received_callback);
     app_message_register_inbox_dropped(inbox_dropped_handler);
     app_message_register_outbox_failed(outbox_failed_handler);
-    app_message_open(1024, 256);
+    app_message_open(1024, 1024);   // was (1024, 256)
 
 #ifdef PBL_COLOR
-    if (s_rainbow_active) {
-        start_rainbow_timer();
-    }
+    if (s_rainbow_active) start_rainbow_timer();
 #endif
 }
 
@@ -2171,10 +2393,7 @@ static void deinit(void) {
     app_message_deregister_callbacks();
     window_destroy(s_main_window);
     destroy_custom_image();
-    if (s_flick_timer) {
-        app_timer_cancel(s_flick_timer);
-        s_flick_timer = NULL;
-    }
+    if (s_flick_timer) app_timer_cancel(s_flick_timer);
 }
 
 int main(void) {

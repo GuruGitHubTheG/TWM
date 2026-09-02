@@ -31,6 +31,12 @@ var KEY_IMAGE_END = 18;
 var KEY_IMAGE_DESIRED_CHECKSUM = 19;
 var KEY_IMAGE_PALETTE = 20;
 
+var KEY_ACTIVE_WINDOW = 25;
+var KEY_SHOW_WINDOW = 26;
+var KEY_DATE_FORMAT = 27;
+var KEY_DATE_SEPARATOR = 28;
+var KEY_MONTH_FORMAT = 29;
+
 var WALLPAPER_CUSTOM = 8;
 var CUSTOM_CHUNK_SIZE = 900;
 var MAX_SEND_ATTEMPTS = 3;
@@ -46,6 +52,17 @@ var pendingTransfer = null;
 var photoTransferGeneration = 0;
 
 var watchVersionFromConfig = null;
+
+function versionAtLeast(actual, required) {
+    var a = String(actual).split('.').map(Number);
+    var r = String(required).split('.').map(Number);
+    for (var i = 0; i < Math.max(a.length, r.length); i++) {
+        var av = a[i] || 0;
+        var rv = r[i] || 0;
+        if (av !== rv) return av > rv;
+    }
+    return true;
+}
 
 // ---------- LZString Decompression (compressToEncodedURIComponent) ----------
 var LZString = (function() {
@@ -731,6 +748,20 @@ Pebble.addEventListener('webviewclosed', function(e) {
     dict[KEY_WALLPAPER] = wallpaper;
     if (config.ClockMode !== undefined) dict[KEY_CLOCK_MODE] = parseInt(config.ClockMode, 10) || 0;
 
+    // For versions >= 2.1.0, send new keys
+    if (watchVersionFromConfig && versionAtLeast(watchVersionFromConfig, '2.1.0')) {
+        dict[KEY_ACTIVE_WINDOW] = parseInt(config.ActiveWindow, 10) || 0;
+        dict[KEY_SHOW_WINDOW] = parseInt(config.ShowWindow, 10) || 1;
+        dict[KEY_DATE_FORMAT] = parseInt(config.DateFormat, 10) || 0;
+        dict[KEY_DATE_SEPARATOR] = parseInt(config.DateSeparator, 10) || 0;
+        dict[KEY_MONTH_FORMAT] = parseInt(config.MonthFormat, 10) || 0;
+    } else {
+        // Legacy: send flick window via old key
+        if (config.FlickWindow !== undefined) {
+            dict[KEY_FLICK_WINDOW] = parseInt(config.FlickWindow, 10) || 1;
+        }
+    }
+    
     // Leading Zeros mode (0/1/2)
     if (config.LeadingZeros !== undefined) {
         var lz = parseInt(config.LeadingZeros, 10);
@@ -747,15 +778,6 @@ Pebble.addEventListener('webviewclosed', function(e) {
         else dict[KEY_SHOW_AMPM] = 2;
     } else {
         dict[KEY_SHOW_AMPM] = 2;
-    }
-
-    // Flick Window (0=None, 1=OneShot, 2=Timer)
-    if (config.FlickWindow !== undefined) {
-        var fw = parseInt(config.FlickWindow, 10);
-        if (!isNaN(fw) && fw >= 0 && fw <= 2) dict[KEY_FLICK_WINDOW] = fw;
-        else dict[KEY_FLICK_WINDOW] = 1;
-    } else {
-        dict[KEY_FLICK_WINDOW] = 1;
     }
     
     if (config.HourlyVibration !== undefined) {
@@ -797,7 +819,7 @@ Pebble.addEventListener('webviewclosed', function(e) {
         ClockMode: String(config.ClockMode !== undefined ? config.ClockMode : 0),
         LeadingZeros: String(dict[KEY_LEADING_ZEROS]),
         ShowAMPM: String(dict[KEY_SHOW_AMPM]),
-        FlickWindow: String(dict[KEY_FLICK_WINDOW]),
+        FlickWindow: String(dict[KEY_FLICK_WINDOW] !== undefined ? dict[KEY_FLICK_WINDOW] : (config.FlickWindow !== undefined ? config.FlickWindow : 1)),
         HourlyVibration: String(dict[KEY_HOURLY_VIBRATION]),
         BTDisconnectVibration: String(dict[KEY_BT_DISCONNECT_VIBRATION]),
         HourlyChime: String(dict[KEY_HOURLY_CHIME]),
