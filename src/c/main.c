@@ -1,6 +1,6 @@
 #include <pebble.h>
 
-#define WATCH_VERSION "2.1.0"
+#define WATCH_VERSION "2.1.1"
 
 // Temporary settings variable: set to true to use Timer window, false for OneShot.
 static bool s_use_timer_window = false;
@@ -110,8 +110,8 @@ static uint32_t s_desktop_res_id;
 static uint32_t s_oneshot_window_icon_res_id;
 static uint32_t s_timer_window_icon_res_id;
 static uint32_t s_close_button_res_id;
-#if defined(PBL_PLATFORM_EMERY) || defined(PBL_PLATFORM_GABBRO)
 static uint32_t s_minimize_button_res_id;
+#if defined(PBL_PLATFORM_EMERY) || defined(PBL_PLATFORM_GABBRO)
 static uint32_t s_maximize_button_res_id;
 #endif
 
@@ -126,8 +126,8 @@ static GBitmap *s_oneshot_window_icon_bitmap;
 static GBitmap *s_timer_window_icon_bitmap;
 static GBitmap *s_oneshot_window_content_bitmap;
 static GBitmap *s_close_button_bitmap;
-#if defined(PBL_PLATFORM_EMERY) || defined(PBL_PLATFORM_GABBRO)
 static GBitmap *s_minimize_button_bitmap;
+#if defined(PBL_PLATFORM_EMERY) || defined(PBL_PLATFORM_GABBRO)
 static GBitmap *s_maximize_button_bitmap;
 #endif
 static GFont s_text_font;
@@ -274,8 +274,8 @@ static void update_colors_and_resources(void) {
     s_oneshot_window_icon_res_id = RESOURCE_ID_ONESHOT_WINDOW_ICON;
     s_timer_window_icon_res_id = RESOURCE_ID_TIMER_WINDOW_ICON;
     s_close_button_res_id = RESOURCE_ID_CLOSE_BUTTON;
-#if defined(PBL_PLATFORM_EMERY) || defined(PBL_PLATFORM_GABBRO)
     s_minimize_button_res_id = RESOURCE_ID_MINIMIZE_BUTTON;
+#if defined(PBL_PLATFORM_EMERY) || defined(PBL_PLATFORM_GABBRO)
     s_maximize_button_res_id = RESOURCE_ID_MAXIMIZE_BUTTON;
 #endif
 #else
@@ -284,26 +284,27 @@ static void update_colors_and_resources(void) {
         s_accent_color = GColorBlack;
         s_text_color = GColorWhite;
         s_background_color = GColorClear;
-        // Medium gray variant for BW (from BW HTML: #808080)
-        s_variant_color = GColorFromRGB(128, 128, 128);
+        // On BW, keep punctuation same as primary to avoid blinking
+        s_variant_color = s_accent_color;
 
         if (s_use_timer_window) s_taskbar_icon_res_id = RESOURCE_ID_TIMER_INVERTED;
         else s_taskbar_icon_res_id = RESOURCE_ID_LIGHTBULB_INVERTED;
         s_desktop_res_id = RESOURCE_ID_SHOW_DESKTOP_INVERTED;
         s_oneshot_window_icon_res_id = RESOURCE_ID_ONESHOT_WINDOW_ICON_INVERTED;
         s_timer_window_icon_res_id = RESOURCE_ID_TIMER_WINDOW_ICON_INVERTED;
-#ifdef RESOURCE_ID_CLOSE_BUTTON_INVERTED
         s_close_button_res_id = RESOURCE_ID_CLOSE_BUTTON_INVERTED;
+#ifdef RESOURCE_ID_MINIMIZE_BUTTON_INVERTED
+        s_minimize_button_res_id = RESOURCE_ID_MINIMIZE_BUTTON_INVERTED;
 #else
-        s_close_button_res_id = RESOURCE_ID_CLOSE_BUTTON;
+        s_minimize_button_res_id = RESOURCE_ID_MINIMIZE_BUTTON;
 #endif
     } else {
         s_dark_color = GColorBlack;
         s_accent_color = GColorWhite;
         s_text_color = GColorBlack;
         s_background_color = GColorClear;
-        // Medium gray variant for BW (from BW HTML: #808080)
-        s_variant_color = GColorFromRGB(128, 128, 128);
+        // On BW, keep punctuation same as primary to avoid blinking
+        s_variant_color = s_accent_color;
 
         if (s_use_timer_window) s_taskbar_icon_res_id = RESOURCE_ID_TIMER;
         else s_taskbar_icon_res_id = RESOURCE_ID_LIGHTBULB;
@@ -311,6 +312,7 @@ static void update_colors_and_resources(void) {
         s_oneshot_window_icon_res_id = RESOURCE_ID_ONESHOT_WINDOW_ICON;
         s_timer_window_icon_res_id = RESOURCE_ID_TIMER_WINDOW_ICON;
         s_close_button_res_id = RESOURCE_ID_CLOSE_BUTTON;
+        s_minimize_button_res_id = RESOURCE_ID_MINIMIZE_BUTTON;
     }
 #endif
 }
@@ -322,12 +324,6 @@ static void load_settings(void) {
         s_wallpaper_value = persist_read_int(PERSIST_WALLPAPER);
     if (persist_exists(PERSIST_CLOCK_MODE))
         s_clock_mode = persist_read_int(PERSIST_CLOCK_MODE);
-
-  // If old flick setting exists and new show setting has never been set,
-    // migrate it to preserve user preference.
-    if (persist_exists(PERSIST_FLICK_WINDOW) && !persist_exists(PERSIST_SHOW_WINDOW)) {
-        s_show_window = s_flick_window;
-    }
 
     if (persist_exists(104)) {
         bool old = persist_read_bool(104);
@@ -368,6 +364,12 @@ static void load_settings(void) {
         }
     }
 #endif
+
+    // If old flick setting exists and new show setting has never been set,
+    // migrate it to preserve user preference.
+    if (persist_exists(PERSIST_FLICK_WINDOW) && !persist_exists(PERSIST_SHOW_WINDOW)) {
+        s_show_window = persist_read_int(PERSIST_FLICK_WINDOW);
+    }
 
     if (persist_exists(PERSIST_FLICK_WINDOW))
         s_flick_window = persist_read_int(PERSIST_FLICK_WINDOW);
@@ -1326,13 +1328,13 @@ static void apply_inverted(bool inverted) {
     }
     s_close_button_bitmap = gbitmap_create_with_resource(s_close_button_res_id);
 
-#if defined(PBL_PLATFORM_EMERY) || defined(PBL_PLATFORM_GABBRO)
     if (s_minimize_button_bitmap) {
         gbitmap_destroy(s_minimize_button_bitmap);
         s_minimize_button_bitmap = NULL;
     }
     s_minimize_button_bitmap = gbitmap_create_with_resource(s_minimize_button_res_id);
 
+#if defined(PBL_PLATFORM_EMERY) || defined(PBL_PLATFORM_GABBRO)
     if (s_maximize_button_bitmap) {
         gbitmap_destroy(s_maximize_button_bitmap);
         s_maximize_button_bitmap = NULL;
@@ -1755,10 +1757,10 @@ static void draw_oneshot_window(GContext *ctx) {
 #if defined(PBL_PLATFORM_EMERY) || defined(PBL_PLATFORM_GABBRO)
     int close_x = win_x + ONESHOT_WIN_BORDER + ONESHOT_WIN_CONTENT_W - 2 - 16;
     int max_x = close_x - 16 - 2;
-    int min_x = max_x - 16 - 2;
+    int minimize_x = max_x - 16 - 2;
     graphics_context_set_fill_color(ctx, s_accent_color);
-    graphics_fill_rect(ctx, GRect(min_x, icon_y, 16, 16), 0, GCornerNone);
-    if (s_minimize_button_bitmap) graphics_draw_bitmap_in_rect(ctx, s_minimize_button_bitmap, GRect(min_x, icon_y, 16, 16));
+    graphics_fill_rect(ctx, GRect(minimize_x, icon_y, 16, 16), 0, GCornerNone);
+    if (s_minimize_button_bitmap) graphics_draw_bitmap_in_rect(ctx, s_minimize_button_bitmap, GRect(minimize_x, icon_y, 16, 16));
     graphics_fill_rect(ctx, GRect(max_x, icon_y, 16, 16), 0, GCornerNone);
     if (s_maximize_button_bitmap) graphics_draw_bitmap_in_rect(ctx, s_maximize_button_bitmap, GRect(max_x, icon_y, 16, 16));
     graphics_fill_rect(ctx, GRect(close_x, icon_y, 16, 16), 0, GCornerNone);
@@ -1833,7 +1835,10 @@ static void draw_timer_window(GContext *ctx) {
                        GTextOverflowModeWordWrap, GTextAlignmentLeft, NULL);
 
     int close_x = win_x + TIMER_WIN_BORDER + TIMER_WIN_CONTENT_W - 2 - 16;
+    int minimize_x = close_x - 16 - 2;   // minimize left of close
     graphics_context_set_fill_color(ctx, s_accent_color);
+    graphics_fill_rect(ctx, GRect(minimize_x, icon_y, 16, 16), 0, GCornerNone);
+    if (s_minimize_button_bitmap) graphics_draw_bitmap_in_rect(ctx, s_minimize_button_bitmap, GRect(minimize_x, icon_y, 16, 16));
     graphics_fill_rect(ctx, GRect(close_x, icon_y, 16, 16), 0, GCornerNone);
     if (s_close_button_bitmap) graphics_draw_bitmap_in_rect(ctx, s_close_button_bitmap, GRect(close_x, icon_y, 16, 16));
 
@@ -2076,8 +2081,8 @@ static void main_window_load(Window *window) {
     s_timer_window_icon_bitmap = gbitmap_create_with_resource(s_timer_window_icon_res_id);
     s_oneshot_window_content_bitmap = gbitmap_create_with_resource(RESOURCE_ID_ONESHOT_WINDOW);
     s_close_button_bitmap = gbitmap_create_with_resource(s_close_button_res_id);
-#if defined(PBL_PLATFORM_EMERY) || defined(PBL_PLATFORM_GABBRO)
     s_minimize_button_bitmap = gbitmap_create_with_resource(s_minimize_button_res_id);
+#if defined(PBL_PLATFORM_EMERY) || defined(PBL_PLATFORM_GABBRO)
     s_maximize_button_bitmap = gbitmap_create_with_resource(s_maximize_button_res_id);
 #endif
 
@@ -2118,8 +2123,8 @@ static void main_window_unload(Window *window) {
     if (s_timer_window_icon_bitmap) gbitmap_destroy(s_timer_window_icon_bitmap);
     if (s_oneshot_window_content_bitmap) gbitmap_destroy(s_oneshot_window_content_bitmap);
     if (s_close_button_bitmap) gbitmap_destroy(s_close_button_bitmap);
-#if defined(PBL_PLATFORM_EMERY) || defined(PBL_PLATFORM_GABBRO)
     if (s_minimize_button_bitmap) gbitmap_destroy(s_minimize_button_bitmap);
+#if defined(PBL_PLATFORM_EMERY) || defined(PBL_PLATFORM_GABBRO)
     if (s_maximize_button_bitmap) gbitmap_destroy(s_maximize_button_bitmap);
 #endif
     cancel_transfer();
@@ -2303,7 +2308,7 @@ static void inbox_received_callback(DictionaryIterator *iter, void *context) {
         Tuple *palette = dict_find(iter, KEY_IMAGE_PALETTE);
     
         if (!w || !h || !len || !chk || !palette || palette->length != CUSTOM_PALETTE_SIZE) {
-            return;   // ignore malformed message
+            return;
         }
     
         uint16_t width = (uint16_t)w->value->int32;
@@ -2376,7 +2381,7 @@ static void init(void) {
     app_message_register_inbox_received(inbox_received_callback);
     app_message_register_inbox_dropped(inbox_dropped_handler);
     app_message_register_outbox_failed(outbox_failed_handler);
-    app_message_open(1024, 1024);   // was (1024, 256)
+    app_message_open(1024, 1024);
 
 #ifdef PBL_COLOR
     if (s_rainbow_active) start_rainbow_timer();
