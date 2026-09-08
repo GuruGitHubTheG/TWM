@@ -224,18 +224,15 @@
                     "name": "CLOSE_BUTTON_INVERTED",
                     "targetPlatforms": [
                         "aplite",
-                        "basalt",
-                        "diorite"
+                        "diorite",
+                        "flint"
                     ],
                     "type": "bitmap"
                 },
                 {
                     "file": "images/minimize_button.png",
                     "name": "MINIMIZE_BUTTON",
-                    "targetPlatforms": [
-                        "emery",
-                        "gabbro"
-                    ],
+                    "targetPlatforms": null,
                     "type": "bitmap"
                 },
                 {
@@ -308,6 +305,16 @@
                         "flint"
                     ],
                     "type": "bitmap"
+                },
+                {
+                    "file": "images/dismiss-inverted.png",
+                    "name": "MINIMIZE_BUTTON_INVERTED",
+                    "targetPlatforms": [
+                        "aplite",
+                        "diorite",
+                        "flint"
+                    ],
+                    "type": "bitmap"
                 }
             ]
         },
@@ -326,5 +333,5 @@
             "watchface": true
         }
     },
-    "version": "2.1.0"
+    "version": "2.1.1"
 }
