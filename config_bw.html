@@ -657,26 +657,9 @@ Machine)</div>
             var monthFormatIndex = 0;          // 0=Numeric, 1=Abbreviated
             var monthFormatOptions = ['Numeric (12)', 'Short (DEC)'];
 
-            var watchVersion = '1.0.0';
-
-            // First try query parameter (comes from pebble-js-app.js)
+            // *** FIX: Do not read version from localStorage when no query param ***
             var versionParam = getQueryParam('version');
-            if (versionParam) {
-                watchVersion = versionParam;
-            } else {
-                // Fallback to stored config if available
-                var storedConfig = localStorage.getItem('twm_config');
-                if (storedConfig) {
-                    try {
-                        var parsedStored = JSON.parse(storedConfig);
-                        if (parsedStored.Version) {
-                            watchVersion = parsedStored.Version;
-                        }
-                    } catch (e) {
-                        // ignore malformed config
-                    }
-                }
-            }
+            var watchVersion = versionParam || '1.0.0';   // <-- Always default to oldest if no param
 
             function parseVersion(v) {
                 var parts = String(v).split('.');
@@ -713,12 +696,10 @@ Machine)</div>
             var silenceQuietTimeIndex;
 
             if (currentPlatform === 'flint' || currentPlatform === 'emery') {
-                // Platforms with sound: four options
                 silenceQuietTimeOptions = ['OFF', 'Vibration Only', 'Sound Only', 'Both'];
                 silenceQuietTimeValues = [0, 1, 2, 3];
                 silenceQuietTimeIndex = 3;   // Default: Both
             } else {
-                // Platforms without sound: two options
                 silenceQuietTimeOptions = ['OFF', 'ON'];
                 silenceQuietTimeValues = [0, 3];
                 silenceQuietTimeIndex = 1;   // Default: ON
@@ -850,7 +831,13 @@ Machine)</div>
                 img.src = url;
             }
 
+            // *** FIXED selectExtraWallpaper to support modal dismissal revert ***
             function selectExtraWallpaper(file, title) {
+                // Save previous selection for potential revert
+                var prevWallpaperId = selectedWallpaperId;
+                var prevExtraWallpaperId = selectedExtraWallpaperId;
+
+                // Set new selection visually
                 selectedWallpaperId = 8;
                 selectedExtraWallpaperId = file;
                 document.querySelectorAll('.wallpaper-item').forEach(function(el) { el.classList.remove('selected'); });
@@ -874,7 +861,22 @@ Machine)</div>
                             loadExtraWallpaperUrl(url, 'Secret RAM Club (Niko Ver.)');
                         },
                         'Shepherd',
-                        'Niko'
+                        'Niko',
+                        function() {
+                            // Modal dismissed by clicking outside – revert selection
+                            selectedWallpaperId = prevWallpaperId;
+                            selectedExtraWallpaperId = prevExtraWallpaperId;
+                            document.querySelectorAll('.wallpaper-item').forEach(function(el) { el.classList.remove('selected'); });
+                            document.querySelectorAll('.extra-wallpaper-item').forEach(function(el) { el.classList.remove('selected'); });
+                            if (prevExtraWallpaperId) {
+                                var prevExtra = document.querySelector('.extra-wallpaper-item[data-extra-file="' + prevExtraWallpaperId + '"]');
+                                if (prevExtra) prevExtra.classList.add('selected');
+                            } else {
+                                var prevBuiltIn = document.querySelector('.wallpaper-item[data-id="' + prevWallpaperId + '"]');
+                                if (prevBuiltIn) prevBuiltIn.classList.add('selected');
+                            }
+                            // No need to load any wallpaper; user cancelled the choice
+                        }
                     );
                     return;
                 }
@@ -1240,10 +1242,7 @@ Machine)</div>
                         }
                         // ========== END NEW SETTINGS ==========
 
-                        // Only use stored version if no query parameter was provided
-                        if (!getQueryParam('version') && config.Version !== undefined) {
-                            watchVersion = config.Version;
-                        }
+                        // *** REMOVED: version reassignment from stored config ***
 
                         if (config.HourlyVibration !== undefined) {
                             var hv = parseInt(config.HourlyVibration, 10);
@@ -1545,7 +1544,8 @@ Machine)</div>
             document.getElementById('photoUrl').addEventListener('input', function() { resetPhotoLoad('URL changed. Tap Load URL to prepare it.', false); });
             document.getElementById('photoUrl').addEventListener('keydown', function(e) { if (e.key === 'Enter' || e.keyCode === 13) { e.preventDefault(); loadImageUrl(false); } });
 
-            function showModal(text, onYes, onNo, yesLabel, noLabel) {
+            // *** UPDATED showModal to support onDismiss callback ***
+            function showModal(text, onYes, onNo, yesLabel, noLabel, onDismiss) {
                 playNotificationSound();
                 document.getElementById('modalText').textContent = text;
                 document.getElementById('questionIcon').style.display = 'block';
@@ -1556,12 +1556,14 @@ Machine)</div>
                 document.getElementById('noBtn').textContent = noLabel || 'No';
                 window._modalYesCallback = onYes || null;
                 window._modalNoCallback = onNo || null;
+                window._modalDismissCallback = onDismiss || null;
                 document.getElementById('modalOverlay').classList.add('active');
             }
             function hideModal() {
                 document.getElementById('modalOverlay').classList.remove('active');
                 window._modalYesCallback = null;
                 window._modalNoCallback = null;
+                window._modalDismissCallback = null;
             }
             function showAccessDeniedModal() {
                 playNotificationSound();
@@ -1572,6 +1574,7 @@ Machine)</div>
                 document.getElementById('okButtonContainer').style.display = 'flex';
                 window._modalYesCallback = null;
                 window._modalNoCallback = null;
+                window._modalDismissCallback = null;
                 document.getElementById('modalOverlay').classList.add('active');
             }
             function showImageLoadFailedModal(message) {
@@ -1583,12 +1586,13 @@ Machine)</div>
                 document.getElementById('okButtonContainer').style.display = 'flex';
                 window._modalYesCallback = null;
                 window._modalNoCallback = null;
+                window._modalDismissCallback = null;
                 document.getElementById('modalOverlay').classList.add('active');
             }
             document.getElementById('yesBtn').addEventListener('click', function() { var cb = window._modalYesCallback; hideModal(); if (cb) cb(); });
             document.getElementById('noBtn').addEventListener('click', function() { var cb = window._modalNoCallback; hideModal(); if (cb) cb(); });
             document.getElementById('okBtn').addEventListener('click', hideModal);
-            document.getElementById('modalOverlay').addEventListener('click', function(e) { if (e.target === this) hideModal(); });
+            document.getElementById('modalOverlay').addEventListener('click', function(e) { if (e.target === this) { var dismissCb = window._modalDismissCallback; hideModal(); if (dismissCb) dismissCb(); } });
             window.showTWMConfirm = function() { showModal('Change Language?\n(This will restart The World\nMachine)', null, null); };
 
             function getConfig() {
