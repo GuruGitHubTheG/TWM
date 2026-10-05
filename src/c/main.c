@@ -1,6 +1,6 @@
 #include <pebble.h>
 
-#define WATCH_VERSION "2.1.1"
+#define WATCH_VERSION "2.1.2"
 
 // Temporary settings variable: set to true to use Timer window, false for OneShot.
 static bool s_use_timer_window = false;
@@ -1087,9 +1087,34 @@ static void begin_custom_image_transfer(uint16_t width, uint16_t height,
         return;
     }
 
+    // Free any previous transfer state BEFORE allocating new memory.
+    cancel_transfer();
+
     GBitmap *bitmap = gbitmap_create_blank(GSize(width, height), CUSTOM_BITMAP_FORMAT);
+
+    // On memory-constrained platforms (Aplite especially), the currently-loaded
+    // custom wallpaper may be occupying the only slot large enough for the new
+    // transfer. Release it and retry.
+    if (!bitmap && s_custom_wallpaper_bitmap) {
+        APP_LOG(APP_LOG_LEVEL_INFO, "Releasing current custom wallpaper to make room for transfer");
+        if (s_wallpaper_layer) {
+            bitmap_layer_set_bitmap(s_wallpaper_layer, NULL);
+            layer_set_hidden(bitmap_layer_get_layer(s_wallpaper_layer), true);
+        }
+        gbitmap_destroy(s_custom_wallpaper_bitmap);
+        s_custom_wallpaper_bitmap = NULL;
+        s_custom_wallpaper_valid = false;
+        s_custom_wallpaper_is_low_depth = false;
+        bitmap = gbitmap_create_blank(GSize(width, height), CUSTOM_BITMAP_FORMAT);
+    }
+
     if (!bitmap) {
         APP_LOG(APP_LOG_LEVEL_ERROR, "Cannot create custom bitmap");
+        // We destroyed the old wallpaper, so try to bring it back from persistence.
+        if (s_wallpaper_value == WALLPAPER_CUSTOM) {
+            load_persisted_custom_image();
+            update_wallpaper();
+        }
         return;
     }
 
@@ -1101,23 +1126,9 @@ static void begin_custom_image_transfer(uint16_t width, uint16_t height,
         return;
     }
 
-    cancel_transfer();
-
-    s_transfer_pixel_data = malloc(length);
-    if (!s_transfer_pixel_data) {
-        if (s_custom_wallpaper_bitmap) {
-            destroy_custom_image();
-        }
-        s_transfer_pixel_data = malloc(length);
-        if (!s_transfer_pixel_data) {
-            gbitmap_destroy(bitmap);
-            APP_LOG(APP_LOG_LEVEL_ERROR, "Cannot allocate custom image buffer");
-            return;
-        }
-    }
-
     memcpy(s_transfer_palette, palette, CUSTOM_PALETTE_SIZE);
     s_transfer_bitmap = bitmap;
+    s_transfer_pixel_data = NULL;   // write directly into the bitmap's data
     s_transfer_pixel_length = length;
     s_transfer_received = 0;
     s_transfer_checksum = checksum;
@@ -1142,7 +1153,7 @@ static void fail_transfer(const char *reason) {
 }
 
 static void finish_custom_image_transfer(uint32_t length, uint16_t checksum) {
-    if (!s_transfer_active) return;
+    if (!s_transfer_active || !s_transfer_bitmap) return;
     if (length != s_transfer_pixel_length ||
         checksum != s_transfer_checksum ||
         s_transfer_received != s_transfer_pixel_length ||
@@ -1151,14 +1162,13 @@ static void finish_custom_image_transfer(uint32_t length, uint16_t checksum) {
         return;
     }
 
-    memcpy(gbitmap_get_data(s_transfer_bitmap), s_transfer_pixel_data, s_transfer_pixel_length);
+    // Apply the palette now that the transfer succeeded.
     memcpy(gbitmap_get_palette(s_transfer_bitmap), s_transfer_palette, CUSTOM_PALETTE_SIZE);
 
-   (void)persist_custom_image(s_transfer_pixel_data, s_transfer_pixel_length,
-                                          s_transfer_palette, CUSTOM_PALETTE_SIZE);
+    (void)persist_custom_image(gbitmap_get_data(s_transfer_bitmap), s_transfer_pixel_length,
+                               s_transfer_palette, CUSTOM_PALETTE_SIZE);
 
     GBitmap *old_custom = s_custom_wallpaper_bitmap;
-
     s_custom_wallpaper_bitmap = s_transfer_bitmap;
     s_custom_wallpaper_valid = true;
     s_custom_wallpaper_is_low_depth = false;
@@ -1173,8 +1183,6 @@ static void finish_custom_image_transfer(uint32_t length, uint16_t checksum) {
 
     s_transfer_active = false;
     cancel_transfer_timer();
-    free(s_transfer_pixel_data);
-    s_transfer_pixel_data = NULL;
 
     APP_LOG(APP_LOG_LEVEL_INFO, "Custom image ready");
 }
@@ -1188,12 +1196,23 @@ static void update_wallpaper(void) {
     }
 
     if (s_wallpaper_value == 0) {
+        // Blank: free the custom bitmap too — we don't need it.
+        if (s_custom_wallpaper_bitmap) {
+            gbitmap_destroy(s_custom_wallpaper_bitmap);
+            s_custom_wallpaper_bitmap = NULL;
+            s_custom_wallpaper_valid = false;
+            s_custom_wallpaper_is_low_depth = false;
+        }
         layer_set_hidden(bitmap_layer_get_layer(s_wallpaper_layer), true);
         if (s_main_window) window_set_background_color(s_main_window, GColorBlack);
         return;
     }
 
     if (s_wallpaper_value == WALLPAPER_CUSTOM) {
+        // Try to bring the persisted custom image back if we dropped it earlier.
+        if (!s_custom_wallpaper_valid) {
+            load_persisted_custom_image();
+        }
         if (s_custom_wallpaper_valid && s_custom_wallpaper_bitmap) {
             bitmap_layer_set_bitmap(s_wallpaper_layer, s_custom_wallpaper_bitmap);
             layer_set_hidden(bitmap_layer_get_layer(s_wallpaper_layer), false);
@@ -1204,6 +1223,14 @@ static void update_wallpaper(void) {
             schedule_image_request();
         }
         return;
+    }
+
+    // Built-in wallpaper: free the custom bitmap first so the resource has heap to allocate into.
+    if (s_custom_wallpaper_bitmap) {
+        gbitmap_destroy(s_custom_wallpaper_bitmap);
+        s_custom_wallpaper_bitmap = NULL;
+        s_custom_wallpaper_valid = false;
+        s_custom_wallpaper_is_low_depth = false;
     }
 
     uint32_t res = get_wallpaper_resource(s_wallpaper_value);
@@ -2320,12 +2347,18 @@ static void inbox_received_callback(DictionaryIterator *iter, void *context) {
     }
     Tuple *chunk = dict_find(iter, KEY_IMAGE_CHUNK);
     if (chunk) {
-        if (!s_transfer_active) return;
-        uint32_t offset = (uint32_t)dict_find(iter, KEY_IMAGE_OFFSET)->value->int32;
-        if (offset + chunk->length > s_transfer_pixel_length) { fail_transfer("chunk order"); return; }
-        memcpy(s_transfer_pixel_data + offset, chunk->value->data, chunk->length);
+        if (!s_transfer_active || !s_transfer_bitmap) return;
+        Tuple *offset_tuple = dict_find(iter, KEY_IMAGE_OFFSET);
+        if (!offset_tuple) return;
+        uint32_t offset = (uint32_t)offset_tuple->value->int32;
+        if (offset + chunk->length > s_transfer_pixel_length) {
+            fail_transfer("chunk order");
+            return;
+        }
+        uint8_t *bitmap_data = gbitmap_get_data(s_transfer_bitmap);
+        memcpy(bitmap_data + offset, chunk->value->data, chunk->length);
         for (uint16_t i = 0; i < chunk->length; i++)
-            s_transfer_running_checksum += s_transfer_pixel_data[offset + i];
+            s_transfer_running_checksum += chunk->value->data[i];
         s_transfer_received += chunk->length;
         refresh_transfer_timeout();
     }
