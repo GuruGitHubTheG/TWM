@@ -765,6 +765,9 @@ Machine)</div>
                 var format = dateFormatOptions[dateFormatIndex];
                 var sep = dateSeparatorOptions[dateSeparatorIndex];
                 var display = format.replace(/\./g, sep);
+                if (monthFormatIndex === 1) {
+                    display = display.replace(/\bMM\b/, 'MMM');
+                }
                 document.getElementById('dateFormatDisplay').textContent = display;
             }
 
